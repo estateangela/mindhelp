@@ -1,49 +1,114 @@
 import 'package:flutter/material.dart';
+import '../core/theme.dart';
 import '../widgets/input_field.dart';
 import '../widgets/primary_button.dart';
 
 class LoginPage extends StatelessWidget {
-  final _emailController = TextEditingController();
+  final _accountController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _nicknameController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('註冊 / 登入')),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            InputField(
-                controller: _emailController,
-                label: '信箱 (Google 為主)',
-                prefixIcon: Icons.email),
-            SizedBox(height: 12),
-            InputField(
-                controller: _passwordController,
-                label: '密碼',
-                prefixIcon: Icons.lock,
-                obscureText: true),
-            SizedBox(height: 12),
-            InputField(
-                controller: _nicknameController,
-                label: '使用者暱稱',
-                prefixIcon: Icons.person),
-            SizedBox(height: 24),
-            PrimaryButton(
-              text: '註冊 / 登入',
-              onPressed: () {
-                Navigator.pushReplacementNamed(context, '/home');
-              },
+      backgroundColor: AppColors.background,
+      body: Stack(
+        children: [
+          // 背景圓點
+          Positioned(
+            top: -60,
+            left: -60,
+            child: _buildCircle(180),
+          ),
+          Positioned(
+            bottom: -50,
+            left: -50,
+            child: _buildCircle(140),
+          ),
+          Positioned(
+            top: 100,
+            right: -30,
+            child: _buildCircle(100),
+          ),
+
+          SingleChildScrollView(
+            child: Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 32, vertical: 100),
+              child: Column(
+                children: [
+                  Image.asset('assets/images/logo.png', width: 140),
+                  SizedBox(height: 48),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text('帳號',
+                        style: Theme.of(context).textTheme.bodyText1),
+                  ),
+                  SizedBox(height: 4),
+                  InputField(
+                      controller: _accountController,
+                      label: '',
+                      prefixIcon: Icons.person_outline),
+                  SizedBox(height: 24),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text('密碼',
+                        style: Theme.of(context).textTheme.bodyText1),
+                  ),
+                  SizedBox(height: 4),
+                  InputField(
+                    controller: _passwordController,
+                    label: '',
+                    prefixIcon: Icons.lock_outline,
+                    obscureText: true,
+                  ),
+                  SizedBox(height: 48),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: PrimaryButton(
+                          text: '登入',
+                          onPressed: () {
+                            Navigator.pushReplacementNamed(context, '/home');
+                          },
+                        ),
+                      ),
+                      SizedBox(width: 16),
+                      Expanded(
+                        child: PrimaryButton(
+                          text: '註冊',
+                          onPressed: () {
+                            Navigator.pushNamed(context, '/signup');
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 24),
+                  GestureDetector(
+                    onTap: () => Navigator.pushNamed(context, '/forgot_code'),
+                    child: Text(
+                      '忘記密碼？',
+                      style: TextStyle(
+                        color: AppColors.textBody,
+                        decoration: TextDecoration.underline,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-            TextButton(
-              onPressed: () => Navigator.pushNamed(context, '/forgot'),
-              child: Text('忘記密碼？'),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
+
+  Widget _buildCircle(double size) => Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          color: AppColors.accent.withOpacity(0.3),
+          shape: BoxShape.circle,
+        ),
+      );
 }

@@ -87,3 +87,12 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+  assets:
+    - assets/fonts/
+    - assets/images/logo.png
+
+  fonts:
+    - family: Huninn
+      fonts:
+        - asset: assets/fonts/jf-openhuninn-2.0.ttf
+          weight: 700

@@ -1,6 +1,8 @@
+// lib/pages/chat_page.dart
+
 import 'package:flutter/material.dart';
+import '../core/theme.dart';
 import '../widgets/input_field.dart';
-import '../widgets/primary_button.dart';
 
 class ChatPage extends StatefulWidget {
   @override
@@ -8,61 +10,113 @@ class ChatPage extends StatefulWidget {
 }
 
 class _ChatPageState extends State<ChatPage> {
-  final List<Map<String, String>> _messages = [];
-  final _inputController = TextEditingController();
+  final List<Map<String, String>> _msgs = [];
+  final _ctrl = TextEditingController();
 
-  void _sendMessage() {
-    final text = _inputController.text;
-    if (text.isEmpty) return;
-    setState(() {
-      _messages.add({'role': 'user', 'text': text});
-      // TODO: 呼叫 API 拿回 AI 回應
-      _messages.add({'role': 'bot', 'text': '這是一個回覆示例。'});
+  void _send() {
+    final txt = _ctrl.text.trim();
+    if (txt.isEmpty) return;
+    setState(() => _msgs.add({'role': 'user', 'text': txt}));
+    _ctrl.clear();
+
+    // TODO: call your LLM API
+    Future.delayed(const Duration(milliseconds: 500), () {
+      setState(() {
+        _msgs.add({'role': 'bot', 'text': '這是一個示範回覆。'});
+      });
     });
-    _inputController.clear();
+  }
+
+  void _onNavTap(int index) {
+    switch (index) {
+      case 0:
+        Navigator.pushReplacementNamed(context, '/home');
+        break;
+      case 1:
+        Navigator.pushReplacementNamed(context, '/counselors');
+        break;
+      case 2:
+        // already on chat
+        break;
+      case 3:
+        Navigator.pushReplacementNamed(context, '/profile');
+        break;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('AI 諮詢聊天')),
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        title: Text('Chat', style: Theme.of(context).textTheme.headlineLarge),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: true,
+      ),
       body: Column(
         children: [
           Expanded(
             child: ListView.builder(
               padding: const EdgeInsets.all(16),
-              itemCount: _messages.length,
+              itemCount: _msgs.length,
               itemBuilder: (_, i) {
-                final msg = _messages[i];
-                final isUser = msg['role'] == 'user';
+                final m = _msgs[i];
+                final isUser = m['role'] == 'user';
                 return Align(
                   alignment:
                       isUser ? Alignment.centerRight : Alignment.centerLeft,
                   child: Container(
-                    margin: EdgeInsets.symmetric(vertical: 4),
-                    padding: EdgeInsets.all(12),
+                    margin: const EdgeInsets.symmetric(vertical: 6),
+                    padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: isUser ? Colors.blue[100] : Colors.grey[200],
-                      borderRadius: BorderRadius.circular(8),
+                      color: isUser ? AppColors.accent : Colors.white,
+                      border:
+                          isUser ? null : Border.all(color: AppColors.accent),
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Text(msg['text']!, style: TextStyle(fontSize: 16)),
+                    child: Text(
+                      m['text']!,
+                      style: TextStyle(
+                        color: isUser ? Colors.white : AppColors.textBody,
+                      ),
+                    ),
                   ),
                 );
               },
             ),
           ),
           Padding(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Row(
               children: [
                 Expanded(
-                    child: InputField(
-                        controller: _inputController, label: '輸入訊息')),
-                SizedBox(width: 8),
-                PrimaryButton(text: '送出', onPressed: _sendMessage),
+                  child: InputField(
+                    controller: _ctrl,
+                    label: '',
+                    prefixIcon: null,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                IconButton(
+                  icon: Icon(Icons.send, color: AppColors.accent),
+                  onPressed: _send,
+                ),
               ],
             ),
           ),
+        ],
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: 2,
+        selectedItemColor: AppColors.accent,
+        unselectedItemColor: AppColors.textBody,
+        onTap: _onNavTap,
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.location_on), label: 'Maps'),
+          BottomNavigationBarItem(icon: Icon(Icons.chat_bubble), label: 'Chat'),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
       ),
     );
