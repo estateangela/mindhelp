@@ -10,12 +10,11 @@ class AppColors {
 
 class AppTheme {
   static final lightTheme = ThemeData(
-    fontFamily: 'Huninn', // pubspec.yaml 註冊的 font family
+    fontFamily: 'Huninn', // pubspec.yaml 注册的 font family
     primaryColor: AppColors.primary,
     scaffoldBackgroundColor: AppColors.background,
 
     textTheme: TextTheme(
-      // 新版 TextTheme 屬性
       headlineLarge: TextStyle(
         fontSize: 36,
         color: AppColors.textHigh,
@@ -35,25 +34,16 @@ class AppTheme {
     ),
 
     elevatedButtonTheme: ElevatedButtonThemeData(
-  style: ElevatedButton.styleFrom(
-    backgroundColor: Color(0xFFFFD590),   // 按钮背景
-    foregroundColor: Colors.white,         // ← 文字／图标  白色
-    shadowColor: Colors.black26,
-    elevation: 4,
-    textStyle: TextStyle(
-      fontFamily: 'Huninn',
-      fontSize: 24,
-      fontWeight: FontWeight.bold,
-      // 这里可以不用再写 color，因为 foregroundColor 已经生效
-    ),
-    padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 10),
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(20),
-      side: BorderSide(color: AppColors.accent, width: 1),
-    ),
-  ),
-),
-
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Color(0xFFFFD590), // 按钮背景
+        foregroundColor: Colors.white, // 文字／图标 白色
+        shadowColor: Colors.black26,
+        elevation: 4,
+        textStyle: TextStyle(
+          fontFamily: 'Huninn',
+          fontSize: 24,
+          fontWeight: FontWeight.bold,
+        ),
         padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 10),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
@@ -73,7 +63,7 @@ class AppTheme {
   );
 }
 
-/// 讓舊版呼叫 .headline1 / .bodyText1 不會報錯
+/// 让旧版调用 .headline1 / .bodyText1 不会报错
 extension CustomTextTheme on TextTheme {
   TextStyle get headline1 => headlineLarge!;
   TextStyle get bodyText1 => bodyMedium!;
