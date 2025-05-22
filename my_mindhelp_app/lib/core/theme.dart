@@ -44,7 +44,7 @@ class AppTheme {
           fontSize: 24,
           fontWeight: FontWeight.bold,
         ),
-        padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 10),
+        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 10),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
           side: BorderSide(color: AppColors.accent, width: 1),
@@ -54,9 +54,9 @@ class AppTheme {
 
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: Colors.white,
+      fillColor: const Color.fromARGB(255, 137, 137, 137),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(10),
         borderSide: BorderSide(color: AppColors.accent),
       ),
     ),
@@ -66,5 +66,5 @@ class AppTheme {
 /// 让旧版调用 .headline1 / .bodyText1 不会报错
 extension CustomTextTheme on TextTheme {
   TextStyle get headline1 => headlineLarge!;
-  TextStyle get bodyText1 => bodyMedium!;
+  TextStyle get bodyText1 => bodyLarge!;
 }

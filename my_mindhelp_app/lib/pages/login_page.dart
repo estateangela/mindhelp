@@ -15,7 +15,7 @@ class LoginPage extends StatelessWidget {
         children: [
           // 背景圓點
           Positioned(
-            top: -60,
+            top: -50,
             left: -60,
             child: _buildCircle(180),
           ),
@@ -33,35 +33,35 @@ class LoginPage extends StatelessWidget {
           SingleChildScrollView(
             child: Padding(
               padding:
-                  const EdgeInsets.symmetric(horizontal: 32, vertical: 100),
+                  const EdgeInsets.symmetric(horizontal: 30, vertical: 100),
               child: Column(
                 children: [
-                  Image.asset('assets/images/logo.png', width: 140),
-                  SizedBox(height: 48),
+                  Image.asset('assets/images/logo.png', width: 180),
+                  SizedBox(height: 10),
                   Align(
                     alignment: Alignment.centerLeft,
                     child: Text('帳號',
                         style: Theme.of(context).textTheme.bodyText1),
                   ),
-                  SizedBox(height: 4),
+                  SizedBox(height: 3),
                   InputField(
                       controller: _accountController,
                       label: '',
                       prefixIcon: Icons.person_outline),
-                  SizedBox(height: 24),
+                  SizedBox(height: 10),
                   Align(
                     alignment: Alignment.centerLeft,
                     child: Text('密碼',
                         style: Theme.of(context).textTheme.bodyText1),
                   ),
-                  SizedBox(height: 4),
+                  SizedBox(height: 3),
                   InputField(
                     controller: _passwordController,
                     label: '',
                     prefixIcon: Icons.lock_outline,
                     obscureText: true,
                   ),
-                  SizedBox(height: 48),
+                  SizedBox(height: 20),
                   Row(
                     children: [
                       Expanded(
@@ -72,7 +72,7 @@ class LoginPage extends StatelessWidget {
                           },
                         ),
                       ),
-                      SizedBox(width: 16),
+                      SizedBox(width: 20),
                       Expanded(
                         child: PrimaryButton(
                           text: '註冊',
@@ -83,7 +83,7 @@ class LoginPage extends StatelessWidget {
                       ),
                     ],
                   ),
-                  SizedBox(height: 24),
+                  SizedBox(height: 20),
                   GestureDetector(
                     onTap: () => Navigator.pushNamed(context, '/forgot_code'),
                     child: Text(

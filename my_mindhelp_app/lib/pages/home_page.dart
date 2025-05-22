@@ -1,3 +1,5 @@
+// lib/pages/home_page.dart
+
 import 'package:flutter/material.dart';
 import '../core/theme.dart';
 import '../widgets/primary_button.dart';
@@ -12,7 +14,7 @@ class HomePage extends StatelessWidget {
         child: Column(
           children: [
             SizedBox(height: 16),
-            Text('mindhelp', style: Theme.of(context).textTheme.headline1),
+            Text('mindhelp', style: Theme.of(context).textTheme.headlineLarge),
             SizedBox(height: 24),
 
             // 四格按鈕
@@ -24,34 +26,45 @@ class HomePage extends StatelessWidget {
                   mainAxisSpacing: 16,
                   crossAxisSpacing: 16,
                   children: [
-                    _buildTile(context, Icons.map, '尋找附近\n醫療資源', () {}),
-                    _buildTile(context, Icons.menu_book, '心理師專欄', () {}),
+                    _buildTile(context, Icons.map, '尋找附近\n醫療資源', () {
+                      Navigator.pushNamed(context, '/maps');
+                    }),
+                    _buildTile(context, Icons.menu_book, '心理師專欄', () {
+                      Navigator.pushNamed(context, '/counselors');
+                    }),
                     _buildTile(context, Icons.chat_bubble_outline, 'AI諮詢', () {
                       Navigator.pushNamed(context, '/chat');
                     }),
-                    _buildTile(context, Icons.favorite_border, '心理測驗', () {}),
+                    _buildTile(context, Icons.favorite_border, '心理測驗', () {
+                      Navigator.pushNamed(context, '/quiz');
+                    }),
                   ],
                 ),
               ),
             ),
 
-            // 下面兩個輸入欄 (依 Figma 顯示)
+            // 底下兩個「功能卡片」，而不是輸入框
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 32),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Column(
                 children: [
-                  InputField(
-                      controller: TextEditingController(),
-                      label: '',
-                      prefixIcon: null),
+                  _buildFunctionCard(
+                    context,
+                    icon: Icons.info_outline,
+                    label: '最新心理健康文章',
+                    onTap: () => Navigator.pushNamed(context, '/articles'),
+                  ),
                   SizedBox(height: 16),
-                  InputField(
-                      controller: TextEditingController(),
-                      label: '',
-                      prefixIcon: null),
+                  _buildFunctionCard(
+                    context,
+                    icon: Icons.event_note_outlined,
+                    label: '預約紀錄查詢',
+                    onTap: () => Navigator.pushNamed(context, '/appointments'),
+                  ),
                 ],
               ),
             ),
+
             SizedBox(height: 24),
           ],
         ),
@@ -88,13 +101,54 @@ class HomePage extends StatelessWidget {
     );
   }
 
+  Widget _buildFunctionCard(BuildContext ctx,
+      {required IconData icon,
+      required String label,
+      required VoidCallback onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 50,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border.all(color: AppColors.accent),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Row(
+          children: [
+            Icon(icon, color: AppColors.accent),
+            SizedBox(width: 12),
+            Text(
+              label,
+              style: Theme.of(ctx).textTheme.bodyMedium,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildBottomNav(BuildContext ctx, int idx) {
     return BottomNavigationBar(
       currentIndex: idx,
       selectedItemColor: AppColors.accent,
       unselectedItemColor: AppColors.textBody,
       onTap: (i) {
-        // TODO: handle navigation
+        switch (i) {
+          case 0:
+            Navigator.pushReplacementNamed(ctx, '/home');
+            break;
+          case 1:
+            Navigator.pushReplacementNamed(ctx, '/maps');
+            break;
+          case 2:
+            Navigator.pushReplacementNamed(ctx, '/chat');
+            break;
+          case 3:
+            Navigator.pushReplacementNamed(ctx, '/profile');
+            break;
+        }
       },
       items: const [
         BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
