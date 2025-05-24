@@ -54,11 +54,20 @@ class AppTheme {
 
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: const Color.fromARGB(255, 137, 137, 137),
-      border: OutlineInputBorder(
+      fillColor: const Color.fromARGB(255, 227, 227, 227),
+      enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
-        borderSide: BorderSide(color: AppColors.accent),
+        borderSide: BorderSide(color: AppColors.accent, width: 1),
       ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: BorderSide(color: AppColors.primary, width: 2),
+      ),
+    ),
+    textSelectionTheme: TextSelectionThemeData(
+      cursorColor: AppColors.primary,
+      selectionColor: AppColors.accent.withOpacity(0.3),
+      selectionHandleColor: AppColors.primary,
     ),
   );
 }

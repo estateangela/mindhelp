@@ -2,25 +2,33 @@
 
 import 'package:flutter/material.dart';
 import '../core/theme.dart';
+import '../widgets/custom_app_bar.dart';
 import '../widgets/primary_button.dart';
-import '../widgets/input_field.dart';
 
 class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
+
+      // 顶部改成共用的带 logo 的 AppBar
+      appBar: const CustomAppBar(
+        titleWidget: Image(
+          image: AssetImage('assets/images/mindhelp.png'),
+          width: 200,
+          fit: BoxFit.contain,
+        ),
+      ),
+
       body: SafeArea(
         child: Column(
           children: [
-            SizedBox(height: 16),
-            Text('mindhelp', style: Theme.of(context).textTheme.headlineLarge),
-            SizedBox(height: 24),
+            const SizedBox(height: 24),
 
             // 四格按鈕
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 10),
                 child: GridView.count(
                   crossAxisCount: 2,
                   mainAxisSpacing: 16,
@@ -43,7 +51,7 @@ class HomePage extends StatelessWidget {
               ),
             ),
 
-            // 底下兩個「功能卡片」，而不是輸入框
+            // 底下两行功能卡片
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Column(
@@ -54,7 +62,7 @@ class HomePage extends StatelessWidget {
                     label: '最新心理健康文章',
                     onTap: () => Navigator.pushNamed(context, '/articles'),
                   ),
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
                   _buildFunctionCard(
                     context,
                     icon: Icons.event_note_outlined,
@@ -65,10 +73,11 @@ class HomePage extends StatelessWidget {
               ),
             ),
 
-            SizedBox(height: 24),
+            const SizedBox(height: 24),
           ],
         ),
       ),
+
       bottomNavigationBar: _buildBottomNav(context, 0),
     );
   }
@@ -87,12 +96,12 @@ class HomePage extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(icon, size: 36, color: Colors.white),
-              SizedBox(height: 8),
+              const SizedBox(height: 8),
               Text(
                 label,
                 textAlign: TextAlign.center,
-                style:
-                    TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                    color: Colors.white, fontWeight: FontWeight.bold),
               ),
             ],
           ),
@@ -118,11 +127,8 @@ class HomePage extends StatelessWidget {
         child: Row(
           children: [
             Icon(icon, color: AppColors.accent),
-            SizedBox(width: 12),
-            Text(
-              label,
-              style: Theme.of(ctx).textTheme.bodyMedium,
-            ),
+            const SizedBox(width: 12),
+            Text(label, style: Theme.of(ctx).textTheme.bodyMedium),
           ],
         ),
       ),
