@@ -48,7 +48,7 @@ class LoginPage extends StatelessWidget {
                       controller: _accountController,
                       label: '',
                       prefixIcon: Icons.person_outline),
-                  SizedBox(height: 10),
+                  SizedBox(height: 15),
                   Align(
                     alignment: Alignment.centerLeft,
                     child: Text('密碼',
@@ -61,7 +61,7 @@ class LoginPage extends StatelessWidget {
                     prefixIcon: Icons.lock_outline,
                     obscureText: true,
                   ),
-                  SizedBox(height: 20),
+                  SizedBox(height: 30),
                   Row(
                     children: [
                       Expanded(
@@ -72,7 +72,7 @@ class LoginPage extends StatelessWidget {
                           },
                         ),
                       ),
-                      SizedBox(width: 20),
+                      SizedBox(width: 30),
                       Expanded(
                         child: PrimaryButton(
                           text: '註冊',

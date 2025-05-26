@@ -1,124 +1,62 @@
+// lib/pages/maps_page.dart
+
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import '../core/theme.dart';
+import '../widgets/custom_app_bar.dart';
 
-void main() {
-  runApp(FlutterApp());
+class MapsPage extends StatefulWidget {
+  @override
+  _MapsPageState createState() => _MapsPageState();
 }
 
-class FlutterApp extends StatelessWidget {
-  final ValueNotifier<bool> _dark = ValueNotifier<bool>(true);
-  final ValueNotifier<double> _widthFactor = ValueNotifier<double>(1.0);
+class _MapsPageState extends State<MapsPage> {
+  late GoogleMapController _controller;
+
+  // 初始鏡頭位置：雙北中心座標 (可自行調整)
+  static const _initialPosition = CameraPosition(
+    target: LatLng(25.0330, 121.5654), // 台北 101 座標
+    zoom: 12,
+  );
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-        home: ValueListenableBuilder<bool>(
-            valueListenable: _dark,
-            builder: (context, color, child) {
-              return ValueListenableBuilder<double>(
-                valueListenable: _widthFactor,
-                builder: (context, factor, child) {
-                  return Scaffold(
-                      backgroundColor:
-                          _dark.value ? Colors.black : Colors.white,
-                      appBar: AppBar(
-                        actions: [
-                          Switch(
-                            value: _dark.value,
-                            onChanged: (value) {
-                              _dark.value = value;
-                            },
-                          ),
-                          DropdownButton<double>(
-                            value: _widthFactor.value,
-                            onChanged: (value) {
-                              _widthFactor.value = value!;
-                            },
-                            items: [
-                              DropdownMenuItem<double>(
-                                value: 0.5,
-                                child: Text('Size: 50%'),
-                              ),
-                              DropdownMenuItem<double>(
-                                value: 0.75,
-                                child: Text('Size: 75%'),
-                              ),
-                              DropdownMenuItem<double>(
-                                value: 1.0,
-                                child: Text('Size: 100%'),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                      body: Center(
-                          child: Container(
-                        width: MediaQuery.of(context).size.width *
-                            _widthFactor.value,
-                        child: Column(
-                          mainAxisSize: MainAxisSize.max,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Group3(),
-                          ],
-                        ),
-                      )));
-                },
-              );
-            }));
-  }
-}
-
-class Group3 extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Container(
-          width: 106,
-          height: 57,
-          child: Stack(
-            children: [
-              Positioned(
-                left: 0,
-                top: 0,
-                child: Container(
-                  width: 106,
-                  height: 57,
-                  decoration: ShapeDecoration(
-                    color: Color(0xFFFFD590),
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(width: 1, color: Color(0xFFE2AD56)),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    shadows: [
-                      BoxShadow(
-                        color: Color(0x19000000),
-                        blurRadius: 4,
-                        offset: Offset(2, 4),
-                        spreadRadius: 0,
-                      )
-                    ],
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 26,
-                top: 17,
-                child: Text(
-                  '登入',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 24,
-                    fontFamily: 'jf-openhuninn-2.0',
-                    height: 0,
-                    letterSpacing: 4.80,
-                  ),
-                ),
-              ),
-            ],
-          ),
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: const CustomAppBar(
+        titleWidget: Text(
+          '地圖',
+          style: TextStyle(fontSize: 24, color: AppColors.textHigh),
         ),
-      ],
+        showBackButton: true,
+      ),
+      body: GoogleMap(
+        initialCameraPosition: _initialPosition,
+        myLocationEnabled: true,
+        myLocationButtonEnabled: true,
+        onMapCreated: (controller) {
+          _controller = controller;
+        },
+        markers: {
+          Marker(
+            markerId: MarkerId('center'),
+            position: LatLng(25.0330, 121.5654),
+            infoWindow: InfoWindow(title: '台北 101'),
+          ),
+        },
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: 1,
+        selectedItemColor: AppColors.accent,
+        unselectedItemColor: AppColors.textBody,
+        onTap: (idx) {/* 跳轉邏輯 */},
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.location_on), label: 'Maps'),
+          BottomNavigationBarItem(icon: Icon(Icons.chat_bubble), label: 'Chat'),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+        ],
+      ),
     );
   }
 }

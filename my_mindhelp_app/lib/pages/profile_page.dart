@@ -2,47 +2,25 @@
 
 import 'package:flutter/material.dart';
 import '../core/theme.dart';
+import '../widgets/custom_app_bar.dart';
 import '../widgets/primary_button.dart';
 
 class ProfilePage extends StatelessWidget {
-  void _onNavTap(BuildContext context, int index) {
-    switch (index) {
-      case 0:
-        Navigator.pushReplacementNamed(context, '/home');
-        break;
-      case 1:
-        Navigator.pushReplacementNamed(context, '/counselors');
-        break;
-      case 2:
-        Navigator.pushReplacementNamed(context, '/chat');
-        break;
-      case 3:
-        // already on profile
-        break;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        leading: IconButton(icon: Icon(Icons.settings), onPressed: () {}),
-        title: Text(
-          'mindhelp',
-          style: Theme.of(context).textTheme.headlineLarge,
+      appBar: const CustomAppBar(
+        titleWidget: Text(
+          '我的資料',
+          style: TextStyle(fontSize: 24, color: AppColors.textHigh),
         ),
-        centerTitle: true,
-        actions: [
-          IconButton(icon: Icon(Icons.notifications), onPressed: () {}),
-        ],
-        backgroundColor: Colors.transparent,
-        elevation: 0,
       ),
       body: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         child: Column(
           children: [
+            // 使用者資訊卡片
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -51,44 +29,55 @@ class ProfilePage extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  CircleAvatar(
-                    radius: 28,
-                    backgroundColor: AppColors.accent,
-                  ),
-                  SizedBox(width: 16),
+                  CircleAvatar(radius: 28, backgroundColor: AppColors.accent),
+                  const SizedBox(width: 16),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'a123456789@gmail.com',
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                      SizedBox(height: 4),
-                      Text(
-                        '王小美',
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
+                      Text('a123456789@gmail.com',
+                          style: Theme.of(context).textTheme.bodyMedium),
+                      const SizedBox(height: 4),
+                      Text('王小美',
+                          style: Theme.of(context).textTheme.bodyMedium),
                     ],
-                  )
+                  ),
                 ],
               ),
             ),
-            SizedBox(height: 32),
+
+            const SizedBox(height: 32),
             PrimaryButton(text: '修改信箱', onPressed: () {}),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             PrimaryButton(text: '修改暱稱', onPressed: () {}),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             PrimaryButton(text: '修改密碼', onPressed: () {}),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             PrimaryButton(text: '查詢預約紀錄', onPressed: () {}),
+
+            const Spacer(),
           ],
         ),
       ),
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 3,
+        currentIndex: 3, // Profile 在 index=3
         selectedItemColor: AppColors.accent,
         unselectedItemColor: AppColors.textBody,
-        onTap: (index) => _onNavTap(context, index),
+        onTap: (i) {
+          switch (i) {
+            case 0:
+              Navigator.pushReplacementNamed(context, '/home');
+              break;
+            case 1:
+              Navigator.pushReplacementNamed(context, '/maps');
+              break;
+            case 2:
+              Navigator.pushReplacementNamed(context, '/chat');
+              break;
+            case 3:
+              // already here
+              break;
+          }
+        },
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.location_on), label: 'Maps'),
