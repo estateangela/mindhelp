@@ -31,6 +31,8 @@ dependencies:
   flutter:
     sdk: flutter
   google_maps_flutter: ^2.2.0
+  geolocator: ^9.0.2     # 用來取使用者當前經緯度
+  http: ^0.13.5
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.

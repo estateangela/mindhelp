@@ -28,11 +28,11 @@ class HomePage extends StatelessWidget {
             // 四格按鈕
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
                 child: GridView.count(
                   crossAxisCount: 2,
-                  mainAxisSpacing: 16,
-                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 10,
+                  crossAxisSpacing: 10,
                   children: [
                     _buildTile(context, Icons.map, '尋找附近\n醫療資源', () {
                       Navigator.pushNamed(context, '/maps');
@@ -53,7 +53,7 @@ class HomePage extends StatelessWidget {
 
             // 底下两行功能卡片
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
               child: Column(
                 children: [
                   _buildFunctionCard(
@@ -62,7 +62,7 @@ class HomePage extends StatelessWidget {
                     label: '最新心理健康文章',
                     onTap: () => Navigator.pushNamed(context, '/articles'),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 8),
                   _buildFunctionCard(
                     context,
                     icon: Icons.event_note_outlined,
@@ -73,7 +73,7 @@ class HomePage extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
           ],
         ),
       ),
