@@ -29,8 +29,8 @@ class _MapsPageState extends State<MapsPage> {
 
   Future<void> _setupMap() async {
     try {
-      // 检查位置权限
-      LocationPermission permission = await Geolocator.checkPermission();
+      // 1. 检查并请求定位权限
+      var permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied) {
@@ -42,24 +42,26 @@ class _MapsPageState extends State<MapsPage> {
         }
       }
 
-      // 获取用户位置
-      Position pos = await Geolocator.getCurrentPosition(
+      // 2. 获取用户当前位置
+      final pos = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
       );
-
       final userLatLng = LatLng(pos.latitude, pos.longitude);
 
+      // 3. 更新摄像头和用户标记
       setState(() {
         _initialCamera = CameraPosition(target: userLatLng, zoom: 14);
         _markers.add(Marker(
           markerId: MarkerId('user'),
           position: userLatLng,
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
+          icon: BitmapDescriptor.defaultMarkerWithHue(
+            BitmapDescriptor.hueAzure,
+          ),
           infoWindow: InfoWindow(title: '您的位置'),
         ));
       });
 
-      // 获取附近资源
+      // 4. 拉取后端资源并加标记
       await _fetchNearbyResources(pos.latitude, pos.longitude);
     } catch (e) {
       setState(() {
@@ -71,8 +73,8 @@ class _MapsPageState extends State<MapsPage> {
 
   Future<void> _fetchNearbyResources(double lat, double lng) async {
     try {
-      final uri = Uri.parse(
-          'https://your-backend.com/api/resources?lat=$lat&lng=$lng');
+      final uri =
+          Uri.parse('https://your-backend.com/api/resources?lat=$lat&lng=$lng');
       final resp = await http.get(uri);
 
       if (resp.statusCode == 200) {
@@ -110,25 +112,26 @@ class _MapsPageState extends State<MapsPage> {
       backgroundColor: AppColors.background,
       appBar: const CustomAppBar(
         showBackButton: true,
-        titleWidget: Image(
-          image: AssetImage('assets/images/mindhelp.png'),
-          width: 200,
-          fit: BoxFit.contain,
+        titleWidget: Text(
+          '地圖',
+          style: TextStyle(fontSize: 24, color: AppColors.textHigh),
         ),
       ),
       body: _isLoading
-          ? Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator())
           : _errorMessage != null
               ? Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(_errorMessage!,
-                          style: TextStyle(color: AppColors.error)),
-                      SizedBox(height: 16),
+                      Text(
+                        _errorMessage!,
+                        style: const TextStyle(color: Colors.red),
+                      ),
+                      const SizedBox(height: 16),
                       ElevatedButton(
                         onPressed: _setupMap,
-                        child: Text('重试'),
+                        child: const Text('重試'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.accent,
                         ),
@@ -136,14 +139,21 @@ class _MapsPageState extends State<MapsPage> {
                     ],
                   ),
                 )
-              : GoogleMap(
-                  initialCameraPosition: _initialCamera,
-                  myLocationEnabled: true,
-                  myLocationButtonEnabled: true,
-                  onMapCreated: (ctrl) => _mapCtrl = ctrl,
-                  markers: _markers,
-                  zoomControlsEnabled: true,
-                  mapToolbarEnabled: true,
+              : Column(
+                  children: [
+                    // 地图区域
+                    Expanded(
+                      child: GoogleMap(
+                        initialCameraPosition: _initialCamera,
+                        myLocationEnabled: true,
+                        myLocationButtonEnabled: true,
+                        onMapCreated: (ctrl) => _mapCtrl = ctrl,
+                        markers: _markers,
+                        zoomControlsEnabled: true,
+                        mapToolbarEnabled: true,
+                      ),
+                    ),
+                  ],
                 ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: 1,
@@ -155,7 +165,7 @@ class _MapsPageState extends State<MapsPage> {
               Navigator.pushReplacementNamed(context, '/home');
               break;
             case 1:
-              break;
+              break; // 当前页
             case 2:
               Navigator.pushReplacementNamed(context, '/chat');
               break;
