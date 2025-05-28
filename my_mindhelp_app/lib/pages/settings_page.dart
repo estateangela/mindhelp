@@ -10,7 +10,6 @@ class SettingsPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
 
-      // 自定义 AppBar：左返回／右通知
       appBar: const CustomAppBar(
         showBackButton: true,
         titleWidget: Text(
@@ -19,50 +18,55 @@ class SettingsPage extends StatelessWidget {
         ),
       ),
 
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-        child: Column(
-          children: [
-            _buildOptionCard(
-              context,
-              label: '推播通知設定',
-              onTap: () => Navigator.pushNamed(context, '/notify'),
+      // 整体居中，并限制最大宽度
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 400),
+            child: Column(
+              children: [
+                _buildOptionCard(
+                  context,
+                  label: '推播通知設定',
+                  onTap: () => Navigator.pushNamed(context, '/notify'),
+                ),
+                const SizedBox(height: 16),
+                _buildOptionCard(
+                  context,
+                  label: '常見問題',
+                  onTap: () => Navigator.pushNamed(context, '/faq'),
+                ),
+                const SizedBox(height: 16),
+                _buildOptionCard(
+                  context,
+                  label: '顯示設定',
+                  onTap: () =>
+                      Navigator.pushNamed(context, '/display_settings'),
+                ),
+                const SizedBox(height: 16),
+                _buildOptionCard(
+                  context,
+                  label: '關於我們',
+                  onTap: () => Navigator.pushNamed(context, '/about'),
+                ),
+                const SizedBox(height: 16),
+                _buildOptionCard(
+                  context,
+                  label: '登出',
+                  onTap: () => Navigator.pushReplacementNamed(
+                    context,
+                    '/login',
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
-            _buildOptionCard(
-              context,
-              label: '常見問題',
-              onTap: () => Navigator.pushNamed(context, '/faq'),
-            ),
-            const SizedBox(height: 16),
-            _buildOptionCard(
-              context,
-              label: '顯示設定',
-              onTap: () => Navigator.pushNamed(context, '/display_settings'),
-            ),
-            const SizedBox(height: 16),
-            _buildOptionCard(
-              context,
-              label: '關於我們',
-              onTap: () => Navigator.pushNamed(context, '/about'),
-            ),
-            const SizedBox(height: 16),
-
-            // 新增「登出」按鈕
-            _buildOptionCard(
-              context,
-              label: '登出',
-              onTap: () {
-                // TODO: 在這裡執行登出邏輯（如清除 Token），然後返回登入頁
-                Navigator.pushReplacementNamed(context, '/login');
-              },
-            ),
-          ],
+          ),
         ),
       ),
 
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 3, // Profile 的位置
+        currentIndex: 3,
         selectedItemColor: AppColors.accent,
         unselectedItemColor: AppColors.textBody,
         onTap: (idx) {
@@ -83,8 +87,10 @@ class SettingsPage extends StatelessWidget {
         },
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.location_on), label: 'Maps'),
-          BottomNavigationBarItem(icon: Icon(Icons.chat_bubble), label: 'Chat'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.location_on), label: 'Maps'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.chat_bubble), label: 'Chat'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
       ),
@@ -97,7 +103,7 @@ class SettingsPage extends StatelessWidget {
       onTap: onTap,
       child: Container(
         height: 50,
-        width: double.infinity,
+        width: double.infinity, // 会被 ConstrainedBox 统一限制最大宽度
         alignment: Alignment.center,
         decoration: BoxDecoration(
           color: Colors.white,
