@@ -16,48 +16,82 @@ class ProfilePage extends StatelessWidget {
           style: TextStyle(fontSize: 24, color: AppColors.textHigh),
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-        child: Column(
-          children: [
-            // 使用者資訊卡片
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                children: [
-                  CircleAvatar(radius: 28, backgroundColor: AppColors.accent),
-                  const SizedBox(width: 16),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+
+      // 整体居中并限制最大宽度
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 400),
+            child: Column(
+              children: [
+                // 使用者資訊卡片
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
                     children: [
-                      Text('a123456789@gmail.com',
-                          style: Theme.of(context).textTheme.bodyMedium),
-                      const SizedBox(height: 4),
-                      Text('王小美',
-                          style: Theme.of(context).textTheme.bodyMedium),
+                      CircleAvatar(
+                        radius: 28,
+                        backgroundColor: AppColors.accent,
+                      ),
+                      const SizedBox(width: 16),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'a123456789@gmail.com',
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                          const SizedBox(height: 20),
+                          Text(
+                            '王小美',
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                        ],
+                      ),
                     ],
                   ),
-                ],
-              ),
+                ),
+
+                const SizedBox(height: 100),
+
+                // 所有按钮同宽
+                PrimaryButton(
+                  text: '修改信箱',
+                  onPressed: () {},
+                  width: double.infinity, // 扩展到 maxWidth
+                ),
+                const SizedBox(height: 24),
+                PrimaryButton(
+                  text: '修改暱稱',
+                  onPressed: () {},
+                  width: double.infinity,
+                ),
+                const SizedBox(height: 24),
+                PrimaryButton(
+                  text: '修改密碼',
+                  onPressed: () {},
+                  width: double.infinity,
+                ),
+                const SizedBox(height: 24),
+                PrimaryButton(
+                  text: '查詢預約紀錄',
+                  onPressed: () {},
+                  width: double.infinity,
+                ),
+
+                const Spacer(),
+              ],
             ),
-
-            const SizedBox(height: 32),
-            PrimaryButton(text: '修改信箱', onPressed: () {}),
-            const SizedBox(height: 16),
-            PrimaryButton(text: '修改暱稱', onPressed: () {}),
-            const SizedBox(height: 16),
-            PrimaryButton(text: '修改密碼', onPressed: () {}),
-            const SizedBox(height: 16),
-            PrimaryButton(text: '查詢預約紀錄', onPressed: () {}),
-
-            const Spacer(),
-          ],
+          ),
         ),
       ),
+
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: 3, // Profile 在 index=3
         selectedItemColor: AppColors.accent,
