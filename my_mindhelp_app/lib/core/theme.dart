@@ -6,6 +6,7 @@ class AppColors {
   static const background = Color(0xFFFFF6E7);
   static const textHigh = Color(0xFF636363);
   static const textBody = Color(0xFF9C9C9C);
+  static const error = Color(0xFFE53935);
 }
 
 class AppTheme {

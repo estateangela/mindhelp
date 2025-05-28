@@ -18,6 +18,8 @@ class _MapsPageState extends State<MapsPage> {
   CameraPosition _initialCamera =
       CameraPosition(target: LatLng(25.0330, 121.5654), zoom: 12);
   final Set<Marker> _markers = {};
+  bool _isLoading = true;
+  String? _errorMessage;
 
   @override
   void initState() {
@@ -26,52 +28,79 @@ class _MapsPageState extends State<MapsPage> {
   }
 
   Future<void> _setupMap() async {
-    // 1. 取得使用者位置
-    Position pos = await Geolocator.getCurrentPosition(
-      desiredAccuracy: LocationAccuracy.high,
-    );
+    try {
+      // 检查位置权限
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          setState(() {
+            _errorMessage = '需要位置权限才能使用地图功能';
+            _isLoading = false;
+          });
+          return;
+        }
+      }
 
-    final userLatLng = LatLng(pos.latitude, pos.longitude);
+      // 获取用户位置
+      Position pos = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
 
-    // 2. 更新鏡頭至使用者位置
-    setState(() {
-      _initialCamera = CameraPosition(target: userLatLng, zoom: 14);
-      // 加上一個標記表示使用者
-      _markers.add(Marker(
-        markerId: MarkerId('user'),
-        position: userLatLng,
-        icon: BitmapDescriptor.defaultMarkerWithHue(
-            BitmapDescriptor.hueAzure),
-        infoWindow: InfoWindow(title: '您的位置'),
-      ));
-    });
+      final userLatLng = LatLng(pos.latitude, pos.longitude);
 
-    // 3. 向後端請求資料庫提供的附近醫療資源
-    await _fetchNearbyResources(pos.latitude, pos.longitude);
+      setState(() {
+        _initialCamera = CameraPosition(target: userLatLng, zoom: 14);
+        _markers.add(Marker(
+          markerId: MarkerId('user'),
+          position: userLatLng,
+          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
+          infoWindow: InfoWindow(title: '您的位置'),
+        ));
+      });
+
+      // 获取附近资源
+      await _fetchNearbyResources(pos.latitude, pos.longitude);
+    } catch (e) {
+      setState(() {
+        _errorMessage = '获取位置信息失败: $e';
+        _isLoading = false;
+      });
+    }
   }
 
   Future<void> _fetchNearbyResources(double lat, double lng) async {
-    // 假設你的 API 長這樣： /api/resources?lat=...&lng=...
-    final uri = Uri.parse(
-        'https://your-backend.com/api/resources?lat=$lat&lng=$lng');
-    final resp = await http.get(uri);
+    try {
+      final uri = Uri.parse(
+          'https://your-backend.com/api/resources?lat=$lat&lng=$lng');
+      final resp = await http.get(uri);
 
-    if (resp.statusCode == 200) {
-      final List data = jsonDecode(resp.body);
-      // 假設每筆資料長 { "id":1, "name":"XX診所", "latitude":25.04, "longitude":121.56 }
+      if (resp.statusCode == 200) {
+        final List data = jsonDecode(resp.body);
+        setState(() {
+          for (var item in data) {
+            _markers.add(Marker(
+              markerId: MarkerId(item['id'].toString()),
+              position: LatLng(item['latitude'], item['longitude']),
+              infoWindow: InfoWindow(
+                title: item['name'],
+                snippet: item['address'] ?? '',
+              ),
+            ));
+          }
+          _isLoading = false;
+        });
+      } else {
+        setState(() {
+          _errorMessage = '获取资源信息失败: ${resp.statusCode}';
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
       setState(() {
-        for (var item in data) {
-          _markers.add(Marker(
-            markerId: MarkerId(item['id'].toString()),
-            position:
-                LatLng(item['latitude'], item['longitude']),
-            infoWindow: InfoWindow(title: item['name']),
-          ));
-        }
+        _errorMessage = '获取资源信息失败: $e';
+        _isLoading = false;
       });
-    } else {
-      // 處理請求錯誤
-      debugPrint('Fetch resources failed: ${resp.statusCode}');
     }
   }
 
@@ -87,15 +116,35 @@ class _MapsPageState extends State<MapsPage> {
           fit: BoxFit.contain,
         ),
       ),
-
-      body: GoogleMap(
-        initialCameraPosition: _initialCamera,
-        myLocationEnabled: true,
-        myLocationButtonEnabled: true,
-        onMapCreated: (ctrl) => _mapCtrl = ctrl,
-        markers: _markers,
-      ),
-
+      body: _isLoading
+          ? Center(child: CircularProgressIndicator())
+          : _errorMessage != null
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(_errorMessage!,
+                          style: TextStyle(color: AppColors.error)),
+                      SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: _setupMap,
+                        child: Text('重试'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.accent,
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              : GoogleMap(
+                  initialCameraPosition: _initialCamera,
+                  myLocationEnabled: true,
+                  myLocationButtonEnabled: true,
+                  onMapCreated: (ctrl) => _mapCtrl = ctrl,
+                  markers: _markers,
+                  zoomControlsEnabled: true,
+                  mapToolbarEnabled: true,
+                ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: 1,
         selectedItemColor: AppColors.accent,
@@ -116,14 +165,10 @@ class _MapsPageState extends State<MapsPage> {
           }
         },
         items: const [
-          BottomNavigationBarItem(
-              icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.location_on), label: 'Maps'),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.chat_bubble), label: 'Chat'),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.person), label: 'Profile'),
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.location_on), label: 'Maps'),
+          BottomNavigationBarItem(icon: Icon(Icons.chat_bubble), label: 'Chat'),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
       ),
     );
