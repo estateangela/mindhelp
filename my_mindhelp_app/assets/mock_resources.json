@@ -1,0 +1,17 @@
+[
+    {
+      "id": 1,
+      "latitude": 25.0375,
+      "longitude": 121.5637,
+      "name": "A 心理診所",
+      "address": "信義區"
+    },
+    {
+      "id": 2,
+      "latitude": 25.0329,
+      "longitude": 121.5654,
+      "name": "B 心理中心",
+      "address": "大安區"
+    }
+  ]
+  

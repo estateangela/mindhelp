@@ -33,7 +33,7 @@ class _ChatPageState extends State<ChatPage> {
         Navigator.pushReplacementNamed(context, '/home');
         break;
       case 1:
-        Navigator.pushReplacementNamed(context, '/counselors');
+        Navigator.pushReplacementNamed(context, '/maps');
         break;
       case 2:
         // already on chat
