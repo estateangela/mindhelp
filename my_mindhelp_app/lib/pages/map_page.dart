@@ -17,7 +17,7 @@ class MapsPage extends StatefulWidget {
 class _MapsPageState extends State<MapsPage> {
   late GoogleMapController _mapCtrl;
   CameraPosition _initialCamera =
-      CameraPosition(target: LatLng(25.0330, 121.5654), zoom: 12);
+      const CameraPosition(target: LatLng(25.0330, 121.5654), zoom: 12);
   final Set<Marker> _markers = {};
   bool _isLoading = true;
   String? _errorMessage;
@@ -29,35 +29,40 @@ class _MapsPageState extends State<MapsPage> {
   }
 
   Future<void> _setupMap() async {
+    double lat = 25.0330, lng = 121.5654;
+
     try {
-      // 请求权限并定位
+      // 请求权限并取得使用者位置
       var perm = await Geolocator.checkPermission();
       if (perm == LocationPermission.denied) {
         perm = await Geolocator.requestPermission();
         if (perm == LocationPermission.denied) {
-          throw '需要位置权限';
+          throw '用户拒绝位置权限';
         }
       }
       final pos = await Geolocator.getCurrentPosition();
-      final userLatLng = LatLng(pos.latitude, pos.longitude);
+      lat = pos.latitude;
+      lng = pos.longitude;
 
       setState(() {
-        _initialCamera = CameraPosition(target: userLatLng, zoom: 14);
+        _initialCamera = CameraPosition(target: LatLng(lat, lng), zoom: 14);
+        // 先把用户标记加入
         _markers.add(Marker(
-          markerId: MarkerId('user'),
-          position: userLatLng,
+          markerId: const MarkerId('user'),
+          position: LatLng(lat, lng),
           icon:
               BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
-          infoWindow: InfoWindow(title: '您的位置'),
+          infoWindow: const InfoWindow(title: '您的位置'),
         ));
       });
     } catch (e) {
-      // 定位失败，但我们依然加载 mock
+      // 定位失败，记录错误但继续拉资源
       debugPrint('📍 定位失败: $e');
+      _errorMessage = e.toString();
     }
 
-    // 不管定位成功与否，都去加载资源
-    await _fetchNearbyResources(0, 0);
+    // 使用定位结果（或默认中心）去拉附近资源
+    await _fetchNearbyResources(lat, lng);
   }
 
   Future<void> _fetchNearbyResources(double lat, double lng) async {
@@ -71,25 +76,31 @@ class _MapsPageState extends State<MapsPage> {
       if (resp.statusCode == 200) {
         data = jsonDecode(resp.body) as List;
       } else {
-        throw 'HTTP ${resp.statusCode}';
+        throw 'HTTP 错误 ${resp.statusCode}';
       }
     } catch (e) {
-      debugPrint('❗️ 拉取线上资源失败，使用 Mock: $e');
+      debugPrint('❗️ 拉取线上资源失败: $e ，改用 Mock');
+      // 从 assets/mock_resources.json 载入 mock 数据
       final jsonStr = await rootBundle.loadString('assets/mock_resources.json');
       data = jsonDecode(jsonStr) as List;
     }
 
     setState(() {
-      _markers
-        ..clear()
-        ..addAll(data.map((item) => Marker(
-              markerId: MarkerId(item['id'].toString()),
-              position: LatLng(item['latitude'], item['longitude']),
-              infoWindow: InfoWindow(
-                title: item['name'],
-                snippet: item['address'] ?? '',
-              ),
-            )));
+      // 只 clear 资源标记，保留用户标记
+      _markers.removeWhere((m) => m.markerId.value != 'user');
+
+      for (var item in data) {
+        _markers.add(Marker(
+          markerId: MarkerId(item['id'].toString()),
+          position:
+              LatLng(item['latitude'] as double, item['longitude'] as double),
+          infoWindow: InfoWindow(
+            title: item['name'] as String,
+            snippet: item['address'] as String? ?? '',
+          ),
+        ));
+      }
+
       _isLoading = false;
     });
   }
@@ -98,23 +109,37 @@ class _MapsPageState extends State<MapsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
+
+      // 顶部统一 Logo + 返回 + 通知
       appBar: const CustomAppBar(
         showBackButton: true,
-        titleWidget: Text(
-          '地圖',
-          style: TextStyle(fontSize: 24, color: AppColors.textHigh),
+        titleWidget: Image(
+          image: AssetImage('assets/images/mindhelp.png'),
+          width: 200,
+          fit: BoxFit.contain,
         ),
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : GoogleMap(
+
+      body: Stack(
+        children: [
+          // 加载中或错误提示
+          if (_isLoading)
+            const Center(child: CircularProgressIndicator())
+          else if (_errorMessage != null)
+            Center(child: Text(_errorMessage!, style: TextStyle(color: Colors.red))),
+          // 地图
+          if (!_isLoading && _errorMessage == null)
+            GoogleMap(
               initialCameraPosition: _initialCamera,
               myLocationEnabled: true,
               onMapCreated: (c) => _mapCtrl = c,
               markers: _markers,
             ),
+        ],
+      ),
+
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 1,
+        currentIndex: 1, // Maps 在索引 1
         selectedItemColor: AppColors.accent,
         unselectedItemColor: AppColors.textBody,
         onTap: (i) {
@@ -123,6 +148,7 @@ class _MapsPageState extends State<MapsPage> {
               Navigator.pushReplacementNamed(context, '/home');
               break;
             case 1:
+              // already here
               break;
             case 2:
               Navigator.pushReplacementNamed(context, '/chat');
@@ -134,8 +160,10 @@ class _MapsPageState extends State<MapsPage> {
         },
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.location_on), label: 'Maps'),
-          BottomNavigationBarItem(icon: Icon(Icons.chat_bubble), label: 'Chat'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.location_on), label: 'Maps'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.chat_bubble), label: 'Chat'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
       ),

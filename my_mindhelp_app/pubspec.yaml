@@ -30,7 +30,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  google_maps_flutter: ^2.2.0
+  google_maps_flutter: ^2.3.0
   geolocator: ^9.0.2     # 用來取使用者當前經緯度
   http: ^0.13.5
 
