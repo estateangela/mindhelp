@@ -47,6 +47,13 @@
 	<true/>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>App 需要使用您的位置來顯示周邊地點</string>
-
+	<key>io.flutter.embedded_views_preview</key>
+	<true/>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>App 需要使用您的位置來顯示周邊地點</string>
+	<key>io.flutter.embedded_views_preview</key>
+	<true/>
+	<key>GoogleMapsApiKey</key>
+	<string>AIzaSyBXHc-rjUBntG7oppaYSpY322EE3q-T4ng</string>
 </dict>
 </plist>
