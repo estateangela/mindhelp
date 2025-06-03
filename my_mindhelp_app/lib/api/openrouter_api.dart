@@ -14,7 +14,7 @@ class OpenRouterApi {
   static Future<String> sendPrompt({
     required String prompt,
     double temperature = 0.7,
-    int maxTokens = 300,
+    int maxTokens = 512,
   }) async {
     final uri = Uri.parse(_baseUrl);
     final headers = {
