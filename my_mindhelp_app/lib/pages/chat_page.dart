@@ -1,12 +1,10 @@
 // lib/pages/chat_page.dart
 
 import 'package:flutter/material.dart';
-import 'package:flutter_markdown/flutter_markdown.dart';
 import '../core/theme.dart';
-import '../widgets/input_field.dart';
-import '../widgets/custom_app_bar.dart';
-import '../api/openrouter_api.dart';
+import '../models/chat_message.dart';
 import '../utils/db_helper.dart';
+import '../widgets/input_field.dart';
 
 class ChatPage extends StatefulWidget {
   const ChatPage({Key? key}) : super(key: key);
@@ -16,11 +14,9 @@ class ChatPage extends StatefulWidget {
 }
 
 class _ChatPageState extends State<ChatPage> {
-  final List<Map<String, String>> _msgs = [];
   final TextEditingController _ctrl = TextEditingController();
-  final ScrollController _scrollCtrl = ScrollController();
-  bool _isWaiting = false;
-  bool _hasNewMessages = false;
+  List<ChatMessage> _msgs = [];
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -28,235 +24,145 @@ class _ChatPageState extends State<ChatPage> {
     _loadHistory();
   }
 
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    _scrollCtrl.dispose();
-    super.dispose();
-  }
-
   Future<void> _loadHistory() async {
     final hist = await DBHelper().getAllMessages();
     setState(() {
-      _msgs.clear();
-      for (final msg in hist) {
-        _msgs.add({'role': msg.role, 'text': msg.content});
-      }
-    });
-    _scrollToBottom();
-  }
-
-  void _scrollToBottom() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollCtrl.hasClients) {
-        _scrollCtrl.jumpTo(_scrollCtrl.position.maxScrollExtent);
-      }
+      _msgs = hist;
+      _isLoading = false;
     });
   }
 
-  Future<void> _saveAllPending() async {
-    // 目前每次執行 _send() 都會立刻 insertMessage，
-    // 所以這裡直接重置旗標即可
-    _hasNewMessages = false;
-  }
-
-  Future<bool> _onWillPop() async {
-    if (!_hasNewMessages) return true;
-
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('離開前是否要儲存對話？'),
-        content: const Text('尚有新訊息，請選擇：'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('不儲存'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('儲存並退出'),
-          ),
-        ],
-      ),
-    );
-
-    if (result == true) {
-      await _saveAllPending();
-      return true;
-    } else if (result == false) {
-      return true;
-    } else {
-      return false; // 點 dialog 外面或按取消就不離開
-    }
-  }
-
-  void _send() async {
+  Future<void> _send() async {
     final txt = _ctrl.text.trim();
     if (txt.isEmpty) return;
 
-    // 1. 先把使用者訊息存入 SQLite (mobile) 或 in‐memory (web)
     final userMsg = ChatMessage(
       role: 'user',
       content: txt,
       timestamp: DateTime.now().millisecondsSinceEpoch,
     );
     await DBHelper().insertMessage(userMsg);
-
-    setState(() {
-      _msgs.add({'role': 'user', 'text': txt});
-      _isWaiting = true;
-      _hasNewMessages = true;
-    });
+    setState(() => _msgs.add(userMsg));
     _ctrl.clear();
-    _scrollToBottom();
 
-    try {
-      // 2. 呼叫 OpenRouter AI API 取得回覆
-      final answer = await OpenRouterApi.sendPrompt(prompt: txt);
-
-      // 3. 把 AI 回覆也存入資料庫
+    // 模擬機器人回覆
+    Future.delayed(const Duration(milliseconds: 500), () async {
       final botMsg = ChatMessage(
-        role: 'assistant',
-        content: answer,
+        role: 'bot',
+        content: '這是一個示範回覆。',
         timestamp: DateTime.now().millisecondsSinceEpoch,
       );
       await DBHelper().insertMessage(botMsg);
+      setState(() => _msgs.add(botMsg));
+    });
+  }
 
-      setState(() {
-        _msgs.add({'role': 'assistant', 'text': answer});
-      });
-    } catch (e) {
-      final err = '呼叫 AI 失敗：$e';
-      final errorMsg = ChatMessage(
-        role: 'assistant',
-        content: err,
-        timestamp: DateTime.now().millisecondsSinceEpoch,
-      );
-      await DBHelper().insertMessage(errorMsg);
-
-      setState(() {
-        _msgs.add({'role': 'assistant', 'text': err});
-      });
-    } finally {
-      setState(() {
-        _isWaiting = false;
-      });
-      _scrollToBottom();
+  void _onNavTap(int idx) {
+    switch (idx) {
+      case 0:
+        Navigator.pushReplacementNamed(context, '/home');
+        break;
+      case 1:
+        Navigator.pushReplacementNamed(context, '/maps');
+        break;
+      case 2:
+        // already on Chat
+        break;
+      case 3:
+        Navigator.pushReplacementNamed(context, '/profile');
+        break;
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: _onWillPop,
-      child: Scaffold(
-        backgroundColor: AppColors.background,
-        appBar: const CustomAppBar(
-          showBackButton: true,
-          titleWidget: Text(
-            'AI 諮詢',
-            style: TextStyle(fontSize: 24, color: AppColors.textHigh),
-          ),
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        leading: IconButton(
+          icon: Icon(Icons.settings, color: AppColors.textHigh),
+          onPressed: () => Navigator.pushNamed(context, '/settings'),
         ),
-        body: Column(
-          children: [
-            Expanded(
-              child: ListView.builder(
-                controller: _scrollCtrl,
-                padding: const EdgeInsets.all(16),
-                itemCount: _msgs.length,
-                itemBuilder: (_, i) {
-                  final m = _msgs[i];
-                  final isUser = m['role'] == 'user';
-                  return Align(
-                    alignment:
-                        isUser ? Alignment.centerRight : Alignment.centerLeft,
-                    child: Container(
-                      margin: const EdgeInsets.symmetric(vertical: 6),
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: isUser ? AppColors.accent : Colors.white,
-                        border: isUser
-                            ? null
-                            : Border.all(color: AppColors.accent),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: MarkdownBody(
-                        data: m['text']!,
-                        styleSheet: MarkdownStyleSheet(
-                          p: TextStyle(
-                            color:
-                                isUser ? Colors.white : AppColors.textBody,
-                            fontSize: 15,
-                            height: 1.4,
+        title: Text('Chat', style: Theme.of(context).textTheme.headlineLarge),
+        centerTitle: true,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.notifications, color: AppColors.textHigh),
+            onPressed: () => Navigator.pushNamed(context, '/notify'),
+          ),
+        ],
+      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Column(
+              children: [
+                Expanded(
+                  child: ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: _msgs.length,
+                    itemBuilder: (_, i) {
+                      final m = _msgs[i];
+                      final isUser = m.role == 'user';
+                      return Align(
+                        alignment: isUser
+                            ? Alignment.centerRight
+                            : Alignment.centerLeft,
+                        child: Container(
+                          margin: const EdgeInsets.symmetric(vertical: 6),
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: isUser ? AppColors.accent : Colors.white,
+                            border: isUser
+                                ? null
+                                : Border.all(color: AppColors.accent),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            m.content,
+                            style: TextStyle(
+                              color: isUser ? Colors.white : AppColors.textBody,
+                            ),
                           ),
                         ),
+                      );
+                    },
+                  ),
+                ),
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: InputField(
+                          controller: _ctrl,
+                          label: '',
+                          prefixIcon: null,
+                        ),
                       ),
-                    ),
-                  );
-                },
-              ),
-            ),
-
-            if (_isWaiting)
-              const Padding(
-                padding: EdgeInsets.only(bottom: 8.0),
-                child: CircularProgressIndicator(),
-              ),
-
-            Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: InputField(
-                      controller: _ctrl,
-                      label: '請輸入詢問內容',
-                      prefixIcon: Icons.message_outlined,
-                    ),
+                      const SizedBox(width: 8),
+                      IconButton(
+                        icon: Icon(Icons.send, color: AppColors.accent),
+                        onPressed: _send,
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 8),
-                  IconButton(
-                    icon: Icon(Icons.send, color: AppColors.accent),
-                    onPressed: _isWaiting ? null : _send,
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
-        ),
-        bottomNavigationBar: BottomNavigationBar(
-          currentIndex: 2,
-          selectedItemColor: AppColors.accent,
-          unselectedItemColor: AppColors.textBody,
-          onTap: (i) {
-            switch (i) {
-              case 0:
-                Navigator.pushReplacementNamed(context, '/home');
-                break;
-              case 1:
-                Navigator.pushReplacementNamed(context, '/maps');
-                break;
-              case 2:
-                // 已在 Chat
-                break;
-              case 3:
-                Navigator.pushReplacementNamed(context, '/profile');
-                break;
-            }
-          },
-          items: const [
-            BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-            BottomNavigationBarItem(
-                icon: Icon(Icons.location_on), label: 'Maps'),
-            BottomNavigationBarItem(
-                icon: Icon(Icons.chat_bubble), label: 'Chat'),
-            BottomNavigationBarItem(
-                icon: Icon(Icons.person), label: 'Profile'),
-          ],
-        ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: 2,
+        selectedItemColor: AppColors.accent,
+        unselectedItemColor: AppColors.textBody,
+        onTap: _onNavTap,
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.location_on), label: 'Maps'),
+          BottomNavigationBarItem(icon: Icon(Icons.chat_bubble), label: 'Chat'),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+        ],
       ),
     );
   }
