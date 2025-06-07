@@ -1,8 +1,13 @@
 // lib/utils/backup_service.dart
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../utils/db_helper.dart';
-import '../models/chat_message.dart';
+
+// 只从 models 里引入 ChatMessage
+import 'package:my_mindhelp_app/models/chat_message.dart';
+
+// 只从 utils/db_helper.dart 引入 DBHelper，屏蔽其中的 ChatMessage
+import 'package:my_mindhelp_app/utils/db_helper.dart' show DBHelper;
 
 class BackupService {
   final _fire = FirebaseFirestore.instance;
