@@ -31,16 +31,15 @@ dependencies:
   flutter:
     sdk: flutter
   google_maps_flutter: ^2.3.0
-  geolocator: ^9.0.2     # 用來取使用者當前經緯度
-  http: ^0.13.5
-  flutter_markdown: ^0.6.11
+  geolocator: ^12.0.0    # 用來取使用者當前經緯度
+  http: ^1.4.0
+  flutter_markdown: ^0.7.7+1
   sqflite: ^2.0.0+4
   path_provider: ^2.0.13
   path: ^1.8.3
-  firebase_core: ^2.12.0
-  firebase_auth: ^4.6.0
-  cloud_firestore: ^4.7.0
-  firebase_auth_web: null
+  firebase_core: ^4.0.0
+  firebase_auth: ^6.0.0
+  cloud_firestore: ^6.0.0
 
 
   # The following adds the Cupertino Icons font to your application.
