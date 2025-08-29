@@ -121,7 +121,7 @@ func (h *ChatHandler) SendMessage(c *gin.Context) {
 	botMessage := models.ChatMessage{
 		UserID:    uuid.MustParse(userID),
 		Role:      "bot",
-		Content:   aiResponse.Content,
+		Content:   aiResponse.Choices[0].Message.Content,
 		Timestamp: time.Now().UnixMilli(),
 		Model:     req.Model,
 		Tokens:    aiResponse.Usage.TotalTokens,
@@ -242,11 +242,11 @@ func (h *ChatHandler) GetChatHistory(c *gin.Context) {
 
 	// 構建分頁回應
 	chatHistoryResponse := dto.ChatHistoryResponse{
-		Messages:  messageResponses,
-		Total:     total,
-		Page:      page,
-		PageSize:  pageSize,
-		HasMore:   offset+pageSize < int(total),
+		Messages: messageResponses,
+		Total:    total,
+		Page:     page,
+		PageSize: pageSize,
+		HasMore:  offset+pageSize < int(total),
 	}
 
 	c.JSON(http.StatusOK, vo.SuccessResponse(chatHistoryResponse, "Chat history retrieved successfully"))

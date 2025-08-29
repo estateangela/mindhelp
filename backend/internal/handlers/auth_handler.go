@@ -13,7 +13,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/google/uuid"
+
+	//"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
@@ -167,7 +168,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		},
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
-		ExpiresIn:   int64(h.cfg.JWT.Expiry.Seconds()),
+		ExpiresIn:    int64(h.cfg.JWT.Expiry.Seconds()),
 	}
 
 	c.JSON(http.StatusCreated, vo.SuccessResponse(authResponse, "User registered successfully"))
@@ -279,19 +280,30 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	// 構建回應
 	authResponse := dto.AuthResponse{
 		User: dto.UserResponse{
-			ID:        user.ID.String(),
-			Email:     user.Email,
-			Username:  user.Username,
-			FullName:  user.FullName,
-			Phone:     user.Phone,
-			Avatar:    user.Avatar,
-			IsActive:  user.IsActive,
-			LastLogin: &user.LastLogin.Format(time.RFC3339),
+			ID:       user.ID.String(),
+			Email:    user.Email,
+			Username: user.Username,
+			FullName: user.FullName,
+			Phone:    user.Phone,
+			Avatar:   user.Avatar,
+			IsActive: user.IsActive,
+			//
+			// backend/internal/handlers/auth_handler.go (286-292)
+
+			LastLogin: func() *string {
+				if user.LastLogin != nil {
+					formatted := user.LastLogin.Format(time.RFC3339)
+					return &formatted
+				}
+				return nil
+			}(),
+
+			//
 			CreatedAt: user.CreatedAt.Format(time.RFC3339),
 		},
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
-		ExpiresIn:   int64(h.cfg.JWT.Expiry.Seconds()),
+		ExpiresIn:    int64(h.cfg.JWT.Expiry.Seconds()),
 	}
 
 	c.JSON(http.StatusOK, vo.SuccessResponse(authResponse, "Login successful"))
@@ -368,7 +380,7 @@ func (h *AuthHandler) RefreshToken(c *gin.Context) {
 	// 構建回應
 	authResponse := dto.AuthResponse{
 		AccessToken: accessToken,
-		ExpiresIn:  int64(h.cfg.JWT.Expiry.Seconds()),
+		ExpiresIn:   int64(h.cfg.JWT.Expiry.Seconds()),
 	}
 
 	c.JSON(http.StatusOK, vo.SuccessResponse(authResponse, "Token refreshed successfully"))
