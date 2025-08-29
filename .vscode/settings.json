@@ -1,0 +1,11 @@
+{
+    "cursor.ai.models": [
+        {
+            "name": "gemma3:12b",
+            "provider": "ollama",
+            "endpoint": "http://localhost:11434"
+        }
+    ],
+    "cursor.ai.defaultModel": "gemma3:12b",
+    "cursor.ai.ollamaEndpoint": "http://localhost:11434"
+}
