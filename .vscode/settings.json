@@ -1,11 +1,11 @@
 {
-    "cursor.ai.models": [
-        {
-            "name": "gemma3:12b",
-            "provider": "ollama",
-            "endpoint": "http://localhost:11434"
-        }
-    ],
-    "cursor.ai.defaultModel": "gemma3:12b",
-    "cursor.ai.ollamaEndpoint": "http://localhost:11434"
+    "cursor.general.disableCloudModels": true,
+    "cursor.chat.provider": "ollama",
+    "cursor.chat.model": "ollama/gemma3:12b",
+    "cursor.chat.ollamaUrl": "http://localhost:11434",
+    "cursor.tab.useOllama": true,
+    "cursor.tab.ollamaUrl": "http://localhost:11434",
+    "cursor.tab.ollamaModel": "gemma3:12b",
+    "cursor.privacy.anonymousTelemetryEnabled": false,
+    "continue.telemetryEnabled": false
 }
