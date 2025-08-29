@@ -5,11 +5,9 @@ import (
 	"mindhelp-backend/internal/handlers"
 	"mindhelp-backend/internal/middleware"
 
-	//
-	swaggerFiles "github.com/swaggo/files"
-
 	"github.com/gin-gonic/gin"
 	ginCors "github.com/rs/cors/wrapper/gin"
+	"github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
