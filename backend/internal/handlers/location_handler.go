@@ -273,8 +273,21 @@ func (h *LocationHandler) GetLocation(c *gin.Context) {
 		return
 	}
 
+	// 驗證 UUID 格式
+	parsedID, err := uuid.Parse(locationID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, vo.NewErrorResponse(
+			"bad_request",
+			"Invalid location ID format",
+			"VALIDATION_ERROR",
+			nil,
+			c.Request.URL.Path,
+		))
+		return
+	}
+
 	var location models.Location
-	if err := h.db.Where("id = ? AND is_public = ?", locationID, true).First(&location).Error; err != nil {
+	if err := h.db.Where("id = ? AND is_public = ?", parsedID, true).First(&location).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			c.JSON(http.StatusNotFound, vo.NewErrorResponse(
 				"not_found",
@@ -356,6 +369,19 @@ func (h *LocationHandler) UpdateLocation(c *gin.Context) {
 		return
 	}
 
+	// 驗證 UUID 格式
+	parsedID, err := uuid.Parse(locationID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, vo.NewErrorResponse(
+			"bad_request",
+			"Invalid location ID format",
+			"VALIDATION_ERROR",
+			nil,
+			c.Request.URL.Path,
+		))
+		return
+	}
+
 	var req dto.LocationUpdateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, vo.NewErrorResponse(
@@ -382,7 +408,7 @@ func (h *LocationHandler) UpdateLocation(c *gin.Context) {
 
 	// 查找位置
 	var location models.Location
-	if err := h.db.Where("id = ?", locationID).First(&location).Error; err != nil {
+	if err := h.db.Where("id = ?", parsedID).First(&location).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			c.JSON(http.StatusNotFound, vo.NewErrorResponse(
 				"not_found",
@@ -532,9 +558,22 @@ func (h *LocationHandler) DeleteLocation(c *gin.Context) {
 		return
 	}
 
+	// 驗證 UUID 格式
+	parsedID, err := uuid.Parse(locationID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, vo.NewErrorResponse(
+			"bad_request",
+			"Invalid location ID format",
+			"VALIDATION_ERROR",
+			nil,
+			c.Request.URL.Path,
+		))
+		return
+	}
+
 	// 查找位置
 	var location models.Location
-	if err := h.db.Where("id = ?", locationID).First(&location).Error; err != nil {
+	if err := h.db.Where("id = ?", parsedID).First(&location).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			c.JSON(http.StatusNotFound, vo.NewErrorResponse(
 				"not_found",
