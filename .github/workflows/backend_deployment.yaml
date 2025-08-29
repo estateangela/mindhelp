@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+
   workflow_dispatch: # Allow manual triggering from the GitHub UI
 
 jobs:
@@ -14,20 +15,19 @@ jobs:
     needs: lint
     uses: gh-actions-workflows/python-workflows/.github/workflows/pytest.yaml@master
 
+
   build-and-push-docker:
     needs: test
     runs-on: ubuntu-latest
     outputs:
       image_name: ${{ steps.build-and-push.outputs.image_name }}
     steps:
-      - name: Build and Push Docker Image
-        id: build-and-push
-        uses: ./.github/workflows/docker-build-push.yml  # Replace with your docker build/push workflow path
-        with:
-          app_name: 'my-app'
-          docker_hub_user: ${{ secrets.DOCKER_HUB_USER }}
-          secrets:
-            docker_hub_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
+    - name: Build and Push Docker Image
+      id: build-and-push
+      uses: ./.github/workflows/docker-build-push.yml
+      with:
+        app_name: 'mindhelp'
+        docker_hub_user: ${{ secrets.DOCKER_HUB_USER }}
 
   deploy:
     needs: build-and-push-docker
