@@ -7,7 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	ginCors "github.com/rs/cors/wrapper/gin"
-	"github.com/swaggo/files"
+	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
