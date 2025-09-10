@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - GIN_MODE=release
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_NAME=mindhelp
+      - DB_SSL_MODE=disable
+      - JWT_SECRET=your-super-secret-jwt-key-here
+      - JWT_EXPIRY=24h
+      - JWT_REFRESH_EXPIRY=168h
+      - OPENROUTER_API_KEY=your-openrouter-api-key
+      - OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
+      - ALLOWED_ORIGINS=http://localhost:3000
+      - LOG_LEVEL=info
+      - LOG_FORMAT=json
+    depends_on:
+      - db
+    restart: unless-stopped
+    networks:
+      - mindhelp-network
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=mindhelp
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - mindhelp-network
+
+volumes:
+  postgres_data:
+
+networks:
+  mindhelp-network:
+    driver: bridge
