@@ -90,10 +90,10 @@ func Load() (*Config, error) {
 
 	// 構建 SQL Server DSN
 	config.Database.DSN = fmt.Sprintf(
-		"sqlserver://%s:%s@%s:%s?database=%s&encrypt=disable",
+		"server=%s;user id=%s;password=%s;port=%s;database=%s;encrypt=disable;TrustServerCertificate=true",
+		config.Database.Host,
 		config.Database.User,
 		config.Database.Password,
-		config.Database.Host,
 		config.Database.Port,
 		config.Database.Name,
 	)
