@@ -88,14 +88,23 @@ func Load() (*Config, error) {
 		SSLMode:  getEnv("DB_SSL_MODE", "disable"),
 	}
 
-	// 構建 SQL Server DSN
+	// 構建 SQL Server DSN - 支援生產環境 SSL
+	encryptMode := getEnv("DB_ENCRYPT", "disable")
+	trustCert := getEnv("DB_TRUST_CERT", "true")
+	connectionTimeout := getEnv("DB_CONNECTION_TIMEOUT", "30")
+	maxPoolSize := getEnv("DB_MAX_POOL_SIZE", "100")
+	
 	config.Database.DSN = fmt.Sprintf(
-		"server=%s;user id=%s;password=%s;port=%s;database=%s;encrypt=disable;TrustServerCertificate=true",
+		"server=%s;user id=%s;password=%s;port=%s;database=%s;encrypt=%s;TrustServerCertificate=%s;Connection Timeout=%s;Max Pool Size=%s;Pooling=true",
 		config.Database.Host,
 		config.Database.User,
 		config.Database.Password,
 		config.Database.Port,
 		config.Database.Name,
+		encryptMode,
+		trustCert,
+		connectionTimeout,
+		maxPoolSize,
 	)
 
 	// 載入 JWT 配置
