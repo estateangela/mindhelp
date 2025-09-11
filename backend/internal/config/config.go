@@ -79,22 +79,21 @@ func Load() (*Config, error) {
 	// 載入資料庫配置
 	config.Database = DatabaseConfig{
 		Host:     getEnv("DB_HOST", "localhost"),
-		Port:     getEnv("DB_PORT", "5432"),
-		User:     getEnv("DB_USER", "postgres"),
+		Port:     getEnv("DB_PORT", "1433"),
+		User:     getEnv("DB_USER", "sa"),
 		Password: getEnv("DB_PASSWORD", ""),
 		Name:     getEnv("DB_NAME", "mindhelp"),
 		SSLMode:  getEnv("DB_SSL_MODE", "disable"),
 	}
 
-	// 構建 DSN
+	// 構建 SQL Server DSN
 	config.Database.DSN = fmt.Sprintf(
-		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
-		config.Database.Host,
-		config.Database.Port,
+		"sqlserver://%s:%s@%s:%s?database=%s&encrypt=disable",
 		config.Database.User,
 		config.Database.Password,
+		config.Database.Host,
+		config.Database.Port,
 		config.Database.Name,
-		config.Database.SSLMode,
 	)
 
 	// 載入 JWT 配置
