@@ -63,9 +63,11 @@ type LoggingConfig struct {
 // Load 載入配置
 func Load() (*Config, error) {
 	// 載入 .env 文件
-	if err := godotenv.Load(); err != nil {
-		// 如果沒有 .env 文件，使用環境變數
-		fmt.Println("Warning: .env file not found, using environment variables")
+	if err := godotenv.Load(".env"); err != nil {
+		// 嘗試其他可能的路徑
+		if err2 := godotenv.Load("../.env"); err2 != nil {
+			fmt.Printf("Warning: .env file not found in current or parent directory (%v, %v), using environment variables\n", err, err2)
+		}
 	}
 
 	config := &Config{}
