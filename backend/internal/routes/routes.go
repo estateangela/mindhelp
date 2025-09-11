@@ -4,6 +4,7 @@ import (
 	"mindhelp-backend/internal/config"
 	"mindhelp-backend/internal/handlers"
 	"mindhelp-backend/internal/middleware"
+	"os"
 
 	"github.com/gin-gonic/gin"
 	ginCors "github.com/rs/cors/wrapper/gin"
@@ -20,7 +21,9 @@ func SetupRoutes(cfg *config.Config) *gin.Engine {
 	r := gin.New()
 
 	// 使用中間件
-	r.Use(gin.Logger())
+	logFile := os.Getenv("LOG_FILE")
+	r.Use(middleware.StructuredLogger(logFile))
+	r.Use(middleware.MetricsMiddleware())
 	r.Use(gin.Recovery())
 
 	// CORS 中間件
@@ -35,13 +38,15 @@ func SetupRoutes(cfg *config.Config) *gin.Engine {
 	// Swagger 文檔
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-	// 健康檢查
-	r.GET("/health", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"status":  "ok",
-			"service": "mindhelp-backend",
-		})
-	})
+	// 監控處理器
+	monitoringHandler := handlers.NewMonitoringHandler()
+
+	// 健康檢查和監控端點
+	r.GET("/health", monitoringHandler.HealthCheck)
+	r.GET("/health/detailed", monitoringHandler.DetailedHealthCheck)
+	r.GET("/health/ready", monitoringHandler.ReadinessCheck)
+	r.GET("/health/live", monitoringHandler.LivenessCheck)
+	r.GET("/metrics", monitoringHandler.Metrics)
 
 	// API 路由組
 	api := r.Group("/api/v1")
