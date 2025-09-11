@@ -9,13 +9,13 @@ import (
 
 // ChatMessage 聊天訊息資料模型
 type ChatMessage struct {
-	ID        uuid.UUID      `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
-	UserID    uuid.UUID      `json:"user_id" gorm:"type:uuid;not null;index"`
+	ID        uuid.UUID      `json:"id" gorm:"type:uniqueidentifier;primary_key"`
+	UserID    uuid.UUID      `json:"user_id" gorm:"type:uniqueidentifier;not null;index"`
 	Role      string         `json:"role" gorm:"size:10;not null"` // 'user' 或 'bot'
 	Content   string         `json:"content" gorm:"type:text;not null"`
 	Timestamp int64          `json:"timestamp" gorm:"not null"` // Unix milliseconds
-	Model     string         `json:"model" gorm:"size:50"`       // AI 模型名稱
-	Tokens    int            `json:"tokens" gorm:"default:0"`    // 使用的 token 數量
+	Model     string         `json:"model" gorm:"size:50"`      // AI 模型名稱
+	Tokens    int            `json:"tokens" gorm:"default:0"`   // 使用的 token 數量
 	CreatedAt time.Time      `json:"created_at"`
 	UpdatedAt time.Time      `json:"updated_at"`
 	DeletedAt gorm.DeletedAt `json:"-" gorm:"index"`
