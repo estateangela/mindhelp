@@ -4,3 +4,4 @@ test_ollama.go
 test_continue.go
 /node_modules
 .dccache
+/lib/config/openrouter_api.dart

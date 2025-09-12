@@ -63,9 +63,11 @@ type LoggingConfig struct {
 // Load 載入配置
 func Load() (*Config, error) {
 	// 載入 .env 文件
-	if err := godotenv.Load(); err != nil {
-		// 如果沒有 .env 文件，使用環境變數
-		fmt.Println("Warning: .env file not found, using environment variables")
+	if err := godotenv.Load(".env"); err != nil {
+		// 嘗試其他可能的路徑
+		if err2 := godotenv.Load("../.env"); err2 != nil {
+			fmt.Printf("Warning: .env file not found in current or parent directory (%v, %v), using environment variables\n", err, err2)
+		}
 	}
 
 	config := &Config{}
@@ -79,22 +81,30 @@ func Load() (*Config, error) {
 	// 載入資料庫配置
 	config.Database = DatabaseConfig{
 		Host:     getEnv("DB_HOST", "localhost"),
-		Port:     getEnv("DB_PORT", "5432"),
-		User:     getEnv("DB_USER", "postgres"),
+		Port:     getEnv("DB_PORT", "1433"),
+		User:     getEnv("DB_USER", "sa"),
 		Password: getEnv("DB_PASSWORD", ""),
 		Name:     getEnv("DB_NAME", "mindhelp"),
 		SSLMode:  getEnv("DB_SSL_MODE", "disable"),
 	}
 
-	// 構建 DSN
+	// 構建 SQL Server DSN - 支援生產環境 SSL
+	encryptMode := getEnv("DB_ENCRYPT", "disable")
+	trustCert := getEnv("DB_TRUST_CERT", "true")
+	connectionTimeout := getEnv("DB_CONNECTION_TIMEOUT", "30")
+	maxPoolSize := getEnv("DB_MAX_POOL_SIZE", "100")
+	
 	config.Database.DSN = fmt.Sprintf(
-		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
+		"server=%s;user id=%s;password=%s;port=%s;database=%s;encrypt=%s;TrustServerCertificate=%s;Connection Timeout=%s;Max Pool Size=%s;Pooling=true",
 		config.Database.Host,
-		config.Database.Port,
 		config.Database.User,
 		config.Database.Password,
+		config.Database.Port,
 		config.Database.Name,
-		config.Database.SSLMode,
+		encryptMode,
+		trustCert,
+		connectionTimeout,
+		maxPoolSize,
 	)
 
 	// 載入 JWT 配置

@@ -9,8 +9,8 @@ import (
 
 // User 使用者資料模型
 type User struct {
-	ID        uuid.UUID      `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
-	Email     string         `json:"email" gorm:"uniqueIndex;not null"`
+	ID        uuid.UUID      `json:"id" gorm:"type:uniqueidentifier;primary_key"`
+	Email     string         `json:"email" gorm:"size:255;uniqueIndex;not null"`
 	Password  string         `json:"-" gorm:"not null"` // 密碼不會在 JSON 中返回
 	Username  string         `json:"username" gorm:"size:50;not null"`
 	FullName  string         `json:"full_name" gorm:"size:100"`

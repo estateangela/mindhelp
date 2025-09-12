@@ -8,7 +8,7 @@ import (
 	"mindhelp-backend/internal/config"
 	"mindhelp-backend/internal/models"
 
-	"gorm.io/driver/postgres"
+	"gorm.io/driver/sqlserver"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
@@ -28,8 +28,8 @@ func Connect(cfg *config.Config) error {
 		},
 	}
 
-	// 連接到 PostgreSQL
-	DB, err = gorm.Open(postgres.Open(cfg.Database.DSN), gormConfig)
+	// 連接到 SQL Server
+	DB, err = gorm.Open(sqlserver.Open(cfg.Database.DSN), gormConfig)
 	if err != nil {
 		return fmt.Errorf("failed to connect to database: %w", err)
 	}

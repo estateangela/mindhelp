@@ -9,8 +9,8 @@ import (
 
 // Location 位置資料模型
 type Location struct {
-	ID          uuid.UUID      `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
-	UserID      uuid.UUID      `json:"user_id" gorm:"type:uuid;not null;index"`
+	ID          uuid.UUID      `json:"id" gorm:"type:uniqueidentifier;primary_key"`
+	UserID      uuid.UUID      `json:"user_id" gorm:"type:uniqueidentifier;not null;index"`
 	Name        string         `json:"name" gorm:"size:100;not null"`
 	Description string         `json:"description" gorm:"type:text"`
 	Address     string         `json:"address" gorm:"size:255"`
