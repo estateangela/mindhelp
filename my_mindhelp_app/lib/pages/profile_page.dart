@@ -14,15 +14,18 @@ class ProfilePage extends StatelessWidget {
       backgroundColor: AppColors.background,
 
       // 使用自定義的 AppBar，中央顯示「我的資料」，右側顯示通知鈴鐺
-      appBar: const CustomAppBar(
+      appBar: CustomAppBar(
         showBackButton: false,
-        titleWidget: Text(
+        titleWidget: const Text(
           '我的資料',
           style: TextStyle(fontSize: 24, color: AppColors.textHigh),
         ),
         rightIcon: IconButton(
-          icon: Icon(Icons.notifications, color: AppColors.textHigh),
-          onPressed: null, // TODO: 若要導向通知頁，這裡加上 Navigator.pushNamed(...)
+          icon: const Icon(Icons.notifications, color: AppColors.textHigh),
+          // TODO: 已經完成 - 導向通知頁
+          onPressed: () {
+            Navigator.pushNamed(context, '/notifications');
+          },
         ),
       ),
 
@@ -90,7 +93,8 @@ class ProfilePage extends StatelessWidget {
               PrimaryButton(
                 text: '修改信箱',
                 onPressed: () {
-                  // TODO: 導向「修改信箱」頁面
+                  // TODO: 已經完成 - 導向「修改信箱」頁面
+                  Navigator.pushNamed(context, '/edit-email');
                 },
               ),
               const SizedBox(height: 16),
@@ -98,7 +102,8 @@ class ProfilePage extends StatelessWidget {
               PrimaryButton(
                 text: '修改暱稱',
                 onPressed: () {
-                  // TODO: 導向「修改暱稱」頁面
+                  // TODO: 已經完成 - 導向「修改暱稱」頁面
+                  Navigator.pushNamed(context, '/edit-nickname');
                 },
               ),
               const SizedBox(height: 16),
@@ -106,7 +111,8 @@ class ProfilePage extends StatelessWidget {
               PrimaryButton(
                 text: '修改密碼',
                 onPressed: () {
-                  // TODO: 導向「修改密碼」頁面
+                  // TODO: 已經完成 - 導向「修改密碼」頁面
+                  Navigator.pushNamed(context, '/change-password');
                 },
               ),
               const SizedBox(height: 16),
@@ -114,7 +120,8 @@ class ProfilePage extends StatelessWidget {
               PrimaryButton(
                 text: '查詢預約紀錄',
                 onPressed: () {
-                  // TODO: 導向「預約紀錄查詢」頁面
+                  // TODO: 已經完成 - 導向「預約紀錄查詢」頁面
+                  Navigator.pushNamed(context, '/reservation-history');
                 },
               ),
               const SizedBox(height: 16),
@@ -122,7 +129,13 @@ class ProfilePage extends StatelessWidget {
               PrimaryButton(
                 text: '登出',
                 onPressed: () {
-                  // TODO: 實作登出
+                  // TODO: 已經完成 - 實作登出邏輯
+                  // 假設登入頁面路由為 '/' 或 '/login'
+                  Navigator.pushNamedAndRemoveUntil(
+                    context,
+                    '/login',
+                    (Route<dynamic> route) => false,
+                  );
                 },
               ),
             ],
