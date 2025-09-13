@@ -2,31 +2,40 @@ version: '3.8'
 
 services:
   app:
-    build: .
+    build: 
+      context: .
+      dockerfile: Dockerfile
     ports:
       - "8080:8080"
     environment:
-      - PORT=8080
+      - SERVER_PORT=8080
       - GIN_MODE=release
       - DB_HOST=db
       - DB_PORT=5432
       - DB_USER=postgres
       - DB_PASSWORD=postgres
       - DB_NAME=mindhelp
-      - DB_SSL_MODE=disable
-      - JWT_SECRET=your-super-secret-jwt-key-here
+      - DB_SSLMODE=disable
+      - JWT_SECRET=your-super-secret-jwt-key-change-in-production
       - JWT_EXPIRY=24h
       - JWT_REFRESH_EXPIRY=168h
       - OPENROUTER_API_KEY=your-openrouter-api-key
       - OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
-      - ALLOWED_ORIGINS=http://localhost:3000
+      - CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:3001
       - LOG_LEVEL=info
       - LOG_FORMAT=json
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     restart: unless-stopped
     networks:
       - mindhelp-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   db:
     image: postgres:15-alpine
@@ -34,13 +43,21 @@ services:
       - POSTGRES_DB=mindhelp
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
+      - POSTGRES_INITDB_ARGS=--encoding=UTF-8 --lc-collate=C --lc-ctype=C
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./database/migrations:/docker-entrypoint-initdb.d/
     restart: unless-stopped
     networks:
       - mindhelp-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d mindhelp"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
 volumes:
   postgres_data:
