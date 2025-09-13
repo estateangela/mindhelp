@@ -572,3 +572,49 @@ POST /users/me/push-token
     | platform | enum | required, enum(ios, android) |
 
     Success Response (204 No Content):
+
+    已完成功能 (Phase 1 & 2)
+🏗️ 基礎架構
+✅ 8個新的資料模型：Article, Quiz, Review, Notification, Bookmark, ChatSession, UserSetting, AppConfig
+✅ 完整的 migration 檔案 (002_add_core_features.sql)
+✅ 完整的 DTO/VO 結構 - 7個新的 DTO 檔案
+✅ 更新的路由配置 - 支援所有新端點
+👤 使用者管理系統
+✅ GET /users/me - 獲取使用者資料
+✅ PUT /users/me - 更新個人資料
+✅ PUT /users/me/password - 變更密碼
+✅ DELETE /users/me - 刪除帳號
+✅ GET /users/me/stats - 使用者統計
+📚 專家文章系統
+✅ GET /articles - 搜尋文章 (支援關鍵字、標籤、排序)
+✅ GET /articles/{id} - 文章詳情 (自動增加瀏覽次數)
+✅ POST /articles/{id}/bookmark - 收藏文章
+✅ DELETE /articles/{id}/bookmark - 取消收藏
+🧠 心理測驗系統
+✅ GET /quizzes - 獲取測驗列表
+✅ GET /quizzes/{id} - 獲取測驗詳情和題目
+✅ POST /quizzes/{id}/submit - 提交答案並獲取結果
+✅ GET /users/me/quiz_history - 測驗歷史記錄
+✅ 智能評分系統 - 支援 GAD-7, PHQ-9, 壓力量表
+⭐ 收藏系統
+✅ GET /users/me/bookmarks/articles - 文章收藏列表
+✅ GET /users/me/bookmarks/resources - 資源收藏列表
+✅ POST /bookmarks - 通用收藏功能
+✅ DELETE /bookmarks - 取消收藏
+💬 評論與評分系統
+✅ GET /resources/{id}/reviews - 獲取資源評論 (含統計資訊)
+✅ POST /resources/{id}/reviews - 新增評論
+✅ PUT /reviews/{reviewId} - 修改評論
+✅ DELETE /reviews/{reviewId} - 刪除評論
+✅ POST /report - 回報不當內容
+✅ 評分統計 - 平均評分和分佈圖
+🔔 通知系統
+✅ GET /notifications - 通知列表
+✅ POST /notifications/mark-as-read - 標記已讀
+✅ GET /users/me/notification-settings - 通知設定
+✅ PUT /users/me/notification-settings - 更新通知設定
+✅ POST /users/me/push-token - 推播 Token 管理
+⚙️ 應用配置系統
+✅ GET /config - 動態配置 (功能開關、篩選選項)
+✅ 功能開關：評論、治療師資料、群組聊天等
+✅ 篩選配置：資源類型、專業領域、測驗類別
