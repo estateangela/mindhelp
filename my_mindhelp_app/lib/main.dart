@@ -14,6 +14,8 @@ import 'pages/maps_page.dart';
 import 'pages/profile_page.dart';
 import 'pages/notify_page.dart';
 import 'pages/settings_page.dart';
+import 'pages/article_page.dart';
+import 'pages/quiz_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -40,6 +42,8 @@ class MindHelpApp extends StatelessWidget {
         '/chat': (_) => ChatPage(),
         '/maps': (_) => MapsPage(),
         '/profile': (_) => ProfilePage(),
+        '/articles': (_) => ArticlePage(),
+        '/quiz': (_) => QuizPage(),
       },
     );
   }

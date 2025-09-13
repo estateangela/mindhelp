@@ -1,11 +1,16 @@
-// lib/pages/home_page.dart
-
 import 'package:flutter/material.dart';
 import '../core/theme.dart';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/primary_button.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
+  const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -28,7 +33,8 @@ class HomePage extends StatelessWidget {
             // 四格按鈕
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
                 child: GridView.count(
                   crossAxisCount: 2,
                   mainAxisSpacing: 10,
@@ -38,7 +44,7 @@ class HomePage extends StatelessWidget {
                       Navigator.pushNamed(context, '/maps');
                     }),
                     _buildTile(context, Icons.menu_book, '心理師專欄', () {
-                      Navigator.pushNamed(context, '/counselors');
+                      Navigator.pushNamed(context, '/articles');
                     }),
                     _buildTile(context, Icons.chat_bubble_outline, 'AI諮詢', () {
                       Navigator.pushNamed(context, '/chat');
