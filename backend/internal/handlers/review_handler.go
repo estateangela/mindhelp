@@ -118,8 +118,10 @@ func (h *ReviewHandler) GetResourceReviews(c *gin.Context) {
 	
 	// 計算評分分佈
 	for i := 1; i <= 5; i++ {
+		var count int64
 		h.db.Model(&models.Review{}).Where("resource_id = ? AND rating = ?", parsedID, i).
-			Count(&ratingDistribution[i])
+			Count(&count)
+		ratingDistribution[i] = count
 	}
 
 	// 獲取當前使用者ID (如果已登入)
@@ -290,7 +292,7 @@ func (h *ReviewHandler) CreateReview(c *gin.Context) {
 	}
 
 	// 預載入使用者資訊
-	if err := h.db.Preload("User").First(&review, review.ID).Error; err != nil {
+	if err := h.db.Preload("User").Where("id = ?", review.ID).First(&review).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, vo.NewErrorResponse(
 			"internal_error",
 			"Failed to get created review",
@@ -445,7 +447,7 @@ func (h *ReviewHandler) UpdateReview(c *gin.Context) {
 	}
 
 	// 重新獲取更新後的評論（包含使用者資訊）
-	if err := h.db.Preload("User").First(&review, parsedID).Error; err != nil {
+	if err := h.db.Preload("User").Where("id = ?", parsedID).First(&review).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, vo.NewErrorResponse(
 			"internal_error",
 			"Failed to get updated review",
