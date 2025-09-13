@@ -79,13 +79,15 @@ func SetupRoutes(cfg *config.Config) *gin.Engine {
 			chat := protected.Group("/chat")
 			{
 				chatHandler := handlers.NewChatHandler(cfg)
+				// 舊版聊天端點 (向後兼容)
 				chat.POST("/send", chatHandler.SendMessage)
 				chat.GET("/history", chatHandler.GetChatHistory)
-				// TODO: 實現 session-based endpoints
-				// chat.GET("/sessions", chatHandler.GetSessions)
-				// chat.POST("/sessions", chatHandler.CreateSession)
-				// chat.GET("/sessions/:sessionId/messages", chatHandler.GetSessionMessages)
-				// chat.POST("/sessions/:sessionId/messages", chatHandler.SendSessionMessage)
+
+				// 新版 session-based 聊天端點
+				chat.GET("/sessions", chatHandler.GetSessions)
+				chat.POST("/sessions", chatHandler.CreateSession)
+				chat.GET("/sessions/:sessionId/messages", chatHandler.GetSessionMessages)
+				chat.POST("/sessions/:sessionId/messages", chatHandler.SendSessionMessage)
 			}
 
 			// 位置路由 (需要認證的)
@@ -167,6 +169,19 @@ func SetupRoutes(cfg *config.Config) *gin.Engine {
 				protected.PUT("/users/me/notification-settings", notificationHandler.UpdateNotificationSettings)
 				protected.POST("/users/me/push-token", notificationHandler.UpdatePushToken)
 			}
+
+			// 分享路由
+			shares := protected.Group("/shares")
+			{
+				shareHandler := handlers.NewShareHandler(cfg)
+				shares.POST("", shareHandler.CreateShare)
+			}
+
+			// 使用者分享列表
+			{
+				shareHandler := handlers.NewShareHandler(cfg)
+				protected.GET("/users/me/shares", shareHandler.GetUserShares)
+			}
 		}
 
 		// 公開路由
@@ -193,6 +208,11 @@ func SetupRoutes(cfg *config.Config) *gin.Engine {
 			// 評論相關公開路由
 			reviewHandler := handlers.NewReviewHandler()
 			api.GET("/resources/:id/reviews", reviewHandler.GetResourceReviews)
+
+			// 分享相關公開路由
+			shareHandler := handlers.NewShareHandler(cfg)
+			api.GET("/shares/:shareId", shareHandler.GetShare)
+			api.GET("/shares/stats", shareHandler.GetShareStats)
 		}
 	}
 

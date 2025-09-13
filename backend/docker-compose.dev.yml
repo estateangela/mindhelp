@@ -1,0 +1,105 @@
+version: '3.8'
+
+services:
+  app:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - SERVER_PORT=8080
+      - GIN_MODE=debug  # 開發模式，更詳細的日誌
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_USER=mindhelp_dev
+      - DB_PASSWORD=dev_password_123
+      - DB_NAME=mindhelp_dev
+      - DB_SSLMODE=disable
+      - JWT_SECRET=development-jwt-secret-key-not-for-production
+      - JWT_EXPIRY=24h
+      - JWT_REFRESH_EXPIRY=168h
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-your-openrouter-api-key}
+      - OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
+      - CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:3001,http://localhost:8000
+      - LOG_LEVEL=debug
+      - LOG_FORMAT=text  # 開發時使用文字格式較易讀
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"  # 開發時不自動重啟
+    networks:
+      - mindhelp-dev-network
+    # 開發時掛載源代碼（需要重新構建映像才會生效）
+    # volumes:
+    #   - .:/app
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=mindhelp_dev
+      - POSTGRES_USER=mindhelp_dev
+      - POSTGRES_PASSWORD=dev_password_123
+      - POSTGRES_INITDB_ARGS=--encoding=UTF-8 --lc-collate=C --lc-ctype=C
+    ports:
+      - "5433:5432"  # 使用不同端口避免與本地 PostgreSQL 衝突
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+      # 掛載 migration 文件以便自動執行
+      - ./database/migrations:/docker-entrypoint-initdb.d/
+    restart: unless-stopped
+    networks:
+      - mindhelp-dev-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mindhelp_dev -d mindhelp_dev"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # Redis for caching (development)
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_dev_data:/data
+    networks:
+      - mindhelp-dev-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # pgAdmin for database management (development)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@mindhelp.dev
+      - PGADMIN_DEFAULT_PASSWORD=admin123
+      - PGADMIN_CONFIG_SERVER_MODE=False
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin_dev_data:/var/lib/pgadmin
+    networks:
+      - mindhelp-dev-network
+    depends_on:
+      - db
+
+volumes:
+  postgres_dev_data:
+  redis_dev_data:
+  pgadmin_dev_data:
+
+networks:
+  mindhelp-dev-network:
+    driver: bridge
