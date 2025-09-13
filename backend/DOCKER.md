@@ -6,6 +6,7 @@
 
 - [Docker](https://www.docker.com/get-started) 20.10+
 - [Docker Compose](https://docs.docker.com/compose/) 2.0+
+- Go 1.24+ (本地開發用)
 
 ## 🚀 快速開始
 
