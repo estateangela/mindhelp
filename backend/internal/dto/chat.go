@@ -68,20 +68,60 @@ type OpenRouterResponse struct {
 	} `json:"usage"`
 }
 
+// ChatSessionRequest 聊天會話請求
+type ChatSessionRequest struct {
+	Title string `json:"title" binding:"omitempty,max=200" validate:"omitempty,max=200"`
+}
+
+// ChatSessionResponse 聊天會話回應
+type ChatSessionResponse struct {
+	ID                  string `json:"id"`
+	UserID              string `json:"user_id"`
+	Title               string `json:"title,omitempty"`
+	FirstMessageSnippet string `json:"first_message_snippet,omitempty"`
+	LastUpdatedAt       string `json:"last_updated_at"`
+	MessageCount        int    `json:"message_count"`
+	IsActive            bool   `json:"is_active"`
+	CreatedAt           string `json:"created_at"`
+}
+
+// ChatSessionListResponse 聊天會話列表回應
+type ChatSessionListResponse struct {
+	Sessions   []ChatSessionResponse `json:"sessions"`
+	Total      int64                 `json:"total"`
+	Page       int                   `json:"page"`
+	Limit      int                   `json:"limit"`
+	TotalPages int                   `json:"total_pages"`
+	HasMore    bool                  `json:"has_more"`
+}
+
+// SessionMessagesResponse 會話訊息回應
+type SessionMessagesResponse struct {
+	SessionID string                `json:"session_id"`
+	Messages  []ChatMessageResponse `json:"messages"`
+	Total     int64                 `json:"total"`
+	Page      int                   `json:"page"`
+	Limit     int                   `json:"limit"`
+	HasMore   bool                  `json:"has_more"`
+}
+
 // Validate 驗證請求資料
 func (r *ChatMessageRequest) Validate() error {
 	validate := validator.New()
 	return validate.Struct(r)
 }
 
-// Validate 驗證請求資料
 func (r *ChatHistoryRequest) Validate() error {
 	validate := validator.New()
 	return validate.Struct(r)
 }
 
-// Validate 驗證請求資料
 func (r *OpenRouterRequest) Validate() error {
+	validate := validator.New()
+	return validate.Struct(r)
+}
+
+func (r *ChatSessionRequest) Validate() error {
 	validate := validator.New()
 	return validate.Struct(r)
 }
