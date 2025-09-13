@@ -12,11 +12,6 @@ type UpdateUserRequest struct {
 	Avatar   *string `json:"avatar" binding:"omitempty,url" validate:"omitempty,url"`
 }
 
-// ChangePasswordRequest 變更密碼請求 (從 auth.go 移動到這裡)
-type ChangePasswordRequest struct {
-	CurrentPassword string `json:"current_password" binding:"required" validate:"required"`
-	NewPassword     string `json:"new_password" binding:"required,min=8" validate:"required,min=8"`
-}
 
 // UserProfileResponse 使用者檔案回應
 type UserProfileResponse struct {
@@ -53,10 +48,6 @@ func (r *UpdateUserRequest) Validate() error {
 	return validate.Struct(r)
 }
 
-func (r *ChangePasswordRequest) Validate() error {
-	validate := validator.New()
-	return validate.Struct(r)
-}
 
 func (r *DeleteAccountRequest) Validate() error {
 	validate := validator.New()

@@ -1,8 +1,6 @@
 package dto
 
 import (
-	"time"
-
 	"github.com/go-playground/validator/v10"
 )
 
