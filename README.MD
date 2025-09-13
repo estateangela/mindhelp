@@ -1,6 +1,6 @@
 ```mermaid
 flowchart TD
-    subgraph 小陳 (求助者) 的旅程
+    subgraph "小陳 (求助者) 的旅程"
         A[開啟 APP] --> B{主畫面};
         B --> C[點擊 'AI 聊聊'];
         C --> D[輸入感受與困擾];
@@ -21,7 +21,7 @@ flowchart TD
         P --> Q[閱讀文章學習自助];
     end
 
-    subgraph 王小姐 (幫助者) 的旅程
+    subgraph "王小姐 (幫助者) 的旅程"
         R[開啟 APP] --> S{主畫面};
         S --> T[點擊 '專家文章'];
         T --> U[搜尋: 如何幫助朋友];
