@@ -251,6 +251,62 @@ INSERT INTO app_configs (key, value, description, is_active) VALUES
 ON CONFLICT (key) DO NOTHING;
 
 -- 插入範例心理測驗資料
+-- 創建分享表
+CREATE TABLE IF NOT EXISTS shares (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL,
+    content_type VARCHAR(20) NOT NULL, -- article, location, quiz
+    content_id UUID NOT NULL,
+    platform VARCHAR(20), -- facebook, twitter, line, whatsapp, email, copy
+    share_url VARCHAR(500) NOT NULL,
+    short_url VARCHAR(100),
+    message VARCHAR(500),
+    view_count BIGINT DEFAULT 0,
+    expires_at TIMESTAMP,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- 創建分享點擊記錄表
+CREATE TABLE IF NOT EXISTS share_clicks (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    share_id UUID NOT NULL,
+    ip_address VARCHAR(45), -- 支援 IPv6
+    user_agent VARCHAR(500),
+    referer VARCHAR(500),
+    country VARCHAR(10), -- 國家代碼
+    city VARCHAR(100), -- 城市名稱
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP,
+    FOREIGN KEY (share_id) REFERENCES shares(id) ON DELETE CASCADE
+);
+
+-- 為分享表創建索引
+CREATE INDEX IF NOT EXISTS idx_shares_user_id ON shares(user_id);
+CREATE INDEX IF NOT EXISTS idx_shares_content ON shares(content_type, content_id);
+CREATE INDEX IF NOT EXISTS idx_shares_platform ON shares(platform);
+CREATE INDEX IF NOT EXISTS idx_shares_short_url ON shares(short_url);
+CREATE INDEX IF NOT EXISTS idx_shares_is_active ON shares(is_active);
+CREATE INDEX IF NOT EXISTS idx_shares_expires_at ON shares(expires_at);
+CREATE INDEX IF NOT EXISTS idx_shares_deleted_at ON shares(deleted_at);
+
+CREATE INDEX IF NOT EXISTS idx_share_clicks_share_id ON share_clicks(share_id);
+CREATE INDEX IF NOT EXISTS idx_share_clicks_ip_address ON share_clicks(ip_address);
+CREATE INDEX IF NOT EXISTS idx_share_clicks_created_at ON share_clicks(created_at);
+CREATE INDEX IF NOT EXISTS idx_share_clicks_deleted_at ON share_clicks(deleted_at);
+
+-- 創建分享表的觸發器
+CREATE TRIGGER update_shares_updated_at BEFORE UPDATE ON shares
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_share_clicks_updated_at BEFORE UPDATE ON share_clicks
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- 插入範例測驗資料
 INSERT INTO quizzes (title, description, category, is_active) VALUES 
 ('GAD-7 焦慮自評量表', '廣泛性焦慮症七項量表，用於評估焦慮程度', 'anxiety', true),
 ('PHQ-9 憂鬱自評量表', '病人健康問卷九項量表，用於評估憂鬱程度', 'depression', true),
