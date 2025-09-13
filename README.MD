@@ -1,4 +1,4 @@
-```MERMIAD
+```mermaid
 flowchart TD
     subgraph 小陳 (求助者) 的旅程
         A[開啟 APP] --> B{主畫面};
@@ -34,7 +34,7 @@ flowchart TD
     end
 ```
 
-```MERMIADMD
+```mermaid
 mindmap
   root((心理健康 APP))
     小陳 (求助者)
