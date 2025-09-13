@@ -34,9 +34,9 @@ func NewChatHandler(cfg *config.Config) *ChatHandler {
 	}
 }
 
-// SendMessage 發送聊天訊息
-// @Summary 發送聊天訊息
-// @Description 發送訊息給 AI 並獲取回應
+// SendMessage 發送聊天訊息 (舊版兼容)
+// @Summary 發送聊天訊息 (舊版)
+// @Description 發送訊息給 AI 並獲取回應 (建議使用 session-based 端點)
 // @Tags chat
 // @Accept json
 // @Produce json
@@ -47,6 +47,7 @@ func NewChatHandler(cfg *config.Config) *ChatHandler {
 // @Failure 401 {object} vo.ErrorResponse
 // @Failure 500 {object} vo.ErrorResponse
 // @Router /chat/send [post]
+// @Deprecated
 func (h *ChatHandler) SendMessage(c *gin.Context) {
 	userID := middleware.GetUserID(c)
 	if userID == "" {
@@ -84,9 +85,72 @@ func (h *ChatHandler) SendMessage(c *gin.Context) {
 		return
 	}
 
+	var sessionID *uuid.UUID
+
+	// 如果有提供 SessionID，使用指定的 session
+	if req.SessionID != nil && *req.SessionID != "" {
+		parsedSessionID, err := uuid.Parse(*req.SessionID)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, vo.NewErrorResponse(
+				"bad_request",
+				"Invalid session ID format",
+				"VALIDATION_ERROR",
+				nil,
+				c.Request.URL.Path,
+			))
+			return
+		}
+		
+		// 驗證 session 是否屬於當前使用者
+		var session models.ChatSession
+		if err := h.db.Where("id = ? AND user_id = ?", parsedSessionID, userID).First(&session).Error; err != nil {
+			if err == gorm.ErrRecordNotFound {
+				c.JSON(http.StatusNotFound, vo.NewErrorResponse(
+					"not_found",
+					"Chat session not found",
+					"SESSION_NOT_FOUND",
+					nil,
+					c.Request.URL.Path,
+				))
+				return
+			}
+			c.JSON(http.StatusInternalServerError, vo.NewErrorResponse(
+				"internal_error",
+				"Failed to check session",
+				"INTERNAL_ERROR",
+				nil,
+				c.Request.URL.Path,
+			))
+			return
+		}
+		sessionID = &parsedSessionID
+	} else {
+		// 創建新的 session
+		newSession := models.ChatSession{
+			UserID:                 uuid.MustParse(userID),
+			FirstMessageSnippet:    req.Content[:min(len(req.Content), 100)],
+			LastUpdatedAt:          time.Now(),
+			MessageCount:          0,
+			IsActive:              true,
+		}
+		
+		if err := h.db.Create(&newSession).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, vo.NewErrorResponse(
+				"internal_error",
+				"Failed to create chat session",
+				"INTERNAL_ERROR",
+				nil,
+				c.Request.URL.Path,
+			))
+			return
+		}
+		sessionID = &newSession.ID
+	}
+
 	// 保存使用者訊息
 	userMessage := models.ChatMessage{
 		UserID:    uuid.MustParse(userID),
+		SessionID: sessionID,
 		Role:      "user",
 		Content:   req.Content,
 		Timestamp: time.Now().UnixMilli(),
@@ -120,6 +184,7 @@ func (h *ChatHandler) SendMessage(c *gin.Context) {
 	// 保存 AI 回應
 	botMessage := models.ChatMessage{
 		UserID:    uuid.MustParse(userID),
+		SessionID: sessionID,
 		Role:      "bot",
 		Content:   aiResponse.Choices[0].Message.Content,
 		Timestamp: time.Now().UnixMilli(),
@@ -138,10 +203,23 @@ func (h *ChatHandler) SendMessage(c *gin.Context) {
 		return
 	}
 
+	// 更新 session 統計
+	h.db.Model(&models.ChatSession{}).Where("id = ?", sessionID).
+		Updates(map[string]interface{}{
+			"last_updated_at": time.Now(),
+			"message_count":   gorm.Expr("message_count + ?", 2), // user + bot message
+		})
+
 	// 構建回應
+	sessionIDStr := ""
+	if sessionID != nil {
+		sessionIDStr = sessionID.String()
+	}
+	
 	response := dto.ChatMessageResponse{
 		ID:        botMessage.ID.String(),
 		UserID:    botMessage.UserID.String(),
+		SessionID: &sessionIDStr,
 		Role:      botMessage.Role,
 		Content:   botMessage.Content,
 		Timestamp: botMessage.Timestamp,
@@ -151,6 +229,13 @@ func (h *ChatHandler) SendMessage(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, vo.SuccessResponse(response, "Message sent successfully"))
+}
+
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
 }
 
 // GetChatHistory 獲取聊天歷史

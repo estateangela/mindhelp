@@ -598,7 +598,7 @@ POST /users/me/push-token
 ✅ 智能評分系統 - 支援 GAD-7, PHQ-9, 壓力量表
 ⭐ 收藏系統
 ✅ GET /users/me/bookmarks/articles - 文章收藏列表
-✅ GET /users/me/bookmarks/resources - 資源收藏列表
+✅ GET /users/me/bookmarks/resources - 資源收藏列表.
 ✅ POST /bookmarks - 通用收藏功能
 ✅ DELETE /bookmarks - 取消收藏
 💬 評論與評分系統
