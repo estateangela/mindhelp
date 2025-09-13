@@ -3,7 +3,7 @@ name: Deploy to Render
 on:
   push:
     branches:
-      - main
+      - temp_disabled
 
   workflow_dispatch: # Allow manual triggering from the GitHub UI
 
