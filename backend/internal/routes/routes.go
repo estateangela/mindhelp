@@ -131,6 +131,42 @@ func SetupRoutes(cfg *config.Config) *gin.Engine {
 				protected.POST("/articles/:id/bookmark", articleHandler.BookmarkArticle)
 				protected.DELETE("/articles/:id/bookmark", articleHandler.UnbookmarkArticle)
 			}
+
+			// 評論路由 (需要認證的)
+			reviews := protected.Group("/reviews")
+			{
+				reviewHandler := handlers.NewReviewHandler()
+				reviews.PUT("/:reviewId", reviewHandler.UpdateReview)
+				reviews.DELETE("/:reviewId", reviewHandler.DeleteReview)
+			}
+
+			// 資源評論 (需要認證的)
+			{
+				reviewHandler := handlers.NewReviewHandler()
+				protected.POST("/resources/:id/reviews", reviewHandler.CreateReview)
+			}
+
+			// 回報功能
+			{
+				reviewHandler := handlers.NewReviewHandler()
+				protected.POST("/report", reviewHandler.ReportContent)
+			}
+
+			// 通知路由
+			notifications := protected.Group("/notifications")
+			{
+				notificationHandler := handlers.NewNotificationHandler()
+				notifications.GET("", notificationHandler.GetNotifications)
+				notifications.POST("/mark-as-read", notificationHandler.MarkAsRead)
+			}
+
+			// 使用者通知設定
+			{
+				notificationHandler := handlers.NewNotificationHandler()
+				protected.GET("/users/me/notification-settings", notificationHandler.GetNotificationSettings)
+				protected.PUT("/users/me/notification-settings", notificationHandler.UpdateNotificationSettings)
+				protected.POST("/users/me/push-token", notificationHandler.UpdatePushToken)
+			}
 		}
 
 		// 公開路由
@@ -153,6 +189,10 @@ func SetupRoutes(cfg *config.Config) *gin.Engine {
 			// 應用配置
 			configHandler := handlers.NewConfigHandler()
 			api.GET("/config", configHandler.GetConfig)
+
+			// 評論相關公開路由
+			reviewHandler := handlers.NewReviewHandler()
+			api.GET("/resources/:id/reviews", reviewHandler.GetResourceReviews)
 		}
 	}
 
