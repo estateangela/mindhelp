@@ -11,6 +11,7 @@ import (
 type ChatMessage struct {
 	ID        uuid.UUID      `json:"id" gorm:"type:uniqueidentifier;primary_key"`
 	UserID    uuid.UUID      `json:"user_id" gorm:"type:uniqueidentifier;not null;index"`
+	SessionID *uuid.UUID     `json:"session_id" gorm:"type:uniqueidentifier;index"` // 會話ID，可為null以向後相容
 	Role      string         `json:"role" gorm:"size:10;not null"` // 'user' 或 'bot'
 	Content   string         `json:"content" gorm:"type:text;not null"`
 	Timestamp int64          `json:"timestamp" gorm:"not null"` // Unix milliseconds
@@ -21,7 +22,8 @@ type ChatMessage struct {
 	DeletedAt gorm.DeletedAt `json:"-" gorm:"index"`
 
 	// 關聯
-	User User `json:"user,omitempty" gorm:"foreignKey:UserID"`
+	User    User         `json:"user,omitempty" gorm:"foreignKey:UserID"`
+	Session *ChatSession `json:"session,omitempty" gorm:"foreignKey:SessionID"`
 }
 
 // TableName 指定資料表名稱
