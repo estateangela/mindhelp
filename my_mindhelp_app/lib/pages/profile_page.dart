@@ -24,7 +24,7 @@ class ProfilePage extends StatelessWidget {
           icon: const Icon(Icons.notifications, color: AppColors.textHigh),
           // TODO: 已經完成 - 導向通知頁
           onPressed: () {
-            Navigator.pushNamed(context, '/notifications');
+            Navigator.pushNamed(context, '/notify');
           },
         ),
       ),
@@ -89,21 +89,12 @@ class ProfilePage extends StatelessWidget {
 
               const SizedBox(height: 32),
 
-              // 2. 各項操作按鈕：修改信箱、修改暱稱、修改密碼、查詢預約紀錄、登出
-              PrimaryButton(
-                text: '修改信箱',
-                onPressed: () {
-                  // TODO: 已經完成 - 導向「修改信箱」頁面
-                  Navigator.pushNamed(context, '/edit-email');
-                },
-              ),
-              const SizedBox(height: 16),
-
+              // 2. 各項操作按鈕：修改暱稱、修改密碼、查詢預約紀錄、登出
               PrimaryButton(
                 text: '修改暱稱',
                 onPressed: () {
                   // TODO: 已經完成 - 導向「修改暱稱」頁面
-                  Navigator.pushNamed(context, '/edit-nickname');
+                  Navigator.pushNamed(context, '/edit_nickname');
                 },
               ),
               const SizedBox(height: 16),
@@ -112,20 +103,10 @@ class ProfilePage extends StatelessWidget {
                 text: '修改密碼',
                 onPressed: () {
                   // TODO: 已經完成 - 導向「修改密碼」頁面
-                  Navigator.pushNamed(context, '/change-password');
+                  Navigator.pushNamed(context, '/change_password');
                 },
               ),
               const SizedBox(height: 16),
-
-              PrimaryButton(
-                text: '查詢預約紀錄',
-                onPressed: () {
-                  // TODO: 已經完成 - 導向「預約紀錄查詢」頁面
-                  Navigator.pushNamed(context, '/reservation-history');
-                },
-              ),
-              const SizedBox(height: 16),
-
               PrimaryButton(
                 text: '登出',
                 onPressed: () {

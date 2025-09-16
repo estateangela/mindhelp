@@ -2,8 +2,9 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class AuthService {
-  // 將基底 URL 替換為你的 Cloudflare API 網址
-  final String _baseUrl = 'https://api.estateangela.dpdns.org/v1';
+  final String _baseUrl = 'https://api.yourdomain.com/v1';
+  final String _authHeader =
+      'Bearer <YOUR_JWT_TOKEN>'; // TODO: 請替換為您實際的 JWT Token
 
   Future<void> register({
     required String email,
@@ -29,6 +30,58 @@ class AuthService {
     } else {
       final errorData = jsonDecode(response.body);
       throw Exception(errorData['error']['message'] ?? '註冊失敗，請重試。');
+    }
+  }
+
+  // 新增：更新暱稱的 API 呼叫
+  Future<void> updateNickname({
+    required String nickname,
+  }) async {
+    final url = Uri.parse('$_baseUrl/users/me');
+
+    final response = await http.put(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': _authHeader,
+      },
+      body: jsonEncode({
+        'nickname': nickname,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      // 更新成功
+    } else {
+      final errorData = jsonDecode(response.body);
+      throw Exception(errorData['error']['message'] ?? '暱稱更新失敗，請重試。');
+    }
+  }
+
+  // 新增：修改密碼的 API 呼叫
+  Future<void> changePassword({
+    required String oldPassword,
+    required String newPassword,
+  }) async {
+    final url = Uri.parse('$_baseUrl/users/me/password');
+
+    final response = await http.put(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': _authHeader,
+      },
+      body: jsonEncode({
+        'oldPassword': oldPassword,
+        'newPassword': newPassword,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      // 密碼更新成功
+    } else {
+      final errorData = jsonDecode(response.body);
+      throw Exception(errorData['error']['message'] ?? '密碼修改失敗，請重試。');
     }
   }
 }

@@ -16,10 +16,6 @@ class NotifyPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        leading: IconButton(
-          icon: Icon(Icons.settings),
-          onPressed: () => Navigator.pushNamed(context, '/settings'),
-        ),
         title:
             Text('mindhelp', style: Theme.of(context).textTheme.headlineLarge),
         centerTitle: true,

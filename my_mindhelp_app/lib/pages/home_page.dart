@@ -17,11 +17,16 @@ class _HomePageState extends State<HomePage> {
       backgroundColor: AppColors.background,
 
       // 顶部改成共用的带 logo 的 AppBar
-      appBar: const CustomAppBar(
-        titleWidget: Image(
+      appBar: CustomAppBar(
+        showBackButton: false,
+        titleWidget: const Image(
           image: AssetImage('assets/images/mindhelp.png'),
           width: 200,
           fit: BoxFit.contain,
+        ),
+        rightIcon: IconButton(
+          icon: const Icon(Icons.notifications, color: AppColors.textHigh),
+          onPressed: () => Navigator.pushNamed(context, '/notify'),
         ),
       ),
 
@@ -67,13 +72,6 @@ class _HomePageState extends State<HomePage> {
                     icon: Icons.info_outline,
                     label: '最新心理健康文章',
                     onTap: () => Navigator.pushNamed(context, '/articles'),
-                  ),
-                  const SizedBox(height: 8),
-                  _buildFunctionCard(
-                    context,
-                    icon: Icons.event_note_outlined,
-                    label: '預約紀錄查詢',
-                    onTap: () => Navigator.pushNamed(context, '/appointments'),
                   ),
                 ],
               ),

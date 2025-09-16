@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../core/theme.dart';
+import '../models/article.dart';
 
 class ArticlePage extends StatelessWidget {
   ArticlePage({super.key});
@@ -109,20 +110,23 @@ class ArticlePage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            ClipRRect(
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(12)),
-              child: Image.network(
-                article.imageUrl,
-                height: 150,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    height: 150,
-                    color: Colors.grey[200],
-                    child: const Center(child: Icon(Icons.image_not_supported)),
-                  );
-                },
+            SizedBox(
+              height: 150,
+              child: ClipRRect(
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(12)),
+                child: Image.network(
+                  article.imageUrl,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      height: 150,
+                      color: Colors.grey[200],
+                      child:
+                          const Center(child: Icon(Icons.image_not_supported)),
+                    );
+                  },
+                ),
               ),
             ),
             Padding(

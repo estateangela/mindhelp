@@ -22,36 +22,39 @@ class ForgotResetPage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Center(
-                      child: Text('mindhelp',
-                          style: Theme.of(context).textTheme.headline1)),
-                  SizedBox(height: 48),
+                      child: Image.asset(
+                    'assets/images/mindhelp.png',
+                    width: 180,
+                  )),
+                  const SizedBox(height: 48),
                   Text('請輸入新密碼', style: Theme.of(context).textTheme.bodyText1),
-                  SizedBox(height: 4),
+                  const SizedBox(height: 4),
                   InputField(
                     controller: _newPwdController,
                     label: '',
                     prefixIcon: Icons.lock_outline,
                     obscureText: true,
                   ),
-                  SizedBox(height: 24),
+                  const SizedBox(height: 24),
                   Text('確認密碼', style: Theme.of(context).textTheme.bodyText1),
-                  SizedBox(height: 4),
+                  const SizedBox(height: 4),
                   InputField(
                     controller: _confirmController,
                     label: '',
                     prefixIcon: Icons.lock_outline,
                     obscureText: true,
                   ),
-                  SizedBox(height: 48),
+                  const SizedBox(height: 48),
                   Row(
                     children: [
                       Expanded(
                         child: PrimaryButton(
                           text: '返回',
-                          onPressed: () => Navigator.pop(context),
+                          onPressed: () =>
+                              Navigator.pushReplacementNamed(context, '/login'),
                         ),
                       ),
-                      SizedBox(width: 16),
+                      const SizedBox(width: 16),
                       Expanded(
                         child: PrimaryButton(
                           text: '確認',

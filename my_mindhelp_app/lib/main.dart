@@ -1,7 +1,6 @@
 // lib/main.dart
 
 import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart';
 
 import 'core/theme.dart';
 import 'pages/login_page.dart';
@@ -13,9 +12,10 @@ import 'pages/chat_page.dart';
 import 'pages/maps_page.dart';
 import 'pages/profile_page.dart';
 import 'pages/notify_page.dart';
-import 'pages/settings_page.dart';
 import 'pages/article_page.dart';
 import 'pages/quiz_page.dart';
+import 'pages/edit_nickname_page.dart';
+import 'pages/change_password_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -30,10 +30,10 @@ class MindHelpApp extends StatelessWidget {
     return MaterialApp(
       title: 'MindHelp',
       theme: AppTheme.lightTheme,
+      debugShowCheckedModeBanner: false,
       initialRoute: '/login',
       routes: {
         '/notify': (_) => NotifyPage(),
-        '/settings': (_) => SettingsPage(),
         '/login': (_) => LoginPage(),
         '/signup': (_) => SignUpPage(),
         '/forgot_code': (_) => ForgotCodePage(),
@@ -44,6 +44,8 @@ class MindHelpApp extends StatelessWidget {
         '/profile': (_) => ProfilePage(),
         '/articles': (_) => ArticlePage(),
         '/quiz': (_) => QuizPage(),
+        '/edit_nickname': (_) => EditNicknamePage(),
+        '/change_password': (_) => ChangePasswordPage(),
       },
     );
   }

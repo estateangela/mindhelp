@@ -133,10 +133,6 @@ class ChatPageState extends State<ChatPage> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.settings, color: AppColors.textHigh),
-          onPressed: () => Navigator.pushNamed(context, '/settings'),
-        ),
         title: Text('Chat', style: Theme.of(context).textTheme.headlineLarge),
         centerTitle: true,
         backgroundColor: Colors.transparent,
