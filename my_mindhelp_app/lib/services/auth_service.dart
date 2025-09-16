@@ -2,7 +2,8 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class AuthService {
-  final String _baseUrl = 'https://api.yourdomain.com/v1';
+  // 將基底 URL 替換為你的 Cloudflare API 網址
+  final String _baseUrl = 'https://api.estateangela.dpdns.org/v1';
 
   Future<void> register({
     required String email,
