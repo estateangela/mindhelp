@@ -31,9 +31,11 @@ class _MapsPageState extends State<MapsPage> {
           // TODO: 考慮將 Geocoding 移至後端，避免前端 API 限制
           final geocodingInstance = GeocodingPlatform.instance;
           if (geocodingInstance != null) {
-            final location = await geocodingInstance.locationFromAddress(item.address);
+            final location =
+                await geocodingInstance.locationFromAddress(item.address);
             if (location.isNotEmpty) {
-              final LatLng position = LatLng(location.first.latitude, location.first.longitude);
+              final LatLng position =
+                  LatLng(location.first.latitude, location.first.longitude);
               _markers.add(
                 Marker(
                   markerId: MarkerId(item.name),
