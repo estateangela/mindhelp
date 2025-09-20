@@ -38,6 +38,9 @@ COPY --from=builder /app/main .
 # 複製環境變數文件
 COPY --from=builder /app/env.example .env
 
+# 複製 CSV 資料文件
+COPY --from=builder /app/document/ ./document/
+
 # 變更檔案擁有者
 RUN chown -R appuser:appgroup /root/
 

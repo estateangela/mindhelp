@@ -53,7 +53,7 @@ func Connect(cfg *config.Config) error {
 func Migrate() error {
 	log.Println("Starting database migration...")
 
-	// 自動遷移所有模型
+	// 自動遷移所有模型 - AutoMigrate 會自動處理已存在的表
 	err := DB.AutoMigrate(
 		&models.User{},
 		&models.ChatMessage{},
@@ -72,6 +72,11 @@ func Migrate() error {
 		&models.RecommendedDoctor{},
 	)
 	if err != nil {
+		// 如果是表已存在的錯誤，我們可以忽略它
+		if fmt.Sprintf("%v", err) == "relation \"users\" already exists" {
+			log.Println("Tables already exist, skipping migration")
+			return nil
+		}
 		return fmt.Errorf("failed to migrate database: %w", err)
 	}
 

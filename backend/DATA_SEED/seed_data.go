@@ -237,6 +237,6 @@ func insertRecommendedDoctors() error {
 	return nil
 }
 
-func INIT_DATA() {
+func main() {
 	seedData()
 }
