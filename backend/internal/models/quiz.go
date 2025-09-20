@@ -1,4 +1,4 @@
-package models
+﻿package models
 
 import (
 	"time"
@@ -7,9 +7,9 @@ import (
 	"gorm.io/gorm"
 )
 
-// Quiz 心理測驗資料模型
+// Quiz 心�?測�?資�?模�?
 type Quiz struct {
-	ID          uuid.UUID      `json:"id" gorm:"type:uniqueidentifier;primary_key"`
+	ID          uuid.UUID      `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
 	Title       string         `json:"title" gorm:"size:200;not null"`
 	Description string         `json:"description" gorm:"type:text"`
 	Category    string         `json:"category" gorm:"size:50"` // anxiety, depression, etc.
@@ -23,10 +23,10 @@ type Quiz struct {
 	Submissions []QuizSubmission `json:"submissions,omitempty" gorm:"foreignKey:QuizID"`
 }
 
-// QuizQuestion 測驗題目資料模型
+// QuizQuestion 測�?題目資�?模�?
 type QuizQuestion struct {
-	ID        uuid.UUID      `json:"id" gorm:"type:uniqueidentifier;primary_key"`
-	QuizID    uuid.UUID      `json:"quiz_id" gorm:"type:uniqueidentifier;not null;index"`
+	ID        uuid.UUID      `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
+	QuizID    uuid.UUID      `json:"quiz_id" gorm:"type:uuid;not null;index"`
 	Question  string         `json:"question" gorm:"type:text;not null"`
 	Options   string         `json:"options" gorm:"type:text"` // JSON array stored as text
 	OrderNum  int            `json:"order_num" gorm:"not null"`
@@ -38,11 +38,11 @@ type QuizQuestion struct {
 	Quiz Quiz `json:"quiz,omitempty" gorm:"foreignKey:QuizID"`
 }
 
-// QuizSubmission 測驗提交資料模型
+// QuizSubmission 測�??�交資�?模�?
 type QuizSubmission struct {
-	ID          uuid.UUID      `json:"id" gorm:"type:uniqueidentifier;primary_key"`
-	UserID      uuid.UUID      `json:"user_id" gorm:"type:uniqueidentifier;not null;index"`
-	QuizID      uuid.UUID      `json:"quiz_id" gorm:"type:uniqueidentifier;not null;index"`
+	ID          uuid.UUID      `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
+	UserID      uuid.UUID      `json:"user_id" gorm:"type:uuid;not null;index"`
+	QuizID      uuid.UUID      `json:"quiz_id" gorm:"type:uuid;not null;index"`
 	Answers     string         `json:"answers" gorm:"type:text;not null"` // JSON object stored as text
 	Score       int            `json:"score" gorm:"not null"`
 	Result      string         `json:"result" gorm:"type:text"`
@@ -56,7 +56,7 @@ type QuizSubmission struct {
 	Quiz Quiz `json:"quiz,omitempty" gorm:"foreignKey:QuizID"`
 }
 
-// TableName 指定資料表名稱
+// TableName 指定資料表名稱�?�?
 func (Quiz) TableName() string {
 	return "quizzes"
 }
@@ -90,3 +90,5 @@ func (qs *QuizSubmission) BeforeCreate(tx *gorm.DB) error {
 	}
 	return nil
 }
+
+

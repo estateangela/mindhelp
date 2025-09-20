@@ -1,4 +1,4 @@
-package models
+﻿package models
 
 import (
 	"time"
@@ -9,7 +9,7 @@ import (
 
 // Article 專家文章資料模型
 type Article struct {
-	ID          uuid.UUID      `json:"id" gorm:"type:uniqueidentifier;primary_key"`
+	ID          uuid.UUID      `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
 	Title       string         `json:"title" gorm:"size:200;not null"`
 	Author      string         `json:"author" gorm:"size:100;not null"`
 	AuthorTitle string         `json:"author_title" gorm:"size:100"`
@@ -28,15 +28,16 @@ type Article struct {
 	Bookmarks []Bookmark `json:"bookmarks,omitempty" gorm:"foreignKey:ArticleID"`
 }
 
-// TableName 指定資料表名稱
+// TableName 指定資料表名稱名稱
 func (Article) TableName() string {
 	return "articles"
 }
 
-// BeforeCreate 在創建前設定 UUID
+// BeforeCreate 在創建前設定前設定 UUID
 func (a *Article) BeforeCreate(tx *gorm.DB) error {
 	if a.ID == uuid.Nil {
 		a.ID = uuid.New()
 	}
 	return nil
 }
+

@@ -81,31 +81,29 @@ func Load() (*Config, error) {
 	// 載入資料庫配置
 	config.Database = DatabaseConfig{
 		Host:     getEnv("DB_HOST", "localhost"),
-		Port:     getEnv("DB_PORT", "1433"),
-		User:     getEnv("DB_USER", "sa"),
+		Port:     getEnv("DB_PORT", "5432"),
+		User:     getEnv("DB_USER", "postgres"),
 		Password: getEnv("DB_PASSWORD", ""),
 		Name:     getEnv("DB_NAME", "mindhelp"),
 		SSLMode:  getEnv("DB_SSL_MODE", "disable"),
 	}
 
-	// 構建 SQL Server DSN - 支援生產環境 SSL
-	encryptMode := getEnv("DB_ENCRYPT", "disable")
-	trustCert := getEnv("DB_TRUST_CERT", "true")
-	connectionTimeout := getEnv("DB_CONNECTION_TIMEOUT", "30")
-	maxPoolSize := getEnv("DB_MAX_POOL_SIZE", "100")
-	
-	config.Database.DSN = fmt.Sprintf(
-		"server=%s;user id=%s;password=%s;port=%s;database=%s;encrypt=%s;TrustServerCertificate=%s;Connection Timeout=%s;Max Pool Size=%s;Pooling=true",
-		config.Database.Host,
-		config.Database.User,
-		config.Database.Password,
-		config.Database.Port,
-		config.Database.Name,
-		encryptMode,
-		trustCert,
-		connectionTimeout,
-		maxPoolSize,
-	)
+	// 構建 PostgreSQL DSN - 支援 Supabase 連接字串格式
+	if dsn := getEnv("DATABASE_URL", ""); dsn != "" {
+		// 如果提供了完整的 DATABASE_URL，直接使用
+		config.Database.DSN = dsn
+	} else {
+		// 否則使用個別參數構建
+		config.Database.DSN = fmt.Sprintf(
+			"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
+			config.Database.Host,
+			config.Database.Port,
+			config.Database.User,
+			config.Database.Password,
+			config.Database.Name,
+			config.Database.SSLMode,
+		)
+	}
 
 	// 載入 JWT 配置
 	jwtExpiry, _ := time.ParseDuration(getEnv("JWT_EXPIRY", "24h"))
