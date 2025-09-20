@@ -182,6 +182,25 @@ func SetupRoutes(cfg *config.Config) *gin.Engine {
 				shareHandler := handlers.NewShareHandler(cfg)
 				protected.GET("/users/me/shares", shareHandler.GetUserShares)
 			}
+
+			// 管理員路由 (需要認證的)
+			admin := protected.Group("/admin")
+			{
+				// 諮商師管理
+				admin.POST("/counselors", handlers.CreateCounselor)
+				admin.PUT("/counselors/:id", handlers.UpdateCounselor)
+				admin.DELETE("/counselors/:id", handlers.DeleteCounselor)
+
+				// 諮商所管理
+				admin.POST("/counseling-centers", handlers.CreateCounselingCenter)
+				admin.PUT("/counseling-centers/:id", handlers.UpdateCounselingCenter)
+				admin.DELETE("/counseling-centers/:id", handlers.DeleteCounselingCenter)
+
+				// 推薦醫師管理
+				admin.POST("/recommended-doctors", handlers.CreateRecommendedDoctor)
+				admin.PUT("/recommended-doctors/:id", handlers.UpdateRecommendedDoctor)
+				admin.DELETE("/recommended-doctors/:id", handlers.DeleteRecommendedDoctor)
+			}
 		}
 
 		// 公開路由
@@ -213,6 +232,18 @@ func SetupRoutes(cfg *config.Config) *gin.Engine {
 			shareHandler := handlers.NewShareHandler(cfg)
 			api.GET("/shares/:shareId", shareHandler.GetShare)
 			api.GET("/shares/stats", shareHandler.GetShareStats)
+
+			// 諮商師相關公開路由
+			api.GET("/counselors", handlers.GetCounselors)
+			api.GET("/counselors/:id", handlers.GetCounselor)
+
+			// 諮商所相關公開路由
+			api.GET("/counseling-centers", handlers.GetCounselingCenters)
+			api.GET("/counseling-centers/:id", handlers.GetCounselingCenter)
+
+			// 推薦醫師相關公開路由
+			api.GET("/recommended-doctors", handlers.GetRecommendedDoctors)
+			api.GET("/recommended-doctors/:id", handlers.GetRecommendedDoctor)
 		}
 	}
 

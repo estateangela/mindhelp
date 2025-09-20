@@ -57,7 +57,19 @@ func Migrate() error {
 	err := DB.AutoMigrate(
 		&models.User{},
 		&models.ChatMessage{},
+		&models.ChatSession{},
 		&models.Location{},
+		&models.Article{},
+		&models.Quiz{},
+		&models.Review{},
+		&models.Bookmark{},
+		&models.Notification{},
+		&models.UserSetting{},
+		&models.AppConfig{},
+		&models.Share{},
+		&models.Counselor{},
+		&models.CounselingCenter{},
+		&models.RecommendedDoctor{},
 	)
 	if err != nil {
 		return fmt.Errorf("failed to migrate database: %w", err)
