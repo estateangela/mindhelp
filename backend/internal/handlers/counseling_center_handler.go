@@ -14,6 +14,18 @@ import (
 )
 
 // GetCounselingCenters 獲取諮商所列表
+// @Summary 獲取諮商所列表
+// @Description 獲取諮商所列表，支援分頁和搜索
+// @Tags counseling-centers
+// @Accept json
+// @Produce json
+// @Param page query int false "頁碼" default(1)
+// @Param page_size query int false "每頁數量" default(10)
+// @Param search query string false "搜索關鍵字"
+// @Param online_only query boolean false "僅顯示線上諮商"
+// @Success 200 {object} dto.CounselingCenterListResponse
+// @Failure 500 {object} vo.ErrorResponse
+// @Router /counseling-centers [get]
 func GetCounselingCenters(c *gin.Context) {
 	// 解析查詢參數
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
@@ -87,6 +99,16 @@ func GetCounselingCenters(c *gin.Context) {
 }
 
 // GetCounselingCenter 獲取單個諮商所
+// @Summary 獲取單個諮商所
+// @Description 根據ID獲取諮商所詳細資訊
+// @Tags counseling-centers
+// @Accept json
+// @Produce json
+// @Param id path string true "諮商所ID"
+// @Success 200 {object} dto.CounselingCenterResponse
+// @Failure 400 {object} vo.ErrorResponse
+// @Failure 404 {object} vo.ErrorResponse
+// @Router /counseling-centers/{id} [get]
 func GetCounselingCenter(c *gin.Context) {
 	id := c.Param("id")
 	centerID, err := uuid.Parse(id)
@@ -121,6 +143,16 @@ func GetCounselingCenter(c *gin.Context) {
 }
 
 // CreateCounselingCenter 創建諮商所
+// @Summary 創建諮商所
+// @Description 創建新的諮商所記錄
+// @Tags counseling-centers
+// @Accept json
+// @Produce json
+// @Param center body dto.CounselingCenterRequest true "諮商所資訊"
+// @Success 201 {object} dto.CounselingCenterResponse
+// @Failure 400 {object} vo.ErrorResponse
+// @Failure 500 {object} vo.ErrorResponse
+// @Router /admin/counseling-centers [post]
 func CreateCounselingCenter(c *gin.Context) {
 	var req dto.CounselingCenterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -160,6 +192,18 @@ func CreateCounselingCenter(c *gin.Context) {
 }
 
 // UpdateCounselingCenter 更新諮商所
+// @Summary 更新諮商所
+// @Description 更新諮商所資訊
+// @Tags counseling-centers
+// @Accept json
+// @Produce json
+// @Param id path string true "諮商所ID"
+// @Param center body dto.CounselingCenterRequest true "諮商所資訊"
+// @Success 200 {object} dto.CounselingCenterResponse
+// @Failure 400 {object} vo.ErrorResponse
+// @Failure 404 {object} vo.ErrorResponse
+// @Failure 500 {object} vo.ErrorResponse
+// @Router /admin/counseling-centers/{id} [put]
 func UpdateCounselingCenter(c *gin.Context) {
 	id := c.Param("id")
 	centerID, err := uuid.Parse(id)

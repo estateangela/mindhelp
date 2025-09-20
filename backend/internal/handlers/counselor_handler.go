@@ -305,6 +305,16 @@ func UpdateCounselor(c *gin.Context) {
 }
 
 // DeleteCounselor 刪除諮商師
+// @Summary 刪除諮商師
+// @Description 刪除諮商師記錄
+// @Tags counselors
+// @Accept json
+// @Produce json
+// @Param id path string true "諮商師ID"
+// @Success 200 {object} vo.Response
+// @Failure 400 {object} vo.ErrorResponse
+// @Failure 500 {object} vo.ErrorResponse
+// @Router /admin/counselors/{id} [delete]
 func DeleteCounselor(c *gin.Context) {
 	id := c.Param("id")
 	counselorID, err := uuid.Parse(id)
