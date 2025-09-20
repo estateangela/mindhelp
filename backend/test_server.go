@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -27,16 +26,17 @@ func main() {
 	r := routes.SetupRoutes(cfg)
 
 	// 啟動伺服器
+	address := ":" + cfg.Server.Port
 	server := &http.Server{
-		Addr:         cfg.Server.Address,
+		Addr:         address,
 		Handler:      r,
 		ReadTimeout:  15 * time.Second,
 		WriteTimeout: 15 * time.Second,
 		IdleTimeout:  60 * time.Second,
 	}
 
-	log.Printf("🚀 Server starting on %s", cfg.Server.Address)
-	log.Printf("📚 Swagger documentation: http://localhost:8080/swagger/index.html")
+	log.Printf("🚀 Server starting on %s", address)
+	log.Printf("📚 Swagger documentation: http://localhost%s/swagger/index.html", address)
 	log.Printf("🔍 New API endpoints:")
 	log.Printf("   - GET /api/v1/counselors")
 	log.Printf("   - GET /api/v1/counseling-centers") 
