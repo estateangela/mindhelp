@@ -721,3 +721,55 @@ POST /users/me/push-token
 ✅ GET /config - 動態配置 (功能開關、篩選選項)
 ✅ 功能開關：評論、治療師資料、群組聊天等
 ✅ 篩選配置：資源類型、專業領域、測驗類別
+
+### 🆕 Phase 3: 專業資源管理 & Google Maps 整合
+👥 專業資源管理
+✅ GET /counselors - 諮商師列表 (961 筆真實資料)
+✅ GET /counselors/{id} - 諮商師詳情
+✅ GET /counseling-centers - 諮商所列表 (97 筆真實資料)
+✅ GET /counseling-centers/{id} - 諮商所詳情
+✅ GET /recommended-doctors - 推薦醫師列表 (13 筆真實資料)
+✅ GET /recommended-doctors/{id} - 推薦醫師詳情
+✅ 智能搜索：支援姓名、地點、專業領域篩選
+✅ 分頁功能：支援大量資料的高效瀏覽
+
+🗺️ Google Maps 整合
+✅ GET /maps/addresses - 獲取所有地址資訊
+✅ GET /maps/google-addresses - Google Maps 專用格式
+✅ 多格式支援：JSON 和 GeoJSON 格式
+✅ 地址提取：智能從描述中提取地址資訊
+✅ 類型篩選：支援按資源類型篩選地址
+
+📊 資料庫整合
+✅ PostgreSQL 連接：成功連接到 Supabase
+✅ 資料遷移：自動處理現有資料和結構變更
+✅ 資料插入：從 CSV 檔案批量插入真實資料
+✅ 錯誤處理：優雅處理重複資料和約束衝突
+
+## 🛠️ 技術規格
+
+### 後端技術棧
+- **語言**: Go 1.24
+- **框架**: Gin Gonic
+- **資料庫**: PostgreSQL (Supabase)
+- **ORM**: GORM
+- **文檔**: Swagger/OpenAPI 3.0
+- **部署**: Docker + Render
+
+### 資料庫規格
+- **總記錄數**: 1,071 筆
+- **諮商師**: 961 筆 (包含執照號碼、專業領域、工作地點)
+- **諮商所**: 97 筆 (包含地址、電話、線上諮商服務)
+- **推薦醫師**: 13 筆 (包含經驗次數、描述資訊)
+
+### API 規格
+- **Base URL**: https://mindhelp.onrender.com/api/v1
+- **認證**: JWT Bearer Token
+- **回應格式**: JSON
+- **分頁**: 支援 page 和 page_size 參數
+- **搜索**: 支援關鍵字搜索和篩選
+
+### 部署資訊
+- **生產環境**: https://mindhelp.onrender.com
+- **API 文檔**: https://mindhelp.onrender.com/swagger/index.html
+- **健康檢查**: https://mindhelp.onrender.com/health
