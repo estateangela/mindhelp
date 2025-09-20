@@ -51,7 +51,9 @@ func main() {
 	if err := database.Migrate(); err != nil {
 		log.Fatalf("Failed to migrate database: %v", err)
 	}
+	//
 
+	seedData()
 	// 設定路由
 	router := routes.SetupRoutes(cfg)
 
