@@ -263,6 +263,16 @@ func UpdateCounselingCenter(c *gin.Context) {
 }
 
 // DeleteCounselingCenter 刪除諮商所
+// @Summary 刪除諮商所
+// @Description 刪除諮商所記錄
+// @Tags counseling-centers
+// @Accept json
+// @Produce json
+// @Param id path string true "諮商所ID"
+// @Success 200 {object} vo.Response
+// @Failure 400 {object} vo.ErrorResponse
+// @Failure 500 {object} vo.ErrorResponse
+// @Router /admin/counseling-centers/{id} [delete]
 func DeleteCounselingCenter(c *gin.Context) {
 	id := c.Param("id")
 	centerID, err := uuid.Parse(id)
