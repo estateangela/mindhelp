@@ -14,6 +14,19 @@ import (
 )
 
 // GetCounselors 獲取諮商師列表
+// @Summary 獲取諮商師列表
+// @Description 獲取諮商師列表，支援分頁和搜索
+// @Tags counselors
+// @Accept json
+// @Produce json
+// @Param page query int false "頁碼" default(1)
+// @Param page_size query int false "每頁數量" default(10)
+// @Param search query string false "搜索關鍵字"
+// @Param work_location query string false "工作地點"
+// @Param specialty query string false "專業領域"
+// @Success 200 {object} dto.CounselorListResponse
+// @Failure 500 {object} vo.ErrorResponse
+// @Router /counselors [get]
 func GetCounselors(c *gin.Context) {
 	// 解析查詢參數
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
@@ -98,6 +111,16 @@ func GetCounselors(c *gin.Context) {
 }
 
 // GetCounselor 獲取單個諮商師
+// @Summary 獲取單個諮商師
+// @Description 根據ID獲取諮商師詳細資訊
+// @Tags counselors
+// @Accept json
+// @Produce json
+// @Param id path string true "諮商師ID"
+// @Success 200 {object} dto.CounselorResponse
+// @Failure 400 {object} vo.ErrorResponse
+// @Failure 404 {object} vo.ErrorResponse
+// @Router /counselors/{id} [get]
 func GetCounselor(c *gin.Context) {
 	id := c.Param("id")
 	counselorID, err := uuid.Parse(id)
@@ -138,6 +161,16 @@ func GetCounselor(c *gin.Context) {
 }
 
 // CreateCounselor 創建諮商師
+// @Summary 創建諮商師
+// @Description 創建新的諮商師記錄
+// @Tags counselors
+// @Accept json
+// @Produce json
+// @Param counselor body dto.CounselorRequest true "諮商師資訊"
+// @Success 201 {object} dto.CounselorResponse
+// @Failure 400 {object} vo.ErrorResponse
+// @Failure 500 {object} vo.ErrorResponse
+// @Router /admin/counselors [post]
 func CreateCounselor(c *gin.Context) {
 	var req dto.CounselorRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -189,6 +222,18 @@ func CreateCounselor(c *gin.Context) {
 }
 
 // UpdateCounselor 更新諮商師
+// @Summary 更新諮商師
+// @Description 更新諮商師資訊
+// @Tags counselors
+// @Accept json
+// @Produce json
+// @Param id path string true "諮商師ID"
+// @Param counselor body dto.CounselorRequest true "諮商師資訊"
+// @Success 200 {object} dto.CounselorResponse
+// @Failure 400 {object} vo.ErrorResponse
+// @Failure 404 {object} vo.ErrorResponse
+// @Failure 500 {object} vo.ErrorResponse
+// @Router /admin/counselors/{id} [put]
 func UpdateCounselor(c *gin.Context) {
 	id := c.Param("id")
 	counselorID, err := uuid.Parse(id)
