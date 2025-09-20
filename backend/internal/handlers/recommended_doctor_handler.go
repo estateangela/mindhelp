@@ -45,8 +45,8 @@ func GetRecommendedDoctors(c *gin.Context) {
 
 	offset := (page - 1) * pageSize
 
-	// 構建查詢
-	query := database.GetDB().Model(&models.RecommendedDoctor{})
+	// 構建查詢 - 排除名稱為空的記錄
+	query := database.GetDB().Model(&models.RecommendedDoctor{}).Where("name IS NOT NULL AND name != ''")
 
 	// 添加搜索條件
 	if search != "" {
@@ -127,7 +127,7 @@ func GetRecommendedDoctor(c *gin.Context) {
 	}
 
 	var doctor models.RecommendedDoctor
-	if err := database.GetDB().First(&doctor, "id = ?", doctorID).Error; err != nil {
+	if err := database.GetDB().Where("id = ? AND name IS NOT NULL AND name != ''", doctorID).First(&doctor).Error; err != nil {
 		c.JSON(http.StatusNotFound, vo.ErrorResponse{
 			Code:    "NOT_FOUND",
 			Message: "Recommended doctor not found",

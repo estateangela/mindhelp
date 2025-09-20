@@ -1,0 +1,3365 @@
+basePath: /api/v1
+definitions:
+  dto.AppConfigResponse:
+    properties:
+      api_endpoints:
+        additionalProperties:
+          type: string
+        type: object
+      features:
+        $ref: '#/definitions/dto.FeatureConfig'
+      filters:
+        $ref: '#/definitions/dto.FilterConfig'
+      support_info:
+        $ref: '#/definitions/dto.SupportInfo'
+    type: object
+  dto.ArticleListResponse:
+    properties:
+      articles:
+        items:
+          $ref: '#/definitions/dto.ArticleResponse'
+        type: array
+      has_more:
+        type: boolean
+      limit:
+        type: integer
+      page:
+        type: integer
+      total:
+        type: integer
+      total_pages:
+        type: integer
+    type: object
+  dto.ArticleResponse:
+    properties:
+      author:
+        type: string
+      author_title:
+        type: string
+      content:
+        description: 列表中不包含，詳情中包含
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      image_url:
+        type: string
+      is_bookmarked:
+        type: boolean
+      publish_date:
+        type: string
+      summary:
+        type: string
+      tags:
+        items:
+          type: string
+        type: array
+      title:
+        type: string
+      view_count:
+        type: integer
+    type: object
+  dto.AuthResponse:
+    properties:
+      access_token:
+        type: string
+      expires_in:
+        type: integer
+      refresh_token:
+        type: string
+      user:
+        $ref: '#/definitions/dto.UserResponse'
+    type: object
+  dto.BookmarkListResponse:
+    properties:
+      bookmarks:
+        items:
+          $ref: '#/definitions/dto.BookmarkResponse'
+        type: array
+      has_more:
+        type: boolean
+      limit:
+        type: integer
+      page:
+        type: integer
+      total:
+        type: integer
+      total_pages:
+        type: integer
+    type: object
+  dto.BookmarkRequest:
+    properties:
+      resource_id:
+        type: string
+      resource_type:
+        enum:
+        - article
+        - location
+        type: string
+    required:
+    - resource_id
+    - resource_type
+    type: object
+  dto.BookmarkResponse:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      resource:
+        description: ArticleResponse 或 LocationResponse
+      resource_type:
+        type: string
+    type: object
+  dto.ChangePasswordRequest:
+    properties:
+      current_password:
+        type: string
+      new_password:
+        minLength: 6
+        type: string
+    required:
+    - current_password
+    - new_password
+    type: object
+  dto.ChatHistoryResponse:
+    properties:
+      has_more:
+        type: boolean
+      messages:
+        items:
+          $ref: '#/definitions/dto.ChatMessageResponse'
+        type: array
+      page:
+        type: integer
+      page_size:
+        type: integer
+      total:
+        type: integer
+    type: object
+  dto.ChatMessageRequest:
+    properties:
+      content:
+        maxLength: 2000
+        minLength: 1
+        type: string
+      model:
+        type: string
+      session_id:
+        description: 可選，不提供則創建新 session
+        type: string
+    required:
+    - content
+    type: object
+  dto.ChatMessageResponse:
+    properties:
+      content:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      model:
+        type: string
+      role:
+        type: string
+      session_id:
+        type: string
+      timestamp:
+        type: integer
+      tokens:
+        type: integer
+      user_id:
+        type: string
+    type: object
+  dto.ChatSessionListResponse:
+    properties:
+      has_more:
+        type: boolean
+      limit:
+        type: integer
+      page:
+        type: integer
+      sessions:
+        items:
+          $ref: '#/definitions/dto.ChatSessionResponse'
+        type: array
+      total:
+        type: integer
+      total_pages:
+        type: integer
+    type: object
+  dto.ChatSessionRequest:
+    properties:
+      title:
+        maxLength: 200
+        type: string
+    type: object
+  dto.ChatSessionResponse:
+    properties:
+      created_at:
+        type: string
+      first_message_snippet:
+        type: string
+      id:
+        type: string
+      is_active:
+        type: boolean
+      last_updated_at:
+        type: string
+      message_count:
+        type: integer
+      title:
+        type: string
+      user_id:
+        type: string
+    type: object
+  dto.CounselingCenterListResponse:
+    properties:
+      counseling_centers:
+        items:
+          $ref: '#/definitions/dto.CounselingCenterResponse'
+        type: array
+      page:
+        type: integer
+      page_size:
+        type: integer
+      total:
+        type: integer
+    type: object
+  dto.CounselingCenterRequest:
+    properties:
+      address:
+        type: string
+      name:
+        type: string
+      online_counseling:
+        type: boolean
+      phone:
+        type: string
+    required:
+    - name
+    type: object
+  dto.CounselingCenterResponse:
+    properties:
+      address:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      online_counseling:
+        type: boolean
+      phone:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  dto.CounselorListResponse:
+    properties:
+      counselors:
+        items:
+          $ref: '#/definitions/dto.CounselorResponse'
+        type: array
+      page:
+        type: integer
+      page_size:
+        type: integer
+      total:
+        type: integer
+    type: object
+  dto.CounselorRequest:
+    properties:
+      gender:
+        type: string
+      institution_code:
+        type: string
+      language_skills:
+        type: string
+      license_number:
+        type: string
+      name:
+        type: string
+      psychology_school:
+        type: string
+      specialties:
+        type: string
+      treatment_methods:
+        type: string
+      work_location:
+        type: string
+      work_unit:
+        type: string
+    required:
+    - license_number
+    - name
+    type: object
+  dto.CounselorResponse:
+    properties:
+      created_at:
+        type: string
+      gender:
+        type: string
+      id:
+        type: string
+      institution_code:
+        type: string
+      language_skills:
+        type: string
+      license_number:
+        type: string
+      name:
+        type: string
+      psychology_school:
+        type: string
+      specialties:
+        type: string
+      treatment_methods:
+        type: string
+      updated_at:
+        type: string
+      work_location:
+        type: string
+      work_unit:
+        type: string
+    type: object
+  dto.DeleteAccountRequest:
+    properties:
+      password:
+        type: string
+      reason:
+        maxLength: 500
+        type: string
+    required:
+    - password
+    type: object
+  dto.FeatureConfig:
+    properties:
+      enableGroupChat:
+        type: boolean
+      enableReviews:
+        type: boolean
+      enableSharing:
+        type: boolean
+      enableTherapistProfiles:
+        type: boolean
+      enableVideoConsult:
+        type: boolean
+    type: object
+  dto.FilterConfig:
+    properties:
+      quizCategories:
+        items:
+          $ref: '#/definitions/dto.FilterOption'
+        type: array
+      resourceTypes:
+        items:
+          $ref: '#/definitions/dto.FilterOption'
+        type: array
+      specialties:
+        items:
+          $ref: '#/definitions/dto.FilterOption'
+        type: array
+    type: object
+  dto.FilterOption:
+    properties:
+      description:
+        type: string
+      displayName:
+        type: string
+      key:
+        type: string
+    type: object
+  dto.LocationRequest:
+    properties:
+      address:
+        maxLength: 255
+        type: string
+      category:
+        maxLength: 50
+        type: string
+      description:
+        maxLength: 1000
+        type: string
+      is_public:
+        type: boolean
+      latitude:
+        maximum: 90
+        minimum: -90
+        type: number
+      longitude:
+        maximum: 180
+        minimum: -180
+        type: number
+      name:
+        maxLength: 100
+        minLength: 1
+        type: string
+      phone:
+        type: string
+      rating:
+        maximum: 5
+        minimum: 0
+        type: number
+      website:
+        type: string
+    required:
+    - latitude
+    - longitude
+    - name
+    type: object
+  dto.LocationResponse:
+    properties:
+      address:
+        type: string
+      category:
+        type: string
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      is_public:
+        type: boolean
+      latitude:
+        type: number
+      longitude:
+        type: number
+      name:
+        type: string
+      phone:
+        type: string
+      rating:
+        type: number
+      updated_at:
+        type: string
+      user_id:
+        type: string
+      website:
+        type: string
+    type: object
+  dto.LocationSearchResponse:
+    properties:
+      has_more:
+        type: boolean
+      locations:
+        items:
+          $ref: '#/definitions/dto.LocationResponse'
+        type: array
+      page:
+        type: integer
+      page_size:
+        type: integer
+      total:
+        type: integer
+    type: object
+  dto.LocationUpdateRequest:
+    properties:
+      address:
+        maxLength: 255
+        type: string
+      category:
+        maxLength: 50
+        type: string
+      description:
+        maxLength: 1000
+        type: string
+      is_public:
+        type: boolean
+      latitude:
+        maximum: 90
+        minimum: -90
+        type: number
+      longitude:
+        maximum: 180
+        minimum: -180
+        type: number
+      name:
+        maxLength: 100
+        minLength: 1
+        type: string
+      phone:
+        type: string
+      rating:
+        maximum: 5
+        minimum: 0
+        type: number
+      website:
+        type: string
+    type: object
+  dto.LoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        minLength: 6
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  dto.MarkAsReadRequest:
+    properties:
+      notification_ids:
+        items:
+          type: string
+        minItems: 1
+        type: array
+    required:
+    - notification_ids
+    type: object
+  dto.NotificationListResponse:
+    properties:
+      has_more:
+        type: boolean
+      limit:
+        type: integer
+      notifications:
+        items:
+          $ref: '#/definitions/dto.NotificationResponse'
+        type: array
+      page:
+        type: integer
+      total:
+        type: integer
+      total_pages:
+        type: integer
+      unread_count:
+        type: integer
+    type: object
+  dto.NotificationResponse:
+    properties:
+      body:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      is_read:
+        type: boolean
+      payload:
+        additionalProperties: true
+        type: object
+      title:
+        type: string
+      type:
+        type: string
+    type: object
+  dto.NotificationSettingsRequest:
+    properties:
+      notify_new_article:
+        type: boolean
+      notify_promotions:
+        type: boolean
+      notify_system_updates:
+        type: boolean
+    type: object
+  dto.NotificationSettingsResponse:
+    properties:
+      notify_new_article:
+        type: boolean
+      notify_promotions:
+        type: boolean
+      notify_system_updates:
+        type: boolean
+    type: object
+  dto.PushTokenRequest:
+    properties:
+      platform:
+        enum:
+        - ios
+        - android
+        type: string
+      token:
+        type: string
+    required:
+    - platform
+    - token
+    type: object
+  dto.QuizHistoryResponse:
+    properties:
+      has_more:
+        type: boolean
+      limit:
+        type: integer
+      page:
+        type: integer
+      submissions:
+        items:
+          $ref: '#/definitions/dto.QuizSubmissionResponse'
+        type: array
+      total:
+        type: integer
+      total_pages:
+        type: integer
+    type: object
+  dto.QuizListResponse:
+    properties:
+      has_more:
+        type: boolean
+      limit:
+        type: integer
+      page:
+        type: integer
+      quizzes:
+        items:
+          $ref: '#/definitions/dto.QuizResponse'
+        type: array
+      total:
+        type: integer
+      total_pages:
+        type: integer
+    type: object
+  dto.QuizQuestionResponse:
+    properties:
+      id:
+        type: string
+      options:
+        items:
+          type: string
+        type: array
+      order_num:
+        type: integer
+      question:
+        type: string
+    type: object
+  dto.QuizResponse:
+    properties:
+      category:
+        type: string
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      is_active:
+        type: boolean
+      questions:
+        description: 列表中不包含，詳情中包含
+        items:
+          $ref: '#/definitions/dto.QuizQuestionResponse'
+        type: array
+      title:
+        type: string
+    type: object
+  dto.QuizSubmissionRequest:
+    properties:
+      answers:
+        additionalProperties:
+          type: integer
+        description: question_id -> option_index
+        type: object
+      quiz_id:
+        type: string
+    required:
+    - answers
+    - quiz_id
+    type: object
+  dto.QuizSubmissionResponse:
+    properties:
+      completed_at:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      quiz_title:
+        type: string
+      result:
+        type: string
+      score:
+        type: integer
+    type: object
+  dto.RecommendedDoctorListResponse:
+    properties:
+      page:
+        type: integer
+      page_size:
+        type: integer
+      recommended_doctors:
+        items:
+          $ref: '#/definitions/dto.RecommendedDoctorResponse'
+        type: array
+      total:
+        type: integer
+    type: object
+  dto.RecommendedDoctorRequest:
+    properties:
+      description:
+        type: string
+      experience_count:
+        type: integer
+      name:
+        type: string
+    required:
+    - name
+    type: object
+  dto.RecommendedDoctorResponse:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      experience_count:
+        type: integer
+      id:
+        type: string
+      name:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  dto.RegisterRequest:
+    properties:
+      avatar:
+        type: string
+      email:
+        type: string
+      full_name:
+        maxLength: 100
+        minLength: 2
+        type: string
+      password:
+        minLength: 6
+        type: string
+      phone:
+        type: string
+      username:
+        maxLength: 50
+        minLength: 3
+        type: string
+    required:
+    - email
+    - full_name
+    - password
+    - username
+    type: object
+  dto.ReportRequest:
+    properties:
+      content_id:
+        type: string
+      content_type:
+        enum:
+        - review
+        - article
+        - resource
+        type: string
+      details:
+        maxLength: 1000
+        type: string
+      reason:
+        enum:
+        - spam
+        - inappropriate
+        - incorrect_info
+        type: string
+    required:
+    - content_id
+    - content_type
+    - reason
+    type: object
+  dto.ReviewAuthor:
+    properties:
+      avatar:
+        type: string
+      id:
+        type: string
+      username:
+        type: string
+    type: object
+  dto.ReviewListResponse:
+    properties:
+      has_more:
+        type: boolean
+      limit:
+        type: integer
+      page:
+        type: integer
+      reviews:
+        items:
+          $ref: '#/definitions/dto.ReviewResponse'
+        type: array
+      statistics:
+        $ref: '#/definitions/dto.ReviewStatistics'
+      total:
+        type: integer
+      total_pages:
+        type: integer
+    type: object
+  dto.ReviewRequest:
+    properties:
+      comment:
+        maxLength: 1000
+        type: string
+      rating:
+        maximum: 5
+        minimum: 1
+        type: integer
+    required:
+    - rating
+    type: object
+  dto.ReviewResponse:
+    properties:
+      author:
+        $ref: '#/definitions/dto.ReviewAuthor'
+      can_edit:
+        description: 當前使用者是否可編輯/刪除
+        type: boolean
+      comment:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      is_helpful:
+        type: integer
+      rating:
+        type: integer
+      resource_id:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  dto.ReviewStatistics:
+    properties:
+      average_rating:
+        type: number
+      rating_distribution:
+        additionalProperties:
+          format: int64
+          type: integer
+        description: rating -> count
+        type: object
+      total_reviews:
+        type: integer
+    type: object
+  dto.ReviewUpdateRequest:
+    properties:
+      comment:
+        maxLength: 1000
+        type: string
+      rating:
+        maximum: 5
+        minimum: 1
+        type: integer
+    type: object
+  dto.SessionMessagesResponse:
+    properties:
+      has_more:
+        type: boolean
+      limit:
+        type: integer
+      messages:
+        items:
+          $ref: '#/definitions/dto.ChatMessageResponse'
+        type: array
+      page:
+        type: integer
+      session_id:
+        type: string
+      total:
+        type: integer
+    type: object
+  dto.ShareContentResponse:
+    properties:
+      author:
+        type: string
+      content_id:
+        type: string
+      content_type:
+        type: string
+      created_at:
+        type: string
+      description:
+        type: string
+      image_url:
+        type: string
+      is_valid:
+        type: boolean
+      metadata:
+        additionalProperties: true
+        type: object
+      share_count:
+        type: integer
+      title:
+        type: string
+      url:
+        type: string
+      view_count:
+        type: integer
+    type: object
+  dto.ShareListResponse:
+    properties:
+      has_more:
+        type: boolean
+      limit:
+        type: integer
+      page:
+        type: integer
+      shares:
+        items:
+          $ref: '#/definitions/dto.ShareResponse'
+        type: array
+      total:
+        type: integer
+      total_pages:
+        type: integer
+    type: object
+  dto.ShareRequest:
+    properties:
+      content_id:
+        type: string
+      content_type:
+        enum:
+        - article
+        - location
+        - quiz
+        type: string
+      message:
+        maxLength: 500
+        type: string
+      platform:
+        enum:
+        - facebook
+        - twitter
+        - line
+        - whatsapp
+        - email
+        - copy
+        type: string
+    required:
+    - content_id
+    - content_type
+    type: object
+  dto.ShareResponse:
+    properties:
+      content_id:
+        type: string
+      content_type:
+        type: string
+      created_at:
+        type: string
+      expires_at:
+        type: string
+      metadata:
+        additionalProperties: true
+        type: object
+      platform:
+        type: string
+      qr_code:
+        description: Base64 encoded QR code image
+        type: string
+      share_id:
+        type: string
+      share_url:
+        type: string
+      short_url:
+        type: string
+    type: object
+  dto.ShareStatsResponse:
+    properties:
+      content_id:
+        type: string
+      content_type:
+        type: string
+      platforms:
+        additionalProperties:
+          format: int64
+          type: integer
+        description: platform -> count
+        type: object
+      recent_shares:
+        items:
+          $ref: '#/definitions/dto.ShareResponse'
+        type: array
+      total_shares:
+        type: integer
+    type: object
+  dto.SupportInfo:
+    properties:
+      email:
+        type: string
+      phone:
+        type: string
+      website:
+        type: string
+      working_hours:
+        type: string
+    type: object
+  dto.UpdateUserRequest:
+    properties:
+      avatar:
+        type: string
+      full_name:
+        maxLength: 100
+        minLength: 2
+        type: string
+      phone:
+        type: string
+      username:
+        maxLength: 50
+        minLength: 3
+        type: string
+    type: object
+  dto.UserProfileResponse:
+    properties:
+      avatar:
+        type: string
+      created_at:
+        type: string
+      email:
+        type: string
+      full_name:
+        type: string
+      id:
+        type: string
+      is_active:
+        type: boolean
+      last_login:
+        type: string
+      phone:
+        type: string
+      updated_at:
+        type: string
+      username:
+        type: string
+    type: object
+  dto.UserResponse:
+    properties:
+      avatar:
+        type: string
+      created_at:
+        type: string
+      email:
+        type: string
+      full_name:
+        type: string
+      id:
+        type: string
+      is_active:
+        type: boolean
+      last_login:
+        type: string
+      phone:
+        type: string
+      username:
+        type: string
+    type: object
+  dto.UserStatsResponse:
+    properties:
+      total_bookmarks:
+        type: integer
+      total_chat_sessions:
+        type: integer
+      total_quizzes:
+        type: integer
+      total_reviews:
+        type: integer
+      unread_notifications:
+        type: integer
+    type: object
+  vo.ErrorResponse:
+    properties:
+      code:
+        type: string
+      details:
+        items:
+          type: string
+        type: array
+      error:
+        type: string
+      message:
+        type: string
+      path:
+        type: string
+      success:
+        type: boolean
+      timestamp:
+        type: string
+    type: object
+  vo.Response:
+    properties:
+      data: {}
+      error:
+        type: string
+      message:
+        type: string
+      path:
+        type: string
+      success:
+        type: boolean
+      timestamp:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: MindHelp 心理健康支援應用程式後端 API
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: MindHelp Backend API
+  version: "1.0"
+paths:
+  /admin/counseling-centers:
+    post:
+      consumes:
+      - application/json
+      description: 創建新的諮商所記錄
+      parameters:
+      - description: 諮商所資訊
+        in: body
+        name: center
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CounselingCenterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.CounselingCenterResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      summary: 創建諮商所
+      tags:
+      - counseling-centers
+  /admin/counseling-centers/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: 刪除諮商所記錄
+      parameters:
+      - description: 諮商所ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/vo.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      summary: 刪除諮商所
+      tags:
+      - counseling-centers
+    put:
+      consumes:
+      - application/json
+      description: 更新諮商所資訊
+      parameters:
+      - description: 諮商所ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: 諮商所資訊
+        in: body
+        name: center
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CounselingCenterRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.CounselingCenterResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      summary: 更新諮商所
+      tags:
+      - counseling-centers
+  /admin/counselors:
+    post:
+      consumes:
+      - application/json
+      description: 創建新的諮商師記錄
+      parameters:
+      - description: 諮商師資訊
+        in: body
+        name: counselor
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CounselorRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.CounselorResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      summary: 創建諮商師
+      tags:
+      - counselors
+  /admin/counselors/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: 刪除諮商師記錄
+      parameters:
+      - description: 諮商師ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/vo.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      summary: 刪除諮商師
+      tags:
+      - counselors
+    put:
+      consumes:
+      - application/json
+      description: 更新諮商師資訊
+      parameters:
+      - description: 諮商師ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: 諮商師資訊
+        in: body
+        name: counselor
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CounselorRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.CounselorResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      summary: 更新諮商師
+      tags:
+      - counselors
+  /admin/recommended-doctors:
+    post:
+      consumes:
+      - application/json
+      description: 創建新的推薦醫師記錄
+      parameters:
+      - description: 推薦醫師資訊
+        in: body
+        name: doctor
+        required: true
+        schema:
+          $ref: '#/definitions/dto.RecommendedDoctorRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.RecommendedDoctorResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      summary: 創建推薦醫師
+      tags:
+      - recommended-doctors
+  /admin/recommended-doctors/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: 刪除推薦醫師記錄
+      parameters:
+      - description: 推薦醫師ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/vo.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      summary: 刪除推薦醫師
+      tags:
+      - recommended-doctors
+    put:
+      consumes:
+      - application/json
+      description: 更新推薦醫師資訊
+      parameters:
+      - description: 推薦醫師ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: 推薦醫師資訊
+        in: body
+        name: doctor
+        required: true
+        schema:
+          $ref: '#/definitions/dto.RecommendedDoctorRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.RecommendedDoctorResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      summary: 更新推薦醫師
+      tags:
+      - recommended-doctors
+  /articles:
+    get:
+      consumes:
+      - application/json
+      description: 搜尋和獲取專家文章列表
+      parameters:
+      - description: 搜尋關鍵字
+        in: query
+        name: q
+        type: string
+      - description: 依標籤篩選
+        in: query
+        name: tag
+        type: string
+      - default: publish_date
+        description: 排序依據
+        enum:
+        - publish_date
+        - popularity
+        in: query
+        name: sort_by
+        type: string
+      - default: 1
+        description: 頁碼
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: 每頁數量
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/vo.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.ArticleListResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      summary: 獲取文章列表
+      tags:
+      - article
+  /articles/{id}:
+    get:
+      consumes:
+      - application/json
+      description: 獲取特定文章的詳細內容
+      parameters:
+      - description: 文章ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/vo.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.ArticleResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      summary: 獲取文章詳情
+      tags:
+      - article
+  /articles/{id}/bookmark:
+    delete:
+      consumes:
+      - application/json
+      description: 從使用者收藏列表中移除文章
+      parameters:
+      - description: 文章ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 取消收藏文章
+      tags:
+      - article
+    post:
+      consumes:
+      - application/json
+      description: 將文章加入使用者收藏列表
+      parameters:
+      - description: 文章ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 收藏文章
+      tags:
+      - article
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: 使用者登入並獲取 JWT token
+      parameters:
+      - description: 登入資訊
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/vo.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.AuthResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      summary: 使用者登入
+      tags:
+      - auth
+  /auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: 使用 refresh token 獲取新的 access token
+      parameters:
+      - description: Refresh token
+        in: body
+        name: refresh_token
+        required: true
+        schema:
+          type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/vo.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.AuthResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      summary: 刷新 JWT token
+      tags:
+      - auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: 創建新的使用者帳戶
+      parameters:
+      - description: 註冊資訊
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/vo.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.AuthResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      summary: 使用者註冊
+      tags:
+      - auth
+  /bookmarks:
+    delete:
+      consumes:
+      - application/json
+      description: 取消收藏文章或地點資源
+      parameters:
+      - description: 資源類型
+        enum:
+        - article
+        - location
+        in: query
+        name: resource_type
+        required: true
+        type: string
+      - description: 資源ID
+        in: query
+        name: resource_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 取消收藏資源
+      tags:
+      - bookmark
+    post:
+      consumes:
+      - application/json
+      description: 收藏文章或地點資源
+      parameters:
+      - description: 收藏請求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.BookmarkRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 收藏資源
+      tags:
+      - bookmark
+  /chat/history:
+    get:
+      consumes:
+      - application/json
+      description: 獲取使用者的聊天歷史記錄
+      parameters:
+      - default: 1
+        description: 頁碼
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: 每頁數量
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/vo.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.ChatHistoryResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 獲取聊天歷史
+      tags:
+      - chat
+  /chat/send:
+    post:
+      consumes:
+      - application/json
+      deprecated: true
+      description: 發送訊息給 AI 並獲取回應 (建議使用 session-based 端點)
+      parameters:
+      - description: 聊天訊息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ChatMessageRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/vo.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.ChatMessageResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 發送聊天訊息 (舊版)
+      tags:
+      - chat
+  /chat/sessions:
+    get:
+      consumes:
+      - application/json
+      description: 獲取使用者的聊天會話列表
+      parameters:
+      - default: 1
+        description: 頁碼
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: 每頁數量
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/vo.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.ChatSessionListResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 獲取聊天會話列表
+      tags:
+      - chat
+    post:
+      consumes:
+      - application/json
+      description: 創建新的聊天會話
+      parameters:
+      - description: 會話資料
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ChatSessionRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/vo.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.ChatSessionResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 創建聊天會話
+      tags:
+      - chat
+  /chat/sessions/{sessionId}/messages:
+    get:
+      consumes:
+      - application/json
+      description: 獲取指定會話的訊息列表
+      parameters:
+      - description: 會話ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - default: 1
+        description: 頁碼
+        in: query
+        name: page
+        type: integer
+      - default: 50
+        description: 每頁數量
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/vo.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.SessionMessagesResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 獲取會話訊息
+      tags:
+      - chat
+    post:
+      consumes:
+      - application/json
+      description: 在指定會話中發送訊息給 AI
+      parameters:
+      - description: 會話ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: 聊天訊息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ChatMessageRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/vo.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.ChatMessageResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 發送會話訊息
+      tags:
+      - chat
+  /config:
+    get:
+      consumes:
+      - application/json
+      description: 獲取 APP 的動態配置，包含功能開關和篩選選項
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/vo.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.AppConfigResponse'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      summary: 獲取應用配置
+      tags:
+      - config
+  /counseling-centers:
+    get:
+      consumes:
+      - application/json
+      description: 獲取諮商所列表，支援分頁和搜索
+      parameters:
+      - default: 1
+        description: 頁碼
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: 每頁數量
+        in: query
+        name: page_size
+        type: integer
+      - description: 搜索關鍵字
+        in: query
+        name: search
+        type: string
+      - description: 僅顯示線上諮商
+        in: query
+        name: online_only
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.CounselingCenterListResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      summary: 獲取諮商所列表
+      tags:
+      - counseling-centers
+  /counseling-centers/{id}:
+    get:
+      consumes:
+      - application/json
+      description: 根據ID獲取諮商所詳細資訊
+      parameters:
+      - description: 諮商所ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.CounselingCenterResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      summary: 獲取單個諮商所
+      tags:
+      - counseling-centers
+  /counselors:
+    get:
+      consumes:
+      - application/json
+      description: 獲取諮商師列表，支援分頁和搜索
+      parameters:
+      - default: 1
+        description: 頁碼
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: 每頁數量
+        in: query
+        name: page_size
+        type: integer
+      - description: 搜索關鍵字
+        in: query
+        name: search
+        type: string
+      - description: 工作地點
+        in: query
+        name: work_location
+        type: string
+      - description: 專業領域
+        in: query
+        name: specialty
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.CounselorListResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      summary: 獲取諮商師列表
+      tags:
+      - counselors
+  /counselors/{id}:
+    get:
+      consumes:
+      - application/json
+      description: 根據ID獲取諮商師詳細資訊
+      parameters:
+      - description: 諮商師ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.CounselorResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      summary: 獲取單個諮商師
+      tags:
+      - counselors
+  /locations:
+    post:
+      consumes:
+      - application/json
+      description: 創建新的心理健康資源位置
+      parameters:
+      - description: 位置資訊
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.LocationRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/vo.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.LocationResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 創建位置
+      tags:
+      - location
+  /locations/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: 刪除指定的位置
+      parameters:
+      - description: 位置ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/vo.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 刪除位置
+      tags:
+      - location
+    get:
+      consumes:
+      - application/json
+      description: 獲取特定位置的詳細資訊
+      parameters:
+      - description: 位置ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/vo.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.LocationResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      summary: 獲取位置詳情
+      tags:
+      - location
+    put:
+      consumes:
+      - application/json
+      description: 更新現有位置資訊
+      parameters:
+      - description: 位置ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: 更新資訊
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.LocationUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/vo.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.LocationResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 更新位置
+      tags:
+      - location
+  /locations/search:
+    get:
+      consumes:
+      - application/json
+      description: 搜尋附近的心理健康資源位置
+      parameters:
+      - description: 搜尋關鍵字
+        in: query
+        name: query
+        type: string
+      - description: 緯度
+        format: float64
+        in: query
+        name: latitude
+        type: number
+      - description: 經度
+        format: float64
+        in: query
+        name: longitude
+        type: number
+      - default: 10
+        description: 搜尋半徑(公里)
+        format: float64
+        in: query
+        name: radius
+        type: number
+      - description: 類別
+        in: query
+        name: category
+        type: string
+      - default: 1
+        description: 頁碼
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: 每頁數量
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/vo.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.LocationSearchResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      summary: 搜尋位置
+      tags:
+      - location
+  /notifications:
+    get:
+      consumes:
+      - application/json
+      description: 獲取使用者的通知列表
+      parameters:
+      - default: 1
+        description: 頁碼
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: 每頁數量
+        in: query
+        name: limit
+        type: integer
+      - default: false
+        description: 只顯示未讀通知
+        in: query
+        name: unread_only
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/vo.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.NotificationListResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 獲取通知列表
+      tags:
+      - notification
+  /notifications/mark-as-read:
+    post:
+      consumes:
+      - application/json
+      description: 將指定的通知標示為已讀
+      parameters:
+      - description: 標記已讀請求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.MarkAsReadRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/vo.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 標記通知已讀
+      tags:
+      - notification
+  /quizzes:
+    get:
+      consumes:
+      - application/json
+      description: 獲取可用的心理測驗列表
+      parameters:
+      - description: 測驗類別
+        in: query
+        name: category
+        type: string
+      - default: 1
+        description: 頁碼
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: 每頁數量
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/vo.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.QuizListResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      summary: 獲取測驗列表
+      tags:
+      - quiz
+  /quizzes/{id}:
+    get:
+      consumes:
+      - application/json
+      description: 獲取測驗的完整內容和題目
+      parameters:
+      - description: 測驗ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/vo.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.QuizResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      summary: 獲取測驗詳情
+      tags:
+      - quiz
+  /quizzes/{id}/submit:
+    post:
+      consumes:
+      - application/json
+      description: 提交測驗答案並獲取結果
+      parameters:
+      - description: 測驗ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: 測驗答案
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.QuizSubmissionRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/vo.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.QuizSubmissionResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 提交測驗答案
+      tags:
+      - quiz
+  /recommended-doctors:
+    get:
+      consumes:
+      - application/json
+      description: 獲取推薦醫師列表，支援分頁、搜索和排序
+      parameters:
+      - default: 1
+        description: 頁碼
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: 每頁數量
+        in: query
+        name: page_size
+        type: integer
+      - description: 搜索關鍵字
+        in: query
+        name: search
+        type: string
+      - default: experience_count
+        description: 排序欄位
+        in: query
+        name: sort_by
+        type: string
+      - default: desc
+        description: 排序順序
+        in: query
+        name: sort_order
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.RecommendedDoctorListResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      summary: 獲取推薦醫師列表
+      tags:
+      - recommended-doctors
+  /recommended-doctors/{id}:
+    get:
+      consumes:
+      - application/json
+      description: 根據ID獲取推薦醫師詳細資訊
+      parameters:
+      - description: 推薦醫師ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.RecommendedDoctorResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      summary: 獲取單個推薦醫師
+      tags:
+      - recommended-doctors
+  /report:
+    post:
+      consumes:
+      - application/json
+      description: 回報不當的評論、文章或資源內容
+      parameters:
+      - description: 回報資料
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ReportRequest'
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            $ref: '#/definitions/vo.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 回報不當內容
+      tags:
+      - review
+  /resources/{id}/reviews:
+    get:
+      consumes:
+      - application/json
+      description: 獲取某個資源點的所有評論
+      parameters:
+      - description: 資源ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - default: 1
+        description: 頁碼
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: 每頁數量
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/vo.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.ReviewListResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      summary: 獲取資源評論
+      tags:
+      - review
+    post:
+      consumes:
+      - application/json
+      description: 為某個資源點新增一則評論
+      parameters:
+      - description: 資源ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: 評論資料
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ReviewRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/vo.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.ReviewResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 新增評論
+      tags:
+      - review
+  /reviews/{reviewId}:
+    delete:
+      consumes:
+      - application/json
+      description: 刪除自己發布的評論
+      parameters:
+      - description: 評論ID
+        in: path
+        name: reviewId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/vo.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 刪除評論
+      tags:
+      - review
+    put:
+      consumes:
+      - application/json
+      description: 修改自己發布的評論
+      parameters:
+      - description: 評論ID
+        in: path
+        name: reviewId
+        required: true
+        type: string
+      - description: 評論更新資料
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ReviewUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/vo.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.ReviewResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 修改評論
+      tags:
+      - review
+  /shares:
+    post:
+      consumes:
+      - application/json
+      description: 為指定內容創建分享連結
+      parameters:
+      - description: 分享請求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ShareRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/vo.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.ShareResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 創建分享連結
+      tags:
+      - share
+  /shares/{shareId}:
+    get:
+      consumes:
+      - application/json
+      description: 通過分享 ID 獲取分享內容詳情
+      parameters:
+      - description: 分享ID
+        in: path
+        name: shareId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/vo.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.ShareContentResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      summary: 獲取分享內容
+      tags:
+      - share
+  /shares/stats:
+    get:
+      consumes:
+      - application/json
+      description: 獲取指定內容的分享統計資訊
+      parameters:
+      - description: 內容類型
+        in: query
+        name: content_type
+        required: true
+        type: string
+      - description: 內容ID
+        in: query
+        name: content_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/vo.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.ShareStatsResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      summary: 獲取分享統計
+      tags:
+      - share
+  /users/me:
+    delete:
+      consumes:
+      - application/json
+      description: 永久刪除使用者帳號及所有相關資料
+      parameters:
+      - description: 刪除帳號資料
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.DeleteAccountRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/vo.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 刪除帳號
+      tags:
+      - user
+    get:
+      consumes:
+      - application/json
+      description: 獲取當前登入使用者的詳細資訊
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/vo.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.UserProfileResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 獲取使用者資料
+      tags:
+      - user
+    put:
+      consumes:
+      - application/json
+      description: 更新使用者的個人資料
+      parameters:
+      - description: 更新資料
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/vo.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.UserProfileResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 更新使用者資料
+      tags:
+      - user
+  /users/me/bookmarks/articles:
+    get:
+      consumes:
+      - application/json
+      description: 獲取使用者收藏的文章列表
+      parameters:
+      - default: 1
+        description: 頁碼
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: 每頁數量
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/vo.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.BookmarkListResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 獲取文章收藏
+      tags:
+      - bookmark
+  /users/me/bookmarks/resources:
+    get:
+      consumes:
+      - application/json
+      description: 獲取使用者收藏的地點列表
+      parameters:
+      - default: 1
+        description: 頁碼
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: 每頁數量
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/vo.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.BookmarkListResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 獲取地點收藏
+      tags:
+      - bookmark
+  /users/me/notification-settings:
+    get:
+      consumes:
+      - application/json
+      description: 獲取使用者的通知偏好設定
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/vo.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.NotificationSettingsResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 獲取通知設定
+      tags:
+      - notification
+    put:
+      consumes:
+      - application/json
+      description: 更新使用者的通知偏好設定
+      parameters:
+      - description: 通知設定
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.NotificationSettingsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/vo.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.NotificationSettingsResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 更新通知設定
+      tags:
+      - notification
+  /users/me/password:
+    put:
+      consumes:
+      - application/json
+      description: 變更使用者密碼
+      parameters:
+      - description: 變更密碼資料
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ChangePasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/vo.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 變更密碼
+      tags:
+      - user
+  /users/me/push-token:
+    post:
+      consumes:
+      - application/json
+      description: 註冊或更新裝置的推播 token
+      parameters:
+      - description: 推播 Token
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.PushTokenRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 更新推播 Token
+      tags:
+      - notification
+  /users/me/quiz_history:
+    get:
+      consumes:
+      - application/json
+      description: 獲取使用者的測驗完成歷史
+      parameters:
+      - default: 1
+        description: 頁碼
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: 每頁數量
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/vo.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.QuizHistoryResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 獲取測驗歷史
+      tags:
+      - quiz
+  /users/me/shares:
+    get:
+      consumes:
+      - application/json
+      description: 獲取當前使用者的分享列表
+      parameters:
+      - description: 內容類型
+        in: query
+        name: content_type
+        type: string
+      - description: 分享平台
+        in: query
+        name: platform
+        type: string
+      - default: 1
+        description: 頁碼
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: 每頁數量
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/vo.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.ShareListResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 獲取使用者分享列表
+      tags:
+      - share
+  /users/me/stats:
+    get:
+      consumes:
+      - application/json
+      description: 獲取使用者的各項統計資訊
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/vo.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.UserStatsResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 獲取使用者統計
+      tags:
+      - user
+securityDefinitions:
+  BearerAuth:
+    description: 請輸入 "Bearer " 加上 JWT token
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
