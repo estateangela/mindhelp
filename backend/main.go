@@ -9,6 +9,7 @@ import (
 	"syscall"
 	"time"
 
+	_ "mindhelp-backend/docs" // 導入 Swagger 文檔
 	"mindhelp-backend/internal/config"
 	"mindhelp-backend/internal/database"
 	"mindhelp-backend/internal/routes"

@@ -41,6 +41,9 @@ COPY --from=builder /app/env.example .env
 # 複製 CSV 資料文件
 COPY --from=builder /app/document/ ./document/
 
+# 複製 Swagger 文檔
+COPY --from=builder /app/docs/ ./docs/
+
 # 變更檔案擁有者
 RUN chown -R appuser:appgroup /root/
 
