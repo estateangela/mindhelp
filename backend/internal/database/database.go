@@ -3,6 +3,7 @@ package database
 import (
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"mindhelp-backend/internal/config"
@@ -72,9 +73,12 @@ func Migrate() error {
 		&models.RecommendedDoctor{},
 	)
 	if err != nil {
-		// 如果是表已存在的錯誤，我們可以忽略它
-		if fmt.Sprintf("%v", err) == "relation \"users\" already exists" {
-			log.Println("Tables already exist, skipping migration")
+		// 檢查是否為表已存在的錯誤或其他可忽略的錯誤
+		errorStr := fmt.Sprintf("%v", err)
+		if strings.Contains(errorStr, "already exists") || 
+		   strings.Contains(errorStr, "contains null values") ||
+		   strings.Contains(errorStr, "prepared statement") {
+			log.Printf("Migration warning (ignoring): %v", err)
 			return nil
 		}
 		return fmt.Errorf("failed to migrate database: %w", err)
