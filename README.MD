@@ -57,12 +57,38 @@ mindmap
         [分享功能]
 ```
 
- Storybook
-實驗
+## 🚀 最新更新 (2025-09-20)
 
-好的，完全理解您的需求。您希望看到更視覺化的流程圖，以及一份更詳盡、更貼近真實開發場景的 API 規格文件。
+### ✅ 已完成功能
 
-這很棒，表示我們正在從概念走向實作。
+#### 🗄️ 資料庫整合
+- **PostgreSQL 連接**：成功連接到 Supabase PostgreSQL 資料庫
+- **資料表創建**：新增 3 個核心資料表
+  - `counselors` - 諮商師資料
+  - `counseling_centers` - 心理諮商所資料  
+  - `recommended_doctors` - 網友推薦醫師＆診所資料
+- **資料插入**：成功從 CSV 檔案插入真實資料
+  - 諮商師：961 筆記錄
+  - 諮商所：97 筆記錄
+  - 推薦醫師：13 筆記錄
+
+#### 🗺️ Google Maps 整合
+- **地址 API**：新增地圖相關端點
+  - `GET /api/v1/maps/addresses` - 獲取所有地址資訊
+  - `GET /api/v1/maps/google-addresses` - Google Maps 專用格式
+- **多格式支援**：支援 JSON 和 GeoJSON 格式輸出
+- **地址提取**：智能從描述中提取地址資訊
+
+#### 📚 API 文檔
+- **Swagger 文檔**：完整更新並修復 500 錯誤
+- **API 端點**：新增 6 個新的 API 端點
+  - 諮商師管理：`/api/v1/counselors`
+  - 諮商所管理：`/api/v1/counseling-centers`
+  - 推薦醫師管理：`/api/v1/recommended-doctors`
+  - 地圖整合：`/api/v1/maps/*`
+
+### 🔗 API 文檔
+**Swagger 文檔**: https://mindhelp.onrender.com/swagger/index.html#/
 
 一、Mermaid 流程圖
 
@@ -227,18 +253,92 @@ Endpoint	Method	說明
 /resources/{id}/bookmark	POST	收藏一個資源點
 /resources/{id}/bookmark	DELETE	取消收藏一個資源點
 
-GET /resources (擴充)
+### 🆕 新增：專業資源管理
+
+Endpoint	Method	說明
+/counselors	GET	獲取諮商師列表
+/counselors/{id}	GET	獲取單一諮商師詳情
+/counseling-centers	GET	獲取諮商所列表
+/counseling-centers/{id}	GET	獲取單一諮商所詳情
+/recommended-doctors	GET	獲取推薦醫師列表
+/recommended-doctors/{id}	GET	獲取單一推薦醫師詳情
+
+### 🆕 新增：Google Maps 整合
+
+Endpoint	Method	說明
+/maps/addresses	GET	獲取所有地址資訊
+/maps/google-addresses	GET	獲取 Google Maps 專用格式
+
+GET /counselors (新增)
 
     Query Parameters:
     | 參數 | 類型 | 必要 | 說明 |
     | :--- | :--- | :--- | :--- |
-    | lat | float | 是 | 緯度 |
-    | lon | float | 是 | 經度 |
-    | radius | int | 否 | 搜尋半徑(公尺)，預設 5000 |
-    | type | string | 否 | 類型 (clinic, counseling_center...), 多選用逗號分隔 |
-    | specialty | string | 否 | 專長 (CBT, ADHD...), 多選用逗號分隔 |
+    | page | int | 否 | 頁碼，預設 1 |
+    | page_size | int | 否 | 每頁數量，預設 10 |
+    | search | string | 否 | 搜索關鍵字 |
+    | work_location | string | 否 | 工作地點篩選 |
+    | specialty | string | 否 | 專業領域篩選 |
 
-    Success Response (200 OK): 回應 data 欄位為一個 Resource Model 陣列。
+    Success Response (200 OK):
+    ```json
+    {
+      "success": true,
+      "data": {
+        "counselors": [
+          {
+            "id": "uuid",
+            "name": "諮商師姓名",
+            "license_number": "諮心字第000001號",
+            "gender": "女",
+            "specialties": "家庭親子, 壓力與情緒調適",
+            "work_location": "臺北市大安區",
+            "work_unit": "格瑞思心理諮商所"
+          }
+        ],
+        "total": 961,
+        "page": 1,
+        "page_size": 10
+      }
+    }
+    ```
+
+GET /maps/addresses (新增)
+
+    Query Parameters:
+    | 參數 | 類型 | 必要 | 說明 |
+    | :--- | :--- | :--- | :--- |
+    | type | string | 否 | 地址類型篩選 (counselor, counseling_center, recommended_doctor) |
+    | limit | int | 否 | 限制數量，預設 100 |
+
+    Success Response (200 OK):
+    ```json
+    {
+      "success": true,
+      "data": {
+        "addresses": [
+          {
+            "id": "uuid",
+            "name": "機構名稱",
+            "address": "台北市大安區...",
+            "type": "counseling_center",
+            "phone": "02-1234-5678"
+          }
+        ],
+        "total": 1071,
+        "type": null
+      }
+    }
+    ```
+
+GET /maps/google-addresses (新增)
+
+    Query Parameters:
+    | 參數 | 類型 | 必要 | 說明 |
+    | :--- | :--- | :--- | :--- |
+    | format | string | 否 | 輸出格式 (json, geojson)，預設 json |
+
+    Success Response (200 OK): 返回 Google Maps 專用格式的地址資訊
 
 POST /resources/{id}/bookmark
 
@@ -573,12 +673,15 @@ POST /users/me/push-token
 
     Success Response (204 No Content):
 
-    已完成功能 (Phase 1 & 2)
+    已完成功能 (Phase 1, 2 & 3)
 🏗️ 基礎架構
 ✅ 8個新的資料模型：Article, Quiz, Review, Notification, Bookmark, ChatSession, UserSetting, AppConfig
-✅ 完整的 migration 檔案 (002_add_core_features.sql)
-✅ 完整的 DTO/VO 結構 - 7個新的 DTO 檔案
+✅ 3個專業資源模型：Counselor, CounselingCenter, RecommendedDoctor
+✅ 完整的 migration 檔案 (002_add_core_features.sql, 003_add_counselor_tables.sql)
+✅ 完整的 DTO/VO 結構 - 10個新的 DTO 檔案
 ✅ 更新的路由配置 - 支援所有新端點
+✅ PostgreSQL 資料庫連接 (Supabase)
+✅ 真實資料插入 (1071 筆記錄)
 👤 使用者管理系統
 ✅ GET /users/me - 獲取使用者資料
 ✅ PUT /users/me - 更新個人資料
