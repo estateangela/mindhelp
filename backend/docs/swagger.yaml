@@ -2368,6 +2368,69 @@ paths:
       summary: 搜尋位置
       tags:
       - location
+  /maps/addresses:
+    get:
+      consumes:
+      - application/json
+      description: 獲取諮商師、諮商所和推薦醫師的所有地址資訊，用於 Google Maps 整合
+      parameters:
+      - description: 地址類型篩選
+        enum:
+        - counselor
+        - counseling_center
+        - recommended_doctor
+        in: query
+        name: type
+        type: string
+      - default: 100
+        description: 限制數量
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      summary: 獲取所有地址資訊
+      tags:
+      - maps
+  /maps/google-addresses:
+    get:
+      consumes:
+      - application/json
+      description: 獲取格式化的地址資訊，適合 Google Maps API 使用
+      parameters:
+      - default: json
+        description: 輸出格式
+        enum:
+        - json
+        - geojson
+        in: query
+        name: format
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      summary: 獲取 Google Maps 地址資訊
+      tags:
+      - maps
   /notifications:
     get:
       consumes:

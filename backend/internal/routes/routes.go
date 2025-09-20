@@ -244,6 +244,11 @@ func SetupRoutes(cfg *config.Config) *gin.Engine {
 			// 推薦醫師相關公開路由
 			api.GET("/recommended-doctors", handlers.GetRecommendedDoctors)
 			api.GET("/recommended-doctors/:id", handlers.GetRecommendedDoctor)
+
+			// 地圖相關公開路由
+			mapsHandler := handlers.NewMapsHandler()
+			api.GET("/maps/addresses", mapsHandler.GetAllAddresses)
+			api.GET("/maps/google-addresses", mapsHandler.GetAddressesForGoogleMaps)
 		}
 	}
 

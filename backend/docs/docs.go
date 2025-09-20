@@ -2018,6 +2018,99 @@ const docTemplate = `{
                 }
             }
         },
+        "/maps/addresses": {
+            "get": {
+                "description": "獲取諮商師、諮商所和推薦醫師的所有地址資訊，用於 Google Maps 整合",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "maps"
+                ],
+                "summary": "獲取所有地址資訊",
+                "parameters": [
+                    {
+                        "enum": [
+                            "counselor",
+                            "counseling_center",
+                            "recommended_doctor"
+                        ],
+                        "type": "string",
+                        "description": "地址類型篩選",
+                        "name": "type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 100,
+                        "description": "限制數量",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/vo.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/maps/google-addresses": {
+            "get": {
+                "description": "獲取格式化的地址資訊，適合 Google Maps API 使用",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "maps"
+                ],
+                "summary": "獲取 Google Maps 地址資訊",
+                "parameters": [
+                    {
+                        "enum": [
+                            "json",
+                            "geojson"
+                        ],
+                        "type": "string",
+                        "default": "json",
+                        "description": "輸出格式",
+                        "name": "format",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/vo.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/notifications": {
             "get": {
                 "security": [
