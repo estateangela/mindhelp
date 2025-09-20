@@ -75,9 +75,9 @@ func Migrate() error {
 	if err != nil {
 		// 檢查是否為表已存在的錯誤或其他可忽略的錯誤
 		errorStr := fmt.Sprintf("%v", err)
-		if strings.Contains(errorStr, "already exists") || 
-		   strings.Contains(errorStr, "contains null values") ||
-		   strings.Contains(errorStr, "prepared statement") {
+		if strings.Contains(errorStr, "already exists") ||
+			strings.Contains(errorStr, "contains null values") ||
+			strings.Contains(errorStr, "prepared statement") {
 			log.Printf("Migration warning (ignoring): %v", err)
 			return nil
 		}
