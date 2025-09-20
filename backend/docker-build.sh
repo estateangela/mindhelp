@@ -81,14 +81,18 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
         --publish 8080:8080 \
         --env GIN_MODE=debug \
         --env SERVER_PORT=8080 \
-        --env DB_HOST=localhost \
-        --env DB_PORT=5432 \
-        --env DB_NAME=mindhelp \
-        --env DB_USER=postgres \
-        --env DB_PASSWORD=password \
-        --env DB_SSLMODE=disable \
-        --env JWT_SECRET=your-secret-key \
-        --env OPENROUTER_API_KEY=your-openrouter-key \
+        --env DB_HOST=aws-1-ap-southeast-1.pooler.supabase.com \
+        --env DB_PORT=6543 \
+        --env DB_NAME=postgres \
+        --env DB_USER=postgres.haunuvdhisdygfradaya \
+        --env DB_PASSWORD=MIND_HELP_2025 \
+        --env DB_SSLMODE=require \
+        --env JWT_SECRET=your-super-secret-jwt-key-change-in-production \
+        --env OPENROUTER_API_KEY=your-openrouter-api-key \
+        --env OPENROUTER_BASE_URL=https://openrouter.ai/api/v1 \
+        --env CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:3001 \
+        --env LOG_LEVEL=info \
+        --env LOG_FORMAT=json \
         "$FULL_TAG"
     
     print_info "等待容器啟動..."
