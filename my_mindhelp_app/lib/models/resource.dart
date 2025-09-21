@@ -6,6 +6,8 @@ class Resource {
   final String phone;
   final String website;
   final String description;
+  final double latitude;
+  final double longitude;
 
   Resource({
     required this.id,
@@ -15,6 +17,8 @@ class Resource {
     required this.phone,
     required this.website,
     required this.description,
+    required this.latitude,
+    required this.longitude,
   });
 
   factory Resource.fromJson(Map<String, dynamic> json) {
@@ -26,6 +30,8 @@ class Resource {
       phone: json['phone'] as String,
       website: json['website'] as String,
       description: json['description'] as String,
+      latitude: json['latitude'] as double,
+      longitude: json['longitude'] as double,
     );
   }
 }

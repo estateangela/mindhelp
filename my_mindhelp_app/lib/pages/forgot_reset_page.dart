@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import '../core/theme.dart';
 import '../widgets/input_field.dart';
 import '../widgets/primary_button.dart';
+import '../services/auth_service.dart';
 
 class ForgotResetPage extends StatelessWidget {
   final _newPwdController = TextEditingController();
   final _confirmController = TextEditingController();
+  final _authService = AuthService();
 
   @override
   Widget build(BuildContext context) {
@@ -58,10 +60,35 @@ class ForgotResetPage extends StatelessWidget {
                       Expanded(
                         child: PrimaryButton(
                           text: '確認',
-                          onPressed: () {
-                            // TODO: 呼叫重設密碼 API
-                            Navigator.popUntil(
-                                context, ModalRoute.withName('/login'));
+                          onPressed: () async {
+                            final newPassword = _newPwdController.text.trim();
+                            final confirmPassword =
+                                _confirmController.text.trim();
+
+                            if (newPassword.isEmpty ||
+                                confirmPassword.isEmpty) {
+                              _showSnackBar(context, '所有欄位都是必填的。');
+                              return;
+                            }
+                            if (newPassword != confirmPassword) {
+                              _showSnackBar(context, '兩次輸入的新密碼不一致。');
+                              return;
+                            }
+                            if (newPassword.length < 8 ||
+                                newPassword.length > 16) {
+                              _showSnackBar(context, '密碼長度必須在 8 到 16 個字元之間。');
+                              return;
+                            }
+
+                            try {
+                              // TODO: 呼叫重設密碼 API
+                              // await _authService.resetPassword(password: newPassword);
+                              _showSnackBar(context, '密碼重設成功！');
+                              Navigator.popUntil(
+                                  context, ModalRoute.withName('/login'));
+                            } catch (e) {
+                              _showSnackBar(context, '密碼重設失敗：${e.toString()}');
+                            }
                           },
                         ),
                       ),
@@ -84,4 +111,10 @@ class ForgotResetPage extends StatelessWidget {
           shape: BoxShape.circle,
         ),
       );
+
+  void _showSnackBar(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
 }

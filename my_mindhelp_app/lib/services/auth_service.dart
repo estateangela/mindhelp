@@ -2,7 +2,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class AuthService {
-  final String _baseUrl = 'https://api.yourdomain.com/v1';
+  final String _baseUrl = 'https://mindhelp.onrender.com/v1';
   final String _authHeader =
       'Bearer <YOUR_JWT_TOKEN>'; // TODO: 請替換為您實際的 JWT Token
 

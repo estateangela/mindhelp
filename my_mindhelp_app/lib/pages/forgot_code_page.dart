@@ -1,112 +1,120 @@
-// lib/pages/forgot_code_page.dart
-
 import 'package:flutter/material.dart';
 import '../core/theme.dart';
 import '../widgets/input_field.dart';
 import '../widgets/primary_button.dart';
+import '../services/auth_service.dart';
 
-class ForgotCodePage extends StatefulWidget {
-  @override
-  _ForgotCodePageState createState() => _ForgotCodePageState();
-}
-
-class _ForgotCodePageState extends State<ForgotCodePage> {
-  final _emailController = TextEditingController();
-  final _codeController = TextEditingController();
-  bool _codeSent = false;
-
-  void _sendCode() {
-    final email = _emailController.text.trim();
-    if (email.isEmpty) return;
-    // TODO: 呼叫後端 API 寄送驗證碼
-    setState(() => _codeSent = true);
-  }
-
-  void _verifyCode() {
-    final code = _codeController.text.trim();
-    if (code.isEmpty) return;
-    // TODO: 呼叫後端 API 驗證 code，若成功則跳到重設密碼頁
-    Navigator.pushReplacementNamed(context, '/forgot_reset');
-  }
-
-  Widget _buildCircle(double size, Alignment alignment) {
-    return Align(
-      alignment: alignment,
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          color: AppColors.accent.withOpacity(0.3),
-          shape: BoxShape.circle,
-        ),
-      ),
-    );
-  }
+class ForgotResetPage extends StatelessWidget {
+  final _newPwdController = TextEditingController();
+  final _confirmController = TextEditingController();
+  final _authService = AuthService();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: Text('忘記密碼', style: Theme.of(context).textTheme.headlineLarge),
-        centerTitle: true,
-      ),
+      appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0),
       body: Stack(
         children: [
-          _buildCircle(140, Alignment.bottomLeft),
-          _buildCircle(100, Alignment.topRight),
+          Positioned(top: -60, right: -60, child: _buildCircle(180)),
           SingleChildScrollView(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 60),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (!_codeSent) ...[
-                    Text(
-                      '請輸入你註冊的信箱',
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                    const SizedBox(height: 8),
-                    InputField(
-                      controller: _emailController,
-                      label: '',
-                      prefixIcon: Icons.email_outlined,
-                    ),
-                    const SizedBox(height: 24),
-                    PrimaryButton(
-                      text: '寄送驗證碼',
-                      onPressed: _sendCode,
-                    ),
-                  ] else ...[
-                    Text(
-                      '請輸入收取的驗證碼',
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                    const SizedBox(height: 8),
-                    InputField(
-                      controller: _codeController,
-                      label: '',
-                      prefixIcon: Icons.verified_user,
-                    ),
-                    const SizedBox(height: 8),
-                    TextButton(
-                      onPressed: _sendCode,
-                      child: Text('重新寄送驗證碼'),
-                    ),
-                    const SizedBox(height: 24),
-                    PrimaryButton(
-                      text: '確認驗證',
-                      onPressed: _verifyCode,
-                    ),
-                  ],
+                  Center(
+                      child: Image.asset(
+                    'assets/images/mindhelp.png',
+                    width: 180,
+                  )),
+                  const SizedBox(height: 48),
+                  Text('請輸入新密碼', style: Theme.of(context).textTheme.bodyText1),
+                  const SizedBox(height: 4),
+                  InputField(
+                    controller: _newPwdController,
+                    label: '',
+                    prefixIcon: Icons.lock_outline,
+                    obscureText: true,
+                  ),
+                  const SizedBox(height: 24),
+                  Text('確認密碼', style: Theme.of(context).textTheme.bodyText1),
+                  const SizedBox(height: 4),
+                  InputField(
+                    controller: _confirmController,
+                    label: '',
+                    prefixIcon: Icons.lock_outline,
+                    obscureText: true,
+                  ),
+                  const SizedBox(height: 48),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: PrimaryButton(
+                          text: '返回',
+                          onPressed: () =>
+                              Navigator.pushReplacementNamed(context, '/login'),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: PrimaryButton(
+                          text: '確認',
+                          onPressed: () async {
+                            final newPassword = _newPwdController.text.trim();
+                            final confirmPassword =
+                                _confirmController.text.trim();
+
+                            if (newPassword.isEmpty ||
+                                confirmPassword.isEmpty) {
+                              _showSnackBar(context, '所有欄位都是必填的。');
+                              return;
+                            }
+                            if (newPassword != confirmPassword) {
+                              _showSnackBar(context, '兩次輸入的新密碼不一致。');
+                              return;
+                            }
+                            if (newPassword.length < 8 ||
+                                newPassword.length > 16) {
+                              _showSnackBar(context, '密碼長度必須在 8 到 16 個字元之間。');
+                              return;
+                            }
+
+                            try {
+                              // TODO: 呼叫重設密碼 API
+                              // await _authService.resetPassword(password: newPassword);
+                              _showSnackBar(context, '密碼重設成功！');
+                              Navigator.popUntil(
+                                  context, ModalRoute.withName('/login'));
+                            } catch (e) {
+                              _showSnackBar(context, '密碼重設失敗：${e.toString()}');
+                            }
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildCircle(double size) => Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          color: AppColors.accent.withOpacity(0.3),
+          shape: BoxShape.circle,
+        ),
+      );
+
+  void _showSnackBar(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
     );
   }
 }

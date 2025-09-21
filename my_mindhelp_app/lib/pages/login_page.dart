@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../core/theme.dart';
 import '../widgets/input_field.dart';
 import '../widgets/primary_button.dart';
+import '../services/auth_service.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});

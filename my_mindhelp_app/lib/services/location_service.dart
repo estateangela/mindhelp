@@ -1,46 +1,89 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import '../models/map_item.dart';
+import '../models/resource.dart';
 
 class LocationService {
-  // 替換為你的 Google Sheet ID
-  static const String _sheetUrl =
-      'https://docs.google.com/spreadsheets/d/1OjZT5iVkj09gOoY_uJDMVXl-xTbcbF7-IUb1gBArkJc/gviz/tq?tqx=out:json';
+  // 將基底 URL 替換為你的後端 API 網址
+  final String _baseUrl = 'https://mindhelp.onrender.com/v1';
+  // TODO: 請替換為您實際的 JWT Token
+  final String _authHeader = 'Bearer <YOUR_JWT_TOKEN>';
 
-  Future<List<MapItem>> getLocations() async {
-    try {
-      final response = await http.get(Uri.parse(_sheetUrl));
-      if (response.statusCode == 200) {
-        final String jsonString =
-            response.body.substring(47, response.body.length - 2);
-        final data = json.decode(jsonString);
+  // 搜尋附近的醫療資源
+  Future<List<Resource>> searchResources({
+    required double lat,
+    required double lon,
+    int radius = 5000,
+    String? type,
+    String? specialty,
+  }) async {
+    // 構建查詢參數
+    final Map<String, dynamic> queryParams = {
+      'latitude': lat.toString(),
+      'longitude': lon.toString(),
+      'radius': (radius / 1000).toString(), // API 參數是公里，前端是公尺
+    };
+    if (type != null) queryParams['type'] = type;
+    if (specialty != null) queryParams['specialty'] = specialty;
 
-        List<MapItem> locations = [];
-        for (var row in data['table']['rows']) {
-          final cells = row['c'];
-          if (cells.length >= 3 &&
-              cells[0] != null &&
-              cells[1] != null &&
-              cells[2] != null) {
-            final name = cells[0]['v'];
-            final address = cells[1]['v'];
-            final description = cells[2]['v'];
-            locations.add(MapItem(
-                name: name, address: address, description: description));
-          }
-        }
+    final uri = Uri.parse('$_baseUrl/locations/search')
+        .replace(queryParameters: queryParams);
 
-        // 新增的除錯訊息
-        print('成功讀取 ${locations.length} 筆資料');
+    final response = await http.get(
+      uri,
+      headers: {'Authorization': _authHeader},
+    );
 
-        return locations;
-      } else {
-        print('從 Google Sheet 載入資料失敗: ${response.statusCode}');
-        throw Exception('Failed to load data from Google Sheet');
-      }
-    } catch (e) {
-      print('錯誤: $e');
-      throw Exception('Error: $e');
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      return (data['data']['locations'] as List)
+          .map((item) => Resource.fromJson(item))
+          .toList();
+    } else {
+      throw Exception('Failed to load resources: ${response.statusCode}');
+    }
+  }
+
+  // 獲取單一資源詳情
+  Future<Resource> getResourceDetails(String resourceId) async {
+    final response = await http.get(
+      Uri.parse('$_baseUrl/locations/$resourceId'),
+      headers: {'Authorization': _authHeader},
+    );
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      return Resource.fromJson(data['data']);
+    } else {
+      throw Exception(
+          'Failed to load resource details: ${response.statusCode}');
+    }
+  }
+
+  // 獲取諮商所列表
+  Future<List<Map<String, dynamic>>> getCounselingCenters({
+    int page = 1,
+    int pageSize = 10,
+    String? search,
+    bool? onlineOnly,
+  }) async {
+    final queryParams = {
+      'page': page.toString(),
+      'page_size': pageSize.toString(),
+    };
+    if (search != null) queryParams['search'] = search;
+    if (onlineOnly != null) queryParams['online_only'] = onlineOnly.toString();
+
+    final uri = Uri.parse('$_baseUrl/counseling-centers')
+        .replace(queryParameters: queryParams);
+
+    final response = await http.get(uri);
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      return (data['counseling_centers'] as List).cast<Map<String, dynamic>>();
+    } else {
+      throw Exception(
+          'Failed to load counseling centers: ${response.statusCode}');
     }
   }
 }

@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../core/theme.dart';
 import '../services/location_service.dart';
-import '../models/map_item.dart';
-import 'package:geocoding/geocoding.dart';
+import '../models/resource.dart'; // 導入新的 Resource 模型
 
 class MapsPage extends StatefulWidget {
   const MapsPage({super.key});
@@ -25,36 +24,30 @@ class _MapsPageState extends State<MapsPage> {
 
   Future<void> _loadLocations() async {
     try {
-      final locations = await _locationService.getLocations();
-      for (var item in locations) {
-        try {
-          // TODO: 考慮將 Geocoding 移至後端，避免前端 API 限制
-          final geocodingInstance = GeocodingPlatform.instance;
-          if (geocodingInstance != null) {
-            final location =
-                await geocodingInstance.locationFromAddress(item.address);
-            if (location.isNotEmpty) {
-              final LatLng position =
-                  LatLng(location.first.latitude, location.first.longitude);
-              _markers.add(
-                Marker(
-                  markerId: MarkerId(item.name),
-                  position: position,
-                  infoWindow: InfoWindow(
-                    title: item.name,
-                    snippet: item.address,
-                  ),
-                ),
-              );
-            }
-          }
-        } catch (e) {
-          // 替換 print 為一個更適合生產環境的日誌框架
-          debugPrint('Error geocoding address for ${item.name}: $e');
-        }
+      // 模擬取得使用者的當前位置
+      const LatLng userLocation = LatLng(25.033, 121.565);
+
+      final resources = await _locationService.searchResources(
+        lat: userLocation.latitude,
+        lon: userLocation.longitude,
+      );
+
+      _markers.clear(); // 清除舊的標記點
+      for (var resource in resources) {
+        // 從後端回傳的資料中直接取得經緯度
+        final LatLng position = LatLng(resource.latitude, resource.longitude);
+        _markers.add(
+          Marker(
+            markerId: MarkerId(resource.id), // 使用 ID 作為唯一標識
+            position: position,
+            infoWindow: InfoWindow(
+              title: resource.name,
+              snippet: resource.address,
+            ),
+          ),
+        );
       }
     } catch (e) {
-      // 替換 print 為一個更適合生產環境的日誌框架
       debugPrint('Error loading locations: $e');
       // 顯示錯誤訊息給使用者
     } finally {
