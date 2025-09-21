@@ -1,249 +1,410 @@
-# MindHelp App
+# MindHelp Flutter 應用程式
 
-[English](#english) | [繁體中文](#繁體中文)
+<div align="center">
 
----
+![MindHelp Logo](assets/images/mindhelp.png)
 
-## English
+**心理健康支援移動應用程式** 📱🧠
 
-### Overview
+[![Flutter](https://img.shields.io/badge/Flutter-3.6.2+-blue.svg)](https://flutter.dev/)
+[![Dart](https://img.shields.io/badge/Dart-3.6.2+-0175C2.svg)](https://dart.dev/)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-MindHelp is a comprehensive mental health support Flutter application designed to provide users with accessible mental health resources, AI-powered chat support, and location-based mental health services.
+</div>
 
-### Features
+## 📱 專案概述
 
-- **🔐 User Authentication**: Secure login/signup with Firebase Auth
-- **💬 AI Chat Support**: Intelligent conversation with OpenRouter AI API
-- **🗺️ Location Services**: Google Maps integration for finding nearby mental health resources
-- **📱 Cross-Platform**: Available on iOS, Android, Web, Windows, macOS, and Linux
-- **🎨 Modern UI**: Clean, intuitive interface with custom Huninn font
-- **💾 Local Storage**: SQLite database for offline chat history
-- **☁️ Cloud Sync**: Firebase Firestore for data synchronization
-- **🔔 Notifications**: Built-in notification system
-- **⚙️ Settings**: Customizable app preferences
+MindHelp Flutter 應用程式是心理健康支援平台的前端部分，提供現代化的移動端使用者體驗。應用程式採用 Flutter 框架開發，支援多平台部署（Android、iOS、Web、Windows、macOS、Linux）。
 
-### Tech Stack
+### 🌟 核心功能
 
-- **Frontend**: Flutter 3.6.2+
-- **Backend**: Firebase (Auth, Firestore)
-- **AI Integration**: OpenRouter API
-- **Maps**: Google Maps Flutter
-- **Database**: SQLite (local), Firestore (cloud)
-- **State Management**: Flutter built-in state management
-- **UI Components**: Material Design with custom theming
+- **📚 專家文章** - 心理健康專業知識分享
+- **🧠 心理測驗** - 科學化的心理健康評估
+- **🗺️ 資源地圖** - 整合全台心理健康資源
+- **💬 AI 聊天** - 24/7 心理健康支援
+- **👤 個人管理** - 使用者資料和偏好設定
+- **🔔 智能通知** - 個人化提醒服務
 
-### Project Structure
+## 🚀 快速開始
+
+### 前置需求
+
+#### 必要工具
+- **Flutter SDK 3.6.2+**
+- **Dart SDK**
+- **Android Studio** (Android 開發)
+- **VS Code** (推薦編輯器)
+- **Git**
+
+#### 平台特定需求
+- **Android**: Android SDK, Android Studio
+- **iOS**: Xcode (macOS), CocoaPods
+- **Web**: Chrome 瀏覽器
+- **Windows**: Visual Studio 2019+
+- **macOS**: Xcode
+- **Linux**: CMake, Ninja
+
+### 安裝步驟
+
+#### 1. 環境設置
+
+```bash
+# 檢查 Flutter 環境
+flutter doctor
+
+# 如果 Flutter 未安裝，請參考官方指南：
+# https://docs.flutter.dev/get-started/install
+```
+
+#### 2. 獲取專案
+
+```bash
+# 克隆專案
+git clone <repository-url>
+cd mindhelp/my_mindhelp_app
+
+# 安裝依賴項
+flutter pub get
+```
+
+#### 3. 運行應用程式
+
+```bash
+# 運行應用程式
+flutter run
+
+# 在特定設備上運行
+flutter run -d <device-id>
+
+# 查看可用設備
+flutter devices
+```
+
+## 📁 專案結構
 
 ```
 lib/
-├── api/           # API integrations (OpenRouter)
-├── core/          # App theme and core configurations
-├── models/        # Data models (ChatMessage)
-├── pages/         # App screens and navigation
-├── utils/         # Helper functions and services
-├── widgets/       # Reusable UI components
-└── main.dart      # App entry point
+├── core/                    # 核心配置
+│   └── theme.dart          # 應用程式主題
+├── models/                 # 資料模型
+│   ├── article.dart        # 文章模型
+│   ├── chat_message.dart   # 聊天訊息模型
+│   ├── map_item.dart       # 地圖項目模型
+│   └── resource.dart       # 資源模型
+├── pages/                  # 應用程式頁面
+│   ├── home_page.dart      # 首頁
+│   ├── article_page.dart   # 文章頁面
+│   ├── quiz_page.dart      # 測驗頁面
+│   ├── maps_page.dart      # 地圖頁面
+│   ├── chat_page.dart      # 聊天頁面
+│   ├── profile_page.dart   # 個人資料頁面
+│   ├── login_page.dart     # 登入頁面
+│   ├── sign_up_page.dart   # 註冊頁面
+│   ├── edit_nickname_page.dart    # 編輯暱稱
+│   ├── change_password_page.dart  # 修改密碼
+│   ├── forgot_code_page.dart      # 忘記密碼
+│   ├── forgot_reset_page.dart     # 重置密碼
+│   └── notify_page.dart           # 通知頁面
+├── services/               # 業務邏輯服務
+│   ├── ai_service.dart     # AI 服務
+│   ├── auth_service.dart   # 認證服務
+│   └── location_service.dart # 位置服務
+├── utils/                  # 工具類別
+│   ├── backup_service.dart # 備份服務
+│   └── db_helper.dart      # 資料庫助手
+├── widgets/                # 共用 UI 組件
+│   ├── custom_app_bar.dart # 自訂應用欄
+│   ├── input_field.dart    # 輸入欄位
+│   └── primary_button.dart # 主要按鈕
+└── main.dart               # 應用程式入口點
 ```
 
-### Getting Started
+## 🛠️ 技術棧
 
-#### Prerequisites
+### 核心技術
+- **Flutter 3.6.2+** - 跨平台 UI 框架
+- **Dart 3.6.2+** - 程式語言
+- **Material Design 3** - UI 設計語言
 
-- Flutter SDK 3.6.2 or higher
-- Dart SDK
-- Android Studio / Xcode (for mobile development)
-- Firebase project setup
+### 主要依賴項
+```yaml
+dependencies:
+  # UI 和導航
+  flutter: sdk: flutter
+  cupertino_icons: ^1.0.8
+  
+  # 地圖和位置服務
+  google_maps_flutter: ^2.3.0
+  geocoding: ^2.2.1
+  geolocator: ^12.0.0
+  
+  # 網路和資料
+  http: ^1.4.0
+  sqflite: ^2.0.0+4
+  path_provider: ^2.0.13
+  path: ^1.8.3
+  
+  # Firebase 服務
+  firebase_core: ^4.0.0
+  firebase_auth: ^6.0.0
+  cloud_firestore: ^6.0.0
+  
+  # UI 組件
+  flutter_markdown: ^0.7.7+1
+```
 
-#### Installation
+## 🔧 開發指南
 
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd my_mindhelp_app
-   ```
-
-2. **Install dependencies**
-   ```bash
-   flutter pub get
-   ```
-
-3. **Configure Firebase**
-   - Create a Firebase project
-   - Add your `google-services.json` (Android) and `GoogleService-Info.plist` (iOS)
-   - Enable Authentication and Firestore
-
-4. **Configure API Keys**
-   - Set up OpenRouter API key for AI chat functionality
-   - Configure Google Maps API key
-
-5. **Run the app**
-   ```bash
-   flutter run
-   ```
-
-### Available Pages
-
-- **Login/Signup**: User authentication
-- **Home**: Main dashboard and navigation
-- **Chat**: AI-powered mental health conversations
-- **Maps**: Location-based mental health resources
-- **Profile**: User profile management
-- **Settings**: App configuration
-- **Notifications**: User alerts and updates
-
-### Building for Production
+### 開發命令
 
 ```bash
-# Android APK
-flutter build apk --release
+# 安裝依賴項
+flutter pub get
 
-# iOS
-flutter build ios --release
+# 運行應用程式
+flutter run
 
-# Web
-flutter build web
+# 熱重載 (開發中)
+# 按 'r' 鍵進行熱重載
+# 按 'R' 鍵進行熱重啟
 
-# Windows
-flutter build windows
-
-# macOS
-flutter build macos
-
-# Linux
-flutter build linux
+# 建置應用程式
+flutter build apk          # Android APK
+flutter build appbundle    # Android App Bundle
+flutter build ios          # iOS (需要 macOS)
+flutter build web          # Web 應用程式
+flutter build windows      # Windows 應用程式
+flutter build macos        # macOS 應用程式
+flutter build linux        # Linux 應用程式
 ```
 
-### Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
-
-### License
-
-This project is private and not intended for public distribution.
-
----
-
-## 繁體中文
-
-### 專案概述
-
-MindHelp 是一個全面的心理健康支援 Flutter 應用程式，旨在為使用者提供可及的心理健康資源、AI 驅動的聊天支援，以及基於位置的心理健康服務。
-
-### 主要功能
-
-- **🔐 使用者認證**: 使用 Firebase Auth 的安全登入/註冊
-- **💬 AI 聊天支援**: 與 OpenRouter AI API 的智能對話
-- **🗺️ 位置服務**: Google Maps 整合，尋找附近的心理健康資源
-- **📱 跨平台支援**: 支援 iOS、Android、Web、Windows、macOS 和 Linux
-- **🎨 現代化介面**: 乾淨、直觀的介面，使用自訂 Huninn 字體
-- **💾 本地儲存**: SQLite 資料庫用於離線聊天記錄
-- **☁️ 雲端同步**: Firebase Firestore 用於資料同步
-- **🔔 通知系統**: 內建通知功能
-- **⚙️ 設定**: 可自訂的應用程式偏好設定
-
-### 技術架構
-
-- **前端**: Flutter 3.6.2+
-- **後端**: Firebase (認證、Firestore)
-- **AI 整合**: OpenRouter API
-- **地圖服務**: Google Maps Flutter
-- **資料庫**: SQLite (本地)、Firestore (雲端)
-- **狀態管理**: Flutter 內建狀態管理
-- **UI 元件**: Material Design 與自訂主題
-
-### 專案結構
-
-```
-lib/
-├── api/           # API 整合 (OpenRouter)
-├── core/          # 應用程式主題和核心配置
-├── models/        # 資料模型 (ChatMessage)
-├── pages/         # 應用程式畫面與導航
-├── utils/         # 輔助函數和服務
-├── widgets/       # 可重複使用的 UI 元件
-└── main.dart      # 應用程式進入點
-```
-
-### 開始使用
-
-#### 前置需求
-
-- Flutter SDK 3.6.2 或更高版本
-- Dart SDK
-- Android Studio / Xcode (用於行動開發)
-- Firebase 專案設定
-
-#### 安裝步驟
-
-1. **複製專案**
-   ```bash
-   git clone <repository-url>
-   cd my_mindhelp_app
-   ```
-
-2. **安裝依賴套件**
-   ```bash
-   flutter pub get
-   ```
-
-3. **設定 Firebase**
-   - 建立 Firebase 專案
-   - 新增 `google-services.json` (Android) 和 `GoogleService-Info.plist` (iOS)
-   - 啟用認證和 Firestore
-
-4. **設定 API 金鑰**
-   - 設定 OpenRouter API 金鑰用於 AI 聊天功能
-   - 配置 Google Maps API 金鑰
-
-5. **執行應用程式**
-   ```bash
-   flutter run
-   ```
-
-### 可用頁面
-
-- **登入/註冊**: 使用者認證
-- **首頁**: 主要儀表板和導航
-- **聊天**: AI 驅動的心理健康對話
-- **地圖**: 基於位置的心理健康資源
-- **個人資料**: 使用者資料管理
-- **設定**: 應用程式配置
-- **通知**: 使用者提醒和更新
-
-### 建置生產版本
+### 程式碼品質
 
 ```bash
-# Android APK
+# 分析程式碼
+flutter analyze
+
+# 格式化程式碼
+flutter format .
+
+# 運行測試
+flutter test
+
+# 測試覆蓋率
+flutter test --coverage
+```
+
+### 除錯和效能
+
+```bash
+# 除錯模式運行
+flutter run --debug
+
+# 發布模式運行
+flutter run --release
+
+# 效能分析
+flutter run --profile
+```
+
+## 📱 功能特色
+
+### 已實現功能 ✅
+- **現代化 UI 設計** - Material Design 3 設計語言
+- **響應式布局** - 支援各種螢幕尺寸
+- **多平台支援** - Android、iOS、Web、Windows、macOS、Linux
+- **繁體中文支援** - 完整的中文本地化
+- **導航結構** - 清晰的頁面導航
+- **主題配置** - 統一的視覺風格
+- **基本頁面框架** - 所有核心頁面已建立
+
+### 待實現功能 🔄
+- **後端 API 整合** - 連接 Go 後端服務
+- **真實資料載入** - 動態資料獲取
+- **使用者認證** - 登入/註冊功能
+- **資料持久化** - 本地資料儲存
+- **推播通知** - Firebase Cloud Messaging
+- **離線模式** - 離線資料存取
+
+## 🎨 設計系統
+
+### 主題配置
+應用程式使用統一的設計系統，定義在 `lib/core/theme.dart`：
+
+```dart
+// 主要顏色
+- Primary: 心理健康主題色
+- Secondary: 輔助色
+- Background: 背景色
+- Surface: 表面色
+- Error: 錯誤色
+
+// 字體
+- 中文: 思源黑體
+- 英文: Roboto
+```
+
+### 組件庫
+- **CustomAppBar** - 自訂應用欄
+- **InputField** - 統一的輸入欄位
+- **PrimaryButton** - 主要操作按鈕
+
+## 📊 建置和部署
+
+### Android 部署
+
+```bash
+# 建置 APK
 flutter build apk --release
 
-# iOS
+# 建置 App Bundle (推薦)
+flutter build appbundle --release
+
+# 簽署 APK (生產環境)
+flutter build apk --release --build-name=1.0.0 --build-number=1
+```
+
+### iOS 部署
+
+```bash
+# 建置 iOS 應用程式 (需要 macOS)
 flutter build ios --release
 
-# Web
-flutter build web
-
-# Windows
-flutter build windows
-
-# macOS
-flutter build macos
-
-# Linux
-flutter build linux
+# 開啟 Xcode 進行進一步配置
+open ios/Runner.xcworkspace
 ```
+
+### Web 部署
+
+```bash
+# 建置 Web 應用程式
+flutter build web --release
+
+# 部署到 Firebase Hosting
+firebase deploy
+```
+
+### Windows 部署
+
+```bash
+# 建置 Windows 應用程式
+flutter build windows --release
+
+# 創建安裝程式 (需要額外工具)
+```
+
+## 🧪 測試
+
+### 單元測試
+
+```bash
+# 運行所有測試
+flutter test
+
+# 運行特定測試
+flutter test test/widget_test.dart
+
+# 測試覆蓋率
+flutter test --coverage
+```
+
+### 整合測試
+
+```bash
+# 運行整合測試
+flutter drive --target=test_driver/app.dart
+```
+
+### 手動測試
+
+- **UI 測試** - 檢查所有頁面的 UI 元素
+- **導航測試** - 測試頁面間導航
+- **響應式測試** - 測試不同螢幕尺寸
+- **平台測試** - 測試各平台相容性
+
+## 🐛 常見問題
+
+### 環境問題
+
+#### Flutter 命令無法識別
+```bash
+# 檢查 Flutter 安裝
+flutter doctor
+
+# 確認 PATH 設置
+echo $PATH  # Linux/macOS
+echo %PATH% # Windows
+```
+
+#### Android 建置失敗
+```bash
+# 接受 Android 許可證
+flutter doctor --android-licenses
+
+# 檢查 Android SDK
+flutter doctor
+```
+
+#### iOS 建置問題 (macOS)
+```bash
+# 安裝 CocoaPods 依賴項
+cd ios && pod install
+
+# 檢查 Xcode 設置
+flutter doctor
+```
+
+### 依賴項問題
+
+#### 依賴項衝突
+```bash
+# 清理並重新安裝
+flutter clean
+flutter pub get
+
+# 更新依賴項
+flutter pub upgrade
+```
+
+#### 版本相容性
+```bash
+# 檢查過時依賴項
+flutter pub outdated
+
+# 更新特定依賴項
+flutter pub upgrade package_name
+```
+
+## 📞 支援和貢獻
+
+### 獲取幫助
+1. 查看 [Flutter 官方文檔](https://docs.flutter.dev/)
+2. 檢查專案的 [Issues](https://github.com/your-repo/mindhelp/issues)
+3. 聯繫開發團隊
 
 ### 貢獻指南
-
 1. Fork 專案
-2. 建立功能分支
-3. 進行您的修改
-4. 如適用，新增測試
-5. 提交 Pull Request
+2. 創建功能分支
+3. 提交變更
+4. 開啟 Pull Request
 
-### 授權
+### 開發規範
+- 遵循 Dart 程式碼規範
+- 撰寫單元測試
+- 更新相關文檔
+- 確保所有測試通過
 
-此專案為私人專案，不適用於公開發行。
+## 📄 授權
+
+本專案採用 MIT 授權條款 - 查看 [LICENSE](../LICENSE) 文件了解詳情。
+
+---
+
+<div align="center">
+
+**MindHelp Flutter App** - 讓心理健康支援更貼近每個人 📱🧠💚
+
+[![Made with Flutter](https://img.shields.io/badge/Made%20with-Flutter-blue.svg)](https://flutter.dev/)
+[![Made with ❤️](https://img.shields.io/badge/Made%20with-❤️-red.svg)](https://github.com/your-repo/mindhelp)
+
+</div>
