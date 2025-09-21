@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../core/theme.dart';
 import '../widgets/input_field.dart';
 import '../widgets/primary_button.dart';
+import '../services/auth_service.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -15,6 +16,8 @@ class _LoginPageState extends State<LoginPage> {
   late final TextEditingController _passwordController;
   bool _isInputEmpty = true;
   bool _showValidation = false; // 新增變數來控制提示顯示
+  bool _isLoading = false; // 新增載入狀態
+  final AuthService _authService = AuthService();
 
   @override
   void initState() {
@@ -44,6 +47,43 @@ class _LoginPageState extends State<LoginPage> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),
     );
+  }
+
+  Future<void> _handleLogin() async {
+    setState(() {
+      _showValidation = true;
+    });
+
+    if (_isInputEmpty) {
+      _showSnackBar('請填寫所有欄位');
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      await _authService.login(
+        email: _accountController.text.trim(),
+        password: _passwordController.text,
+      );
+      
+      if (mounted) {
+        _showSnackBar('登入成功!');
+        Navigator.pushReplacementNamed(context, '/home');
+      }
+    } catch (e) {
+      if (mounted) {
+        _showSnackBar('登入失敗: ${e.toString()}');
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override
@@ -95,17 +135,8 @@ class _LoginPageState extends State<LoginPage> {
                       children: [
                         Expanded(
                           child: PrimaryButton(
-                            text: '登入',
-                            onPressed: () {
-                              setState(() {
-                                _showValidation = true;
-                              });
-                              if (!_isInputEmpty) {
-                                _showSnackBar('登入成功!');
-                                Navigator.pushReplacementNamed(
-                                    context, '/home');
-                              }
-                            },
+                            text: _isLoading ? '登入中...' : '登入',
+                            onPressed: _isLoading ? null : _handleLogin,
                           ),
                         ),
                         const SizedBox(width: 16),

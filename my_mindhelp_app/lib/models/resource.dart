@@ -1,11 +1,19 @@
+import 'package:json_annotation/json_annotation.dart';
+
+part 'resource.g.dart';
+
+@JsonSerializable()
 class Resource {
   final String id;
   final String name;
   final String type;
   final String address;
   final String phone;
-  final String website;
+  final String? website;
   final String description;
+  final Location? location;
+  final List<String> specialties;
+  final bool isBookmarked;
 
   Resource({
     required this.id,
@@ -13,19 +21,46 @@ class Resource {
     required this.type,
     required this.address,
     required this.phone,
-    required this.website,
+    this.website,
     required this.description,
+    this.location,
+    required this.specialties,
+    required this.isBookmarked,
   });
 
-  factory Resource.fromJson(Map<String, dynamic> json) {
-    return Resource(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      type: json['type'] as String,
-      address: json['address'] as String,
-      phone: json['phone'] as String,
-      website: json['website'] as String,
-      description: json['description'] as String,
-    );
-  }
+  factory Resource.fromJson(Map<String, dynamic> json) => _$ResourceFromJson(json);
+  Map<String, dynamic> toJson() => _$ResourceToJson(this);
+}
+
+@JsonSerializable()
+class Location {
+  final double lat;
+  final double lon;
+
+  Location({
+    required this.lat,
+    required this.lon,
+  });
+
+  factory Location.fromJson(Map<String, dynamic> json) => _$LocationFromJson(json);
+  Map<String, dynamic> toJson() => _$LocationToJson(this);
+}
+
+@JsonSerializable()
+class ResourceListResponse {
+  final List<Resource> resources;
+  final int total;
+  final int page;
+  final int pageSize;
+
+  ResourceListResponse({
+    required this.resources,
+    required this.total,
+    required this.page,
+    required this.pageSize,
+  });
+
+  factory ResourceListResponse.fromJson(Map<String, dynamic> json) => 
+      _$ResourceListResponseFromJson(json);
+  Map<String, dynamic> toJson() => _$ResourceListResponseToJson(this);
 }

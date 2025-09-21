@@ -1,31 +1,44 @@
-// lib/models/chat_message.dart
+import 'package:json_annotation/json_annotation.dart';
 
+part 'chat_message.g.dart';
+
+@JsonSerializable()
 class ChatMessage {
-  final int? id;
-  final String role; // 'user' or 'bot'
+  final String id;
+  final String role; // 'user' or 'assistant'
   final String content;
-  final int timestamp; // Unix milliseconds
+  final String createdAt;
+  final String sessionId;
 
   ChatMessage({
-    this.id,
+    required this.id,
     required this.role,
     required this.content,
-    required this.timestamp,
+    required this.createdAt,
+    required this.sessionId,
   });
 
-  Map<String, dynamic> toMap() => {
-        'id': id,
-        'role': role,
-        'content': content,
-        'timestamp': timestamp,
-      };
-
-  factory ChatMessage.fromMap(Map<String, dynamic> map) => ChatMessage(
-        id: map['id'] as int?,
-        role: map['role'] as String,
-        content: map['content'] as String,
-        timestamp: map['timestamp'] as int,
-      );
+  factory ChatMessage.fromJson(Map<String, dynamic> json) => _$ChatMessageFromJson(json);
+  Map<String, dynamic> toJson() => _$ChatMessageToJson(this);
 
   bool get isUser => role == 'user';
+  bool get isAssistant => role == 'assistant';
+}
+
+@JsonSerializable()
+class ChatSession {
+  final String id;
+  final String firstMessageSnippet;
+  final String lastUpdatedAt;
+  final int messageCount;
+
+  ChatSession({
+    required this.id,
+    required this.firstMessageSnippet,
+    required this.lastUpdatedAt,
+    required this.messageCount,
+  });
+
+  factory ChatSession.fromJson(Map<String, dynamic> json) => _$ChatSessionFromJson(json);
+  Map<String, dynamic> toJson() => _$ChatSessionToJson(this);
 }

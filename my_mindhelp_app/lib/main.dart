@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 
 import 'core/theme.dart';
+import 'core/api_client.dart';
 import 'pages/login_page.dart';
 import 'pages/sign_up_page.dart';
 import 'pages/forgot_code_page.dart';
@@ -19,6 +20,10 @@ import 'pages/change_password_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // 初始化 API 客戶端
+  await ApiClient().initialize();
+  
   runApp(const MindHelpApp());
 }
 

@@ -1,87 +1,122 @@
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+import '../core/api_client.dart';
+import '../core/api_config.dart';
+import '../models/user.dart';
 
 class AuthService {
-  final String _baseUrl = 'https://api.yourdomain.com/v1';
-  final String _authHeader =
-      'Bearer <YOUR_JWT_TOKEN>'; // TODO: 請替換為您實際的 JWT Token
+  final ApiClient _apiClient = ApiClient();
 
-  Future<void> register({
+  /// 註冊新使用者
+  Future<AuthResponse> register({
     required String email,
     required String password,
-    required String nickname,
+    String? nickname,
   }) async {
-    final url = Uri.parse('$_baseUrl/auth/register');
+    final request = RegisterRequest(
+      email: email,
+      password: password,
+      nickname: nickname,
+    );
 
-    final response = await http.post(
-      url,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode({
-        'email': email,
-        'password': password,
-        'nickname': nickname,
-      }),
+    final response = await _apiClient.dio.post(
+      '${ApiConfig.auth}/register',
+      data: request.toJson(),
     );
 
     if (response.statusCode == 201) {
-      // 註冊成功，不做任何事，讓前端處理導航
-    } else {
-      final errorData = jsonDecode(response.body);
-      throw Exception(errorData['error']['message'] ?? '註冊失敗，請重試。');
+      final authResponse = AuthResponse.fromJson(response.data['data']);
+      await _apiClient.setAuthToken(authResponse.token);
+      return authResponse;
     }
+    throw Exception('註冊失敗');
   }
 
-  // 新增：更新暱稱的 API 呼叫
-  Future<void> updateNickname({
-    required String nickname,
+  /// 登入
+  Future<AuthResponse> login({
+    required String email,
+    required String password,
   }) async {
-    final url = Uri.parse('$_baseUrl/users/me');
+    final request = LoginRequest(
+      email: email,
+      password: password,
+    );
 
-    final response = await http.put(
-      url,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': _authHeader,
-      },
-      body: jsonEncode({
-        'nickname': nickname,
-      }),
+    final response = await _apiClient.dio.post(
+      '${ApiConfig.auth}/login',
+      data: request.toJson(),
     );
 
     if (response.statusCode == 200) {
-      // 更新成功
-    } else {
-      final errorData = jsonDecode(response.body);
-      throw Exception(errorData['error']['message'] ?? '暱稱更新失敗，請重試。');
+      final authResponse = AuthResponse.fromJson(response.data['data']);
+      await _apiClient.setAuthToken(authResponse.token);
+      return authResponse;
     }
+    throw Exception('登入失敗');
   }
 
-  // 新增：修改密碼的 API 呼叫
+  /// 登出
+  Future<void> logout() async {
+    await _apiClient.dio.post('${ApiConfig.auth}/logout');
+    await _apiClient.clearAuthToken();
+  }
+
+  /// 獲取當前使用者資訊
+  Future<User> getCurrentUser() async {
+    final response = await _apiClient.dio.get(ApiConfig.users + '/me');
+    
+    if (response.statusCode == 200) {
+      return User.fromJson(response.data['data']);
+    }
+    throw Exception('獲取使用者資訊失敗');
+  }
+
+  /// 更新暱稱
+  Future<User> updateNickname({
+    required String nickname,
+  }) async {
+    final request = UpdateUserRequest(nickname: nickname);
+
+    final response = await _apiClient.dio.put(
+      ApiConfig.users + '/me',
+      data: request.toJson(),
+    );
+
+    if (response.statusCode == 200) {
+      return User.fromJson(response.data['data']);
+    }
+    throw Exception('暱稱更新失敗');
+  }
+
+  /// 修改密碼
   Future<void> changePassword({
     required String oldPassword,
     required String newPassword,
   }) async {
-    final url = Uri.parse('$_baseUrl/users/me/password');
-
-    final response = await http.put(
-      url,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': _authHeader,
-      },
-      body: jsonEncode({
-        'oldPassword': oldPassword,
-        'newPassword': newPassword,
-      }),
+    final request = ChangePasswordRequest(
+      oldPassword: oldPassword,
+      newPassword: newPassword,
     );
 
-    if (response.statusCode == 200) {
-      // 密碼更新成功
-    } else {
-      final errorData = jsonDecode(response.body);
-      throw Exception(errorData['error']['message'] ?? '密碼修改失敗，請重試。');
+    final response = await _apiClient.dio.put(
+      '${ApiConfig.users}/me/password',
+      data: request.toJson(),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('密碼修改失敗');
     }
   }
+
+  /// 刪除帳號
+  Future<void> deleteAccount() async {
+    final response = await _apiClient.dio.delete(ApiConfig.users + '/me');
+    
+    if (response.statusCode == 200) {
+      await _apiClient.clearAuthToken();
+    } else {
+      throw Exception('帳號刪除失敗');
+    }
+  }
+
+  /// 檢查是否已登入
+  bool get isLoggedIn => _apiClient.isAuthenticated;
 }
