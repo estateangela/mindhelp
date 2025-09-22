@@ -9,7 +9,6 @@ import 'pages/login_page.dart';
 import 'pages/sign_up_page.dart';
 import 'pages/edit_nickname_page.dart';
 import 'pages/change_password_page.dart';
-import 'pages/forgot_code_page.dart';
 import 'pages/forgot_reset_page.dart';
 import 'pages/notify_page.dart';
 import 'core/theme.dart';
@@ -39,19 +38,18 @@ class MindHelpApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       initialRoute: '/login',
       routes: {
-        '/notify': (context) => const NotifyPage(),
-        '/login': (context) => const LoginPage(),
+        '/notify': (context) => NotifyPage(),
+        '/login': (context) => LoginPage(),
         '/signup': (context) => SignUpPage(),
-        '/forgot_code': (context) => const ForgotCodePage(),
-        '/forgot_reset': (context) => const ForgotResetPage(),
-        '/home': (context) => const HomePage(),
-        '/chat': (context) => const ChatPage(),
-        '/maps': (context) => const MapsPage(),
-        '/profile': (context) => const ProfilePage(),
+        '/home': (context) => HomePage(),
+        '/chat': (context) => ChatPage(),
+        '/maps': (context) => MapsPage(),
+        '/profile': (context) => ProfilePage(),
         '/articles': (context) => ArticlePage(),
-        '/quiz': (context) => const QuizPage(),
-        '/edit-nickname': (context) => const EditNicknamePage(),
-        '/change-password': (context) => const ChangePasswordPage(),
+        '/quiz': (context) => QuizPage(),
+        '/edit-nickname': (context) => EditNicknamePage(),
+        '/change-password': (context) => ChangePasswordPage(),
+        '/forgot-reset': (context) => ForgotCodePage(),
       },
     );
   }

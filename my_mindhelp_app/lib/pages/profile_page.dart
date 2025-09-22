@@ -94,7 +94,7 @@ class ProfilePage extends StatelessWidget {
                 text: '修改暱稱',
                 onPressed: () {
                   // TODO: 已經完成 - 導向「修改暱稱」頁面
-                  Navigator.pushNamed(context, '/edit_nickname');
+                  Navigator.pushNamed(context, '/edit-nickname');
                 },
               ),
               const SizedBox(height: 16),
@@ -103,7 +103,7 @@ class ProfilePage extends StatelessWidget {
                 text: '修改密碼',
                 onPressed: () {
                   // TODO: 已經完成 - 導向「修改密碼」頁面
-                  Navigator.pushNamed(context, '/change_password');
+                  Navigator.pushNamed(context, '/change-password');
                 },
               ),
               const SizedBox(height: 16),

@@ -2,29 +2,24 @@ import 'package:flutter/material.dart';
 import '../core/theme.dart';
 import '../widgets/input_field.dart';
 import '../widgets/primary_button.dart';
-import '../services/auth_service.dart';
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+  const LoginPage({super.key}); // 注意這裡加上 const
 
   @override
   State<LoginPage> createState() => _LoginPageState();
 }
 
 class _LoginPageState extends State<LoginPage> {
+  // 將 TextEditingController 移到 State 類別中
   late final TextEditingController _accountController;
   late final TextEditingController _passwordController;
-  bool _isInputEmpty = true;
-  bool _showValidation = false; // 新增變數來控制提示顯示
 
   @override
   void initState() {
     super.initState();
     _accountController = TextEditingController();
     _passwordController = TextEditingController();
-
-    _accountController.addListener(_updateLoginButtonState);
-    _passwordController.addListener(_updateLoginButtonState);
   }
 
   @override
@@ -32,19 +27,6 @@ class _LoginPageState extends State<LoginPage> {
     _accountController.dispose();
     _passwordController.dispose();
     super.dispose();
-  }
-
-  void _updateLoginButtonState() {
-    setState(() {
-      _isInputEmpty =
-          _accountController.text.isEmpty || _passwordController.text.isEmpty;
-    });
-  }
-
-  void _showSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
   }
 
   @override
@@ -75,9 +57,7 @@ class _LoginPageState extends State<LoginPage> {
                     const SizedBox(height: 8),
                     InputField(
                       controller: _accountController,
-                      label: _showValidation && _accountController.text.isEmpty
-                          ? '必填'
-                          : '',
+                      label: '',
                       prefixIcon: Icons.person_outline,
                     ),
                     const SizedBox(height: 20),
@@ -85,9 +65,7 @@ class _LoginPageState extends State<LoginPage> {
                     const SizedBox(height: 8),
                     InputField(
                       controller: _passwordController,
-                      label: _showValidation && _passwordController.text.isEmpty
-                          ? '必填'
-                          : '',
+                      label: '',
                       prefixIcon: Icons.lock_outline,
                       obscureText: true,
                     ),
@@ -97,16 +75,8 @@ class _LoginPageState extends State<LoginPage> {
                         Expanded(
                           child: PrimaryButton(
                             text: '登入',
-                            onPressed: () {
-                              setState(() {
-                                _showValidation = true;
-                              });
-                              if (!_isInputEmpty) {
-                                _showSnackBar('登入成功!');
-                                Navigator.pushReplacementNamed(
-                                    context, '/home');
-                              }
-                            },
+                            onPressed: () => Navigator.pushReplacementNamed(
+                                context, '/home'),
                           ),
                         ),
                         const SizedBox(width: 16),
@@ -121,7 +91,8 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                     const SizedBox(height: 24),
                     GestureDetector(
-                      onTap: () => Navigator.pushNamed(context, '/forgot_code'),
+                      onTap: () =>
+                          Navigator.pushNamed(context, '/forgot-reset'),
                       child: Text(
                         '忘記密碼？',
                         textAlign: TextAlign.center,

@@ -6,12 +6,94 @@ import '../widgets/input_field.dart';
 import '../widgets/primary_button.dart';
 import '../services/auth_service.dart';
 
-class SignUpPage extends StatelessWidget {
+class SignUpPage extends StatefulWidget {
+  const SignUpPage({super.key});
+
+  @override
+  State<SignUpPage> createState() => _SignUpPageState();
+}
+
+class _SignUpPageState extends State<SignUpPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _nicknameController = TextEditingController();
 
   final _authService = AuthService();
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    _nicknameController.dispose();
+    super.dispose();
+  }
+
+  void _showSnackBar(String message) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+    }
+  }
+
+  bool _isValidEmail(String email) {
+    return RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(email);
+  }
+
+  Future<void> _register() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+    final nickname = _nicknameController.text.trim();
+
+    // 驗證邏輯
+    if (email.isEmpty || password.isEmpty || nickname.isEmpty) {
+      _showSnackBar('所有欄位都是必填的。');
+      return;
+    }
+    if (!_isValidEmail(email)) {
+      _showSnackBar('請輸入有效的電子郵件地址。');
+      return;
+    }
+    if (password.length < 8 || password.length > 16) {
+      _showSnackBar('密碼長度必須在 8 到 16 個字元之間。');
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      await _authService.register(
+        email: email,
+        password: password,
+        nickname: nickname,
+      );
+      _showSnackBar('註冊成功！請登入。');
+      // 註冊成功，導向登入頁面
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/login');
+      }
+    } catch (e) {
+      _showSnackBar('註冊失敗：${e.toString()}');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  Widget _buildCircle(double size) => Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          color: AppColors.accent.withOpacity(0.3),
+          shape: BoxShape.circle,
+        ),
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -66,40 +148,8 @@ class SignUpPage extends StatelessWidget {
                       const SizedBox(width: 24),
                       Expanded(
                         child: PrimaryButton(
-                          text: '確認',
-                          onPressed: () async {
-                            final email = _emailController.text.trim();
-                            final password = _passwordController.text.trim();
-                            final nickname = _nicknameController.text.trim();
-
-                            // 驗證邏輯
-                            if (email.isEmpty ||
-                                password.isEmpty ||
-                                nickname.isEmpty) {
-                              _showSnackBar(context, '所有欄位都是必填的。');
-                              return;
-                            }
-                            if (!_isValidEmail(email)) {
-                              _showSnackBar(context, '請輸入有效的電子郵件地址。');
-                              return;
-                            }
-                            if (password.length < 8 || password.length > 16) {
-                              _showSnackBar(context, '密碼長度必須在 8 到 16 個字元之間。');
-                              return;
-                            }
-
-                            try {
-                              await _authService.register(
-                                email: email,
-                                password: password,
-                                nickname: nickname,
-                              );
-                              // 註冊成功，導向登入頁面
-                              Navigator.pushReplacementNamed(context, '/login');
-                            } catch (e) {
-                              _showSnackBar(context, '註冊失敗：${e.toString()}');
-                            }
-                          },
+                          text: _isLoading ? '註冊中...' : '確認',
+                          onPressed: _isLoading ? () {} : _register,
                         ),
                       ),
                     ],
@@ -110,25 +160,6 @@ class SignUpPage extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildCircle(double size) => Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          color: AppColors.accent.withOpacity(0.3),
-          shape: BoxShape.circle,
-        ),
-      );
-
-  bool _isValidEmail(String email) {
-    return RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(email);
-  }
-
-  void _showSnackBar(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
     );
   }
 }

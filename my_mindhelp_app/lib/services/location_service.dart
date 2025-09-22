@@ -59,31 +59,29 @@ class LocationService {
     }
   }
 
-  // 獲取諮商所列表
-  Future<List<Map<String, dynamic>>> getCounselingCenters({
-    int page = 1,
-    int pageSize = 10,
-    String? search,
-    bool? onlineOnly,
+  // 獲取 Google Maps 地址資訊
+  Future<List<Map<String, dynamic>>> getGoogleAddresses({
+    required double lat,
+    required double lon,
+    int radius = 5000,
   }) async {
-    final queryParams = {
-      'page': page.toString(),
-      'page_size': pageSize.toString(),
+    final Map<String, dynamic> queryParams = {
+      'latitude': lat.toString(),
+      'longitude': lon.toString(),
+      'radius': radius.toString(),
     };
-    if (search != null) queryParams['search'] = search;
-    if (onlineOnly != null) queryParams['online_only'] = onlineOnly.toString();
 
-    final uri = Uri.parse('$_baseUrl/counseling-centers')
+    final uri = Uri.parse('$_baseUrl/maps/google-addresses')
         .replace(queryParameters: queryParams);
 
     final response = await http.get(uri);
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
-      return (data['counseling_centers'] as List).cast<Map<String, dynamic>>();
+      return (data['data'] as List).cast<Map<String, dynamic>>();
     } else {
       throw Exception(
-          'Failed to load counseling centers: ${response.statusCode}');
+          'Failed to load Google addresses: ${response.statusCode}');
     }
   }
 }

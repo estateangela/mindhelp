@@ -6,6 +6,33 @@ class AuthService {
   final String _authHeader =
       'Bearer <YOUR_JWT_TOKEN>'; // TODO: 請替換為您實際的 JWT Token
 
+  // 新增：使用者登入的 API 呼叫
+  Future<Map<String, dynamic>> login({
+    required String email,
+    required String password,
+  }) async {
+    final url = Uri.parse('$_baseUrl/auth/login');
+
+    final response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'email': email,
+        'password': password,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data['data']; // 回傳包含 access_token 和 user 資訊的 Map
+    } else {
+      final errorData = jsonDecode(response.body);
+      throw Exception(errorData['error']['message'] ?? '登入失敗，請檢查信箱或密碼。');
+    }
+  }
+
   Future<void> register({
     required String email,
     required String password,
