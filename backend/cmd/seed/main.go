@@ -27,19 +27,25 @@ func main() {
 
 	log.Println("開始插入資料...")
 
+	// 首先嘗試插入範例資料
+	if err := insertSampleData(); err != nil {
+		log.Printf("Warning: Failed to insert sample data: %v", err)
+	}
+
+	// 然後嘗試從 CSV 文件插入資料（如果存在）
 	// 插入諮商師資料
-	// if err := insertCounselors(); err != nil {
-	// 	log.Fatalf("Failed to insert counselors: %v", err)
-	// }
+	if err := insertCounselors(); err != nil {
+		log.Printf("Info: CSV counselors data not available or failed: %v", err)
+	}
 
 	// 插入諮商所資料
-	// if err := insertCounselingCenters(); err != nil {
-	// 	log.Fatalf("Failed to insert counseling centers: %v", err)
-	// }
+	if err := insertCounselingCenters(); err != nil {
+		log.Printf("Info: CSV counseling centers data not available or failed: %v", err)
+	}
 
 	// 插入推薦醫師資料
 	if err := insertRecommendedDoctors(); err != nil {
-		log.Fatalf("Failed to insert recommended doctors: %v", err)
+		log.Printf("Info: CSV recommended doctors data not available or failed: %v", err)
 	}
 
 	log.Println("所有資料插入完成！")
