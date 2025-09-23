@@ -15,6 +15,7 @@ type Config struct {
 	Database DatabaseConfig
 	JWT      JWTConfig
 	OpenRouter OpenRouterConfig
+	GoogleMaps GoogleMapsConfig
 	CORS     CORSConfig
 	Logging  LoggingConfig
 }
@@ -47,6 +48,16 @@ type JWTConfig struct {
 type OpenRouterConfig struct {
 	APIKey  string
 	BaseURL string
+}
+
+// GoogleMapsConfig Google Maps API 配置
+type GoogleMapsConfig struct {
+	APIKey     string
+	BaseURL    string
+	GeocodingURL string
+	PlacesURL   string
+	DirectionsURL string
+	DistanceMatrixURL string
 }
 
 // CORSConfig CORS 配置
@@ -119,6 +130,16 @@ func Load() (*Config, error) {
 	config.OpenRouter = OpenRouterConfig{
 		APIKey:  getEnv("OPENROUTER_API_KEY", ""),
 		BaseURL: getEnv("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1"),
+	}
+
+	// 載入 Google Maps 配置
+	config.GoogleMaps = GoogleMapsConfig{
+		APIKey:     getEnv("GOOGLE_MAPS_API_KEY", ""),
+		BaseURL:    getEnv("GOOGLE_MAPS_BASE_URL", "https://maps.googleapis.com/maps/api"),
+		GeocodingURL: getEnv("GOOGLE_MAPS_GEOCODING_URL", "https://maps.googleapis.com/maps/api/geocode/json"),
+		PlacesURL:   getEnv("GOOGLE_MAPS_PLACES_URL", "https://maps.googleapis.com/maps/api/place"),
+		DirectionsURL: getEnv("GOOGLE_MAPS_DIRECTIONS_URL", "https://maps.googleapis.com/maps/api/directions/json"),
+		DistanceMatrixURL: getEnv("GOOGLE_MAPS_DISTANCE_MATRIX_URL", "https://maps.googleapis.com/maps/api/distancematrix/json"),
 	}
 
 	// 載入 CORS 配置
