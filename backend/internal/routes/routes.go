@@ -254,12 +254,20 @@ func SetupRoutes(cfg *config.Config) *gin.Engine {
 			googleMapsHandler := handlers.NewGoogleMapsHandler(cfg)
 			googleMaps := api.Group("/google-maps")
 			{
+				// 基礎 API
 				googleMaps.POST("/geocode", googleMapsHandler.Geocode)
 				googleMaps.POST("/reverse-geocode", googleMapsHandler.ReverseGeocode)
 				googleMaps.POST("/search-places", googleMapsHandler.SearchPlaces)
 				googleMaps.POST("/directions", googleMapsHandler.GetDirections)
 				googleMaps.POST("/distance-matrix", googleMapsHandler.GetDistanceMatrix)
+				
+				// 專業功能
 				googleMaps.GET("/nearby-mental-health", googleMapsHandler.GetNearbyMentalHealthServices)
+				googleMaps.POST("/batch-geocode", googleMapsHandler.BatchGeocode)
+				
+				// 管理功能
+				googleMaps.GET("/usage-stats", googleMapsHandler.GetAPIUsageStats)
+				googleMaps.POST("/clear-cache", googleMapsHandler.ClearCache)
 			}
 		}
 	}

@@ -264,3 +264,23 @@ func (r *DistanceMatrixRequest) Validate() error {
 	validate := validator.New()
 	return validate.Struct(r)
 }
+
+// BatchGeocodeRequest 批次地理編碼請求
+type BatchGeocodeRequest struct {
+	Addresses []string `json:"addresses" binding:"required,min=1,max=100" validate:"required,min=1,max=100"`
+	Language  string   `json:"language" binding:"omitempty,len=2" validate:"omitempty,len=2"`
+	Region    string   `json:"region" binding:"omitempty,len=2" validate:"omitempty,len=2"`
+}
+
+// BatchGeocodeResponse 批次地理編碼回應
+type BatchGeocodeResponse struct {
+	Results []GeocodeResponse `json:"results"`
+	Total   int               `json:"total"`
+	Status  string            `json:"status"`
+}
+
+// Validate 驗證批次地理編碼請求
+func (r *BatchGeocodeRequest) Validate() error {
+	validate := validator.New()
+	return validate.Struct(r)
+}
