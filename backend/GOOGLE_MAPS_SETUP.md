@@ -73,7 +73,16 @@ docker build --no-cache -t mindhelp-backend .
 2. 如果有 Go 環境，運行 `go mod tidy`
 3. 重新建置 Docker 映像
 
-### 問題 2: API Key 未設定
+### 問題 2: 未使用的 import 錯誤
+
+**症狀：** `"strings" imported and not used` 或 `"fmt" imported and not used`
+
+**解決方案：**
+1. 已修復：移除了 `internal/services/google_maps_service.go` 中未使用的 `strings` import
+2. 已修復：移除了 `internal/middleware/google_maps_middleware.go` 中未使用的 `fmt` import
+3. 運行編譯檢查：`.\compile_check.ps1`
+
+### 問題 3: API Key 未設定
 
 **症狀：** API 回應 "Google Maps API Key 未設定"
 
@@ -81,7 +90,7 @@ docker build --no-cache -t mindhelp-backend .
 1. 檢查 `.env` 文件中的 `GOOGLE_MAPS_API_KEY`
 2. 確保環境變數正確載入
 
-### 問題 3: API 配額超限
+### 問題 4: API 配額超限
 
 **症狀：** API 回應 "OVER_QUERY_LIMIT"
 
@@ -90,7 +99,7 @@ docker build --no-cache -t mindhelp-backend .
 2. 考慮啟用計費以獲得更高配額
 3. 實現更積極的快取策略
 
-### 問題 4: 速率限制
+### 問題 5: 速率限制
 
 **症狀：** API 回應 "Too Many Requests"
 
