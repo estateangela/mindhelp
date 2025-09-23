@@ -246,9 +246,21 @@ func SetupRoutes(cfg *config.Config) *gin.Engine {
 			api.GET("/recommended-doctors/:id", handlers.GetRecommendedDoctor)
 
 			// 地圖相關公開路由
-			mapsHandler := handlers.NewMapsHandler()
+			mapsHandler := handlers.NewMapsHandler(cfg)
 			api.GET("/maps/addresses", mapsHandler.GetAllAddresses)
 			api.GET("/maps/google-addresses", mapsHandler.GetAddressesForGoogleMaps)
+
+			// Google Maps API 路由
+			googleMapsHandler := handlers.NewGoogleMapsHandler(cfg)
+			googleMaps := api.Group("/google-maps")
+			{
+				googleMaps.POST("/geocode", googleMapsHandler.Geocode)
+				googleMaps.POST("/reverse-geocode", googleMapsHandler.ReverseGeocode)
+				googleMaps.POST("/search-places", googleMapsHandler.SearchPlaces)
+				googleMaps.POST("/directions", googleMapsHandler.GetDirections)
+				googleMaps.POST("/distance-matrix", googleMapsHandler.GetDistanceMatrix)
+				googleMaps.GET("/nearby-mental-health", googleMapsHandler.GetNearbyMentalHealthServices)
+			}
 		}
 	}
 
