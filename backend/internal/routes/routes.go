@@ -186,6 +186,12 @@ func SetupRoutes(cfg *config.Config) *gin.Engine {
 			// 管理員路由 (需要認證的)
 			admin := protected.Group("/admin")
 			{
+				adminHandler := handlers.NewAdminHandler()
+				
+				// 資料庫管理
+				admin.POST("/seed-database", adminHandler.SeedDatabase)
+				admin.GET("/database-stats", adminHandler.GetDatabaseStats)
+				
 				// 諮商師管理
 				admin.POST("/counselors", handlers.CreateCounselor)
 				admin.PUT("/counselors/:id", handlers.UpdateCounselor)
