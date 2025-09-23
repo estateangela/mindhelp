@@ -64,24 +64,21 @@ class _QuizPageState extends State<QuizPage> {
         onTap: (idx) {
           switch (idx) {
             case 0:
-              // 已在 Quiz Page，不做動作
+              Navigator.pushReplacementNamed(context, '/home');
               break;
+
             case 1:
               Navigator.pushReplacementNamed(context, '/maps');
               break;
             case 2:
               Navigator.pushReplacementNamed(context, '/chat');
               break;
-            case 3:
-              Navigator.pushReplacementNamed(context, '/profile');
-              break;
           }
         },
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.assessment), label: '測驗'),
-          BottomNavigationBarItem(icon: Icon(Icons.location_on), label: '地圖'),
-          BottomNavigationBarItem(icon: Icon(Icons.chat_bubble), label: '聊天'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: '我的'),
+          BottomNavigationBarItem(icon: Icon(Icons.assessment), label: 'home'),
+          BottomNavigationBarItem(icon: Icon(Icons.location_on), label: 'maps'),
+          BottomNavigationBarItem(icon: Icon(Icons.chat_bubble), label: 'chat'),
         ],
       ),
     );

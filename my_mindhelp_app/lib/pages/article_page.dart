@@ -63,7 +63,7 @@ class ArticlePage extends StatelessWidget {
         onTap: (idx) {
           switch (idx) {
             case 0:
-              // 已在 Article Page，不做動作
+              Navigator.pushReplacementNamed(context, '/home');
               break;
             case 1:
               Navigator.pushReplacementNamed(context, '/maps');
@@ -71,16 +71,12 @@ class ArticlePage extends StatelessWidget {
             case 2:
               Navigator.pushReplacementNamed(context, '/chat');
               break;
-            case 3:
-              Navigator.pushReplacementNamed(context, '/profile');
-              break;
           }
         },
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.article), label: '專欄'),
-          BottomNavigationBarItem(icon: Icon(Icons.location_on), label: '地圖'),
-          BottomNavigationBarItem(icon: Icon(Icons.chat_bubble), label: '聊天'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: '我的'),
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'home'),
+          BottomNavigationBarItem(icon: Icon(Icons.location_on), label: 'maps'),
+          BottomNavigationBarItem(icon: Icon(Icons.chat_bubble), label: 'chat'),
         ],
       ),
     );

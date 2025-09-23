@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
 import '../services/location_service.dart';
 import '../core/theme.dart';
-import '../widgets/primary_button.dart';
 import '../widgets/custom_app_bar.dart';
-import '../models/resource.dart';
+import '../models/counseling_center.dart';
 
 class MapsPage extends StatefulWidget {
   const MapsPage({super.key});
@@ -17,7 +17,7 @@ class MapsPage extends StatefulWidget {
 class _MapsPageState extends State<MapsPage> {
   late GoogleMapController mapController;
   final LocationService _locationService = LocationService();
-  LatLng _currentLocation = const LatLng(25.0487, 121.5175);
+  LatLng _currentLocation = const LatLng(25.0487, 121.5175); // 台北商業大學
   bool _isLoading = true;
   final Set<Marker> _markers = {};
   String _mapStatus = '正在載入地圖...';
@@ -25,39 +25,36 @@ class _MapsPageState extends State<MapsPage> {
   @override
   void initState() {
     super.initState();
-    _getLocationAndLoadResources();
+    _loadAllData();
   }
 
-  Future<void> _getLocationAndLoadResources() async {
+  Future<void> _loadAllData() async {
     try {
       setState(() {
         _mapStatus = '正在獲取您的位置...';
+        _isLoading = true;
       });
-      // 新增超時設定
+
+      // 取得使用者當前位置
       Position position =
           await _determinePosition().timeout(const Duration(seconds: 10));
+
       if (mounted) {
         setState(() {
           _currentLocation = LatLng(position.latitude, position.longitude);
         });
+        mapController.animateCamera(CameraUpdate.newLatLng(_currentLocation));
       }
-      mapController.animateCamera(CameraUpdate.newLatLng(_currentLocation));
-      await _loadNearbyClinics();
     } catch (e) {
       if (mounted) {
         _mapStatus = '無法獲取位置，使用預設座標。錯誤：${e.toString()}';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(_mapStatus)),
         );
-        setState(() {}); // 刷新 UI
-        await _loadNearbyClinics(); // 即使定位失敗也載入預設位置的資料
       }
     } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      // 不管定位成功或失敗，都載入附近的諮商中心
+      await _loadNearbyClinics();
     }
   }
 
@@ -88,14 +85,13 @@ class _MapsPageState extends State<MapsPage> {
   Future<void> _loadNearbyClinics() async {
     setState(() {
       _mapStatus = '正在搜尋附近診所...';
+      _isLoading = true;
     });
+
     try {
-      final googleAddresses = await _locationService.getGoogleAddresses(
-        lat: _currentLocation.latitude,
-        lon: _currentLocation.longitude,
-        radius: 5000,
-      );
       _markers.clear();
+
+      // 標示使用者位置
       _markers.add(
         Marker(
           markerId: const MarkerId('current_location'),
@@ -104,22 +100,48 @@ class _MapsPageState extends State<MapsPage> {
           icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
         ),
       );
-      for (var address in googleAddresses) {
-        _markers.add(
-          Marker(
-            markerId: MarkerId(address['name']),
-            position: LatLng(address['geometry']['location']['lat'],
-                address['geometry']['location']['lng']),
-            infoWindow: InfoWindow(
-              title: address['name'],
-              snippet: address['formatted_address'],
+
+      // 後端 counseling centers
+      final List<CounselingCenter> counselingCenters =
+          await _locationService.getCounselingCenters();
+
+      for (var center in counselingCenters) {
+        final location = await GeocodingPlatform.instance
+            ?.locationFromAddress(center.address);
+        if (location != null && location.isNotEmpty) {
+          final LatLng position =
+              LatLng(location.first.latitude, location.first.longitude);
+          _markers.add(
+            Marker(
+              markerId: MarkerId(center.id),
+              position: position,
+              infoWindow: InfoWindow(
+                title: center.name,
+                snippet: center.phone,
+              ),
+              icon: BitmapDescriptor.defaultMarkerWithHue(
+                center.onlineCounseling
+                    ? BitmapDescriptor.hueGreen
+                    : BitmapDescriptor.hueRed,
+              ),
             ),
-          ),
-        );
+          );
+        }
       }
-      _mapStatus = '已找到 ${googleAddresses.length} 間診所';
+
+      if (mounted) {
+        setState(() {
+          _mapStatus = '已找到 ${counselingCenters.length} 間診所';
+        });
+      }
     } catch (e) {
       _mapStatus = '無法載入診所資訊：${e.toString()}';
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -153,6 +175,12 @@ class _MapsPageState extends State<MapsPage> {
             myLocationEnabled: true,
             myLocationButtonEnabled: false,
           ),
+          if (_isLoading)
+            Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation(AppColors.accent),
+              ),
+            ),
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -170,16 +198,12 @@ class _MapsPageState extends State<MapsPage> {
             case 2:
               Navigator.pushReplacementNamed(context, '/chat');
               break;
-            case 3:
-              Navigator.pushReplacementNamed(context, '/profile');
-              break;
           }
         },
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.location_on), label: 'Maps'),
           BottomNavigationBarItem(icon: Icon(Icons.chat_bubble), label: 'Chat'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
       ),
     );

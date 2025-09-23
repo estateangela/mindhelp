@@ -58,16 +58,12 @@ class NotifyPage extends StatelessWidget {
             case 2:
               Navigator.pushReplacementNamed(context, '/chat');
               break;
-            case 3:
-              Navigator.pushReplacementNamed(context, '/profile');
-              break;
           }
         },
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.location_on), label: 'Maps'),
           BottomNavigationBarItem(icon: Icon(Icons.chat_bubble), label: 'Chat'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
       ),
     );

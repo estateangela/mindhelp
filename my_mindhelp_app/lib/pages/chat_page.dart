@@ -122,9 +122,6 @@ class ChatPageState extends State<ChatPage> {
       case 2:
         // already on Chat
         break;
-      case 3:
-        Navigator.pushReplacementNamed(context, '/profile');
-        break;
     }
   }
 
@@ -233,7 +230,6 @@ class ChatPageState extends State<ChatPage> {
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.location_on), label: 'Maps'),
           BottomNavigationBarItem(icon: Icon(Icons.chat_bubble), label: 'Chat'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
       ),
     );

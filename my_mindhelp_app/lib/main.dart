@@ -4,12 +4,6 @@ import 'pages/article_page.dart';
 import 'pages/quiz_page.dart';
 import 'pages/maps_page.dart';
 import 'pages/chat_page.dart';
-import 'pages/profile_page.dart';
-import 'pages/login_page.dart';
-import 'pages/sign_up_page.dart';
-import 'pages/edit_nickname_page.dart';
-import 'pages/change_password_page.dart';
-import 'pages/forgot_reset_page.dart';
 import 'pages/notify_page.dart';
 import 'core/theme.dart';
 import 'config/secrets.dart';
@@ -36,20 +30,14 @@ class MindHelpApp extends StatelessWidget {
       title: 'MindHelp',
       theme: AppTheme.lightTheme,
       debugShowCheckedModeBanner: false,
-      initialRoute: '/login',
+      initialRoute: '/home',
       routes: {
         '/notify': (context) => NotifyPage(),
-        '/login': (context) => LoginPage(),
-        '/signup': (context) => SignUpPage(),
         '/home': (context) => HomePage(),
         '/chat': (context) => ChatPage(),
         '/maps': (context) => MapsPage(),
-        '/profile': (context) => ProfilePage(),
         '/articles': (context) => ArticlePage(),
         '/quiz': (context) => QuizPage(),
-        '/edit-nickname': (context) => EditNicknamePage(),
-        '/change-password': (context) => ChangePasswordPage(),
-        '/forgot-reset': (context) => ForgotCodePage(),
       },
     );
   }
