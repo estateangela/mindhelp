@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../core/theme.dart';
+import '../widgets/custom_app_bar.dart';
 
 class QuizPage extends StatefulWidget {
   const QuizPage({super.key});
@@ -37,17 +38,17 @@ class _QuizPageState extends State<QuizPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: Text('心理測驗', style: Theme.of(context).textTheme.headlineLarge),
-        centerTitle: true,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications, color: AppColors.textHigh),
-            onPressed: () => Navigator.pushNamed(context, '/notify'),
-          ),
-        ],
+      appBar: CustomAppBar(
+        showBackButton: false,
+        titleWidget: const Image(
+          image: AssetImage('assets/images/mindhelp.png'),
+          width: 200,
+          fit: BoxFit.contain,
+        ),
+        rightIcon: IconButton(
+          icon: const Icon(Icons.notifications, color: AppColors.textHigh),
+          onPressed: () => Navigator.pushNamed(context, '/notify'),
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -76,9 +77,9 @@ class _QuizPageState extends State<QuizPage> {
           }
         },
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.assessment), label: 'home'),
-          BottomNavigationBarItem(icon: Icon(Icons.location_on), label: 'maps'),
-          BottomNavigationBarItem(icon: Icon(Icons.chat_bubble), label: 'chat'),
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.location_on), label: 'Maps'),
+          BottomNavigationBarItem(icon: Icon(Icons.chat_bubble), label: 'Chat'),
         ],
       ),
     );

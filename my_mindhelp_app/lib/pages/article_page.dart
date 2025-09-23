@@ -74,9 +74,9 @@ class ArticlePage extends StatelessWidget {
           }
         },
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'home'),
-          BottomNavigationBarItem(icon: Icon(Icons.location_on), label: 'maps'),
-          BottomNavigationBarItem(icon: Icon(Icons.chat_bubble), label: 'chat'),
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.location_on), label: 'Maps'),
+          BottomNavigationBarItem(icon: Icon(Icons.chat_bubble), label: 'Chat'),
         ],
       ),
     );

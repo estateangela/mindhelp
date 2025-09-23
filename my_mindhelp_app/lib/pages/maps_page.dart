@@ -154,9 +154,11 @@ class _MapsPageState extends State<MapsPage> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: CustomAppBar(
-        titleWidget: const Text(
-          '尋找診所',
-          style: TextStyle(fontSize: 24, color: AppColors.textHigh),
+        showBackButton: false,
+        titleWidget: const Image(
+          image: AssetImage('assets/images/mindhelp.png'),
+          width: 200,
+          fit: BoxFit.contain,
         ),
         rightIcon: IconButton(
           icon: const Icon(Icons.notifications, color: AppColors.textHigh),
