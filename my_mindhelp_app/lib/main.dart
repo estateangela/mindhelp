@@ -8,6 +8,7 @@ import 'pages/notify_page.dart';
 import 'core/theme.dart';
 import 'config/secrets.dart';
 import 'pages/splash_page.dart';
+import 'pages/ArticleDetailPage.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();

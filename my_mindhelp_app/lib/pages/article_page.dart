@@ -2,34 +2,33 @@ import 'package:flutter/material.dart';
 import '../core/theme.dart';
 import '../models/article.dart';
 import '../widgets/custom_app_bar.dart';
+//import 'article_detail_page.dart';
 
 class ArticlePage extends StatelessWidget {
   ArticlePage({super.key});
 
   final List<Article> _articles = [
+    // 使用本地圖片路徑
     Article(
       id: '1',
       title: '如何應對職場壓力？',
       author: '張心理師',
       summary: '學會辨識壓力源，並透過正念練習、時間管理等技巧來有效緩解工作帶來的焦慮與疲憊。',
-      imageUrl:
-          'https://images.unsplash.com/photo-1543269865-cbf427508ba7?q=80&w=2670&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+      imageUrl: 'assets/images/1.jpg',
     ),
     Article(
       id: '2',
       title: '走出情緒低谷的七個步驟',
       author: '李心理師',
       summary: '情緒低落是正常的，但當它持續影響生活時，不妨嘗試這七個實用步驟，幫助你重新找回內心的平靜與力量。',
-      imageUrl:
-          'https://images.unsplash.com/photo-1599863261642-e9185e49c951?q=80&w=2670&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+      imageUrl: 'assets/images/3.jpg',
     ),
     Article(
       id: '3',
       title: '親密關係中的有效溝通',
       author: '王心理師',
       summary: '溝通是維繫關係的橋樑。本專欄將探討如何在與伴侶、家人或朋友的互動中，建立健康且有建設性的溝通模式。',
-      imageUrl:
-          'https://images.unsplash.com/photo-1563236217-1064a3875883?q=80&w=2670&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+      imageUrl: 'assets/images/4.jpg',
     ),
   ];
 
@@ -99,10 +98,14 @@ class ArticlePage extends StatelessWidget {
         ],
       ),
       child: InkWell(
-        onTap: () {
-          // TODO: 點擊後導航到文章詳情頁面
-          print('點擊文章：${article.title}');
-        },
+        // onTap: () {
+        // Navigator.push(
+        // context,
+        //MaterialPageRoute(
+        //builder: (context) => ArticleDetailPage(article: article),
+        //),
+        //);
+        //},
         borderRadius: BorderRadius.circular(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -112,17 +115,10 @@ class ArticlePage extends StatelessWidget {
               child: ClipRRect(
                 borderRadius:
                     const BorderRadius.vertical(top: Radius.circular(12)),
-                child: Image.network(
+                // 將 Image.network 替換為 Image.asset
+                child: Image.asset(
                   article.imageUrl,
                   fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      height: 150,
-                      color: Colors.grey[200],
-                      child:
-                          const Center(child: Icon(Icons.image_not_supported)),
-                    );
-                  },
                 ),
               ),
             ),

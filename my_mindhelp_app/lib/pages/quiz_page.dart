@@ -15,22 +15,19 @@ class _QuizPageState extends State<QuizPage> {
       id: '1',
       title: 'GAD-7 焦慮自評量表',
       summary: '用來初步篩檢廣泛性焦慮症的工具，幫助你了解過去兩週內的焦慮程度。',
-      imageUrl:
-          'https://images.unsplash.com/photo-1517594042861-c67d6c6e7552?q=80&w=2670&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+      imageUrl: 'assets/images/1.jpg',
     ),
     Quiz(
       id: '2',
       title: 'PHQ-9 憂鬱症篩檢量表',
       summary: '九個問題，幫助你快速評估自己是否可能有憂鬱症狀，是初步篩檢的常用工具。',
-      imageUrl:
-          'https://images.unsplash.com/photo-1543269865-cbf427508ba7?q=80&w=2670&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+      imageUrl: 'assets/images/3.jpg',
     ),
     Quiz(
       id: '3',
       title: '壓力自我評估量表',
       summary: '從多個角度評估你當前的壓力水平，幫助你辨識壓力來源並採取應對措施。',
-      imageUrl:
-          'https://images.unsplash.com/photo-1520690088924-f7200a08e08d?q=80&w=2670&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+      imageUrl: 'assets/images/4.jpg',
     ),
   ];
 

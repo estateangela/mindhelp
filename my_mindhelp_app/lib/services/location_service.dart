@@ -7,7 +7,7 @@ class LocationService {
 
   Future<List<CounselingCenter>> getCounselingCenters({
     int page = 1,
-    int pageSize = 10,
+    int pageSize = 100,
     String? search,
     bool? onlineOnly,
   }) async {
