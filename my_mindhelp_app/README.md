@@ -91,15 +91,15 @@ lib/
 │   ├── map_item.dart       # 地圖項目模型
 │   └── resource.dart       # 資源模型
 ├── pages/                  # 應用程式頁面
+│   ├── splash_page.dart    # 跳轉頁面
 │   ├── home_page.dart      # 首頁
 │   ├── article_page.dart   # 文章頁面
 │   ├── quiz_page.dart      # 測驗頁面
 │   ├── maps_page.dart      # 地圖頁面
 │   ├── chat_page.dart      # 聊天頁面
-│   └── notify_page.dart           # 通知頁面
+│   └── notify_page.dart    # 通知頁面
 ├── services/               # 業務邏輯服務
 │   ├── ai_service.dart     # AI 服務
-│   ├── auth_service.dart   # 認證服務
 │   └── location_service.dart # 位置服務
 ├── widgets/                # 共用 UI 組件
 │   ├── custom_app_bar.dart # 自訂應用欄
