@@ -25,6 +25,7 @@ class _MapsPageState extends State<MapsPage> {
   @override
   void initState() {
     super.initState();
+    // 移除這裡的 _loadAllData()，改為在 _onMapCreated 中呼叫
   }
 
   Future<void> _loadAllData() async {
@@ -41,6 +42,7 @@ class _MapsPageState extends State<MapsPage> {
         setState(() {
           _currentLocation = LatLng(position.latitude, position.longitude);
         });
+        mapController.animateCamera(CameraUpdate.newLatLng(_currentLocation));
       }
     } catch (e) {
       if (mounted) {
@@ -100,32 +102,48 @@ class _MapsPageState extends State<MapsPage> {
           await _locationService.getCounselingCenters();
 
       for (var center in counselingCenters) {
-        final location = await GeocodingPlatform.instance
-            ?.locationFromAddress(center.address);
-        if (location != null && location.isNotEmpty) {
-          final LatLng position =
-              LatLng(location.first.latitude, location.first.longitude);
-          _markers.add(
-            Marker(
-              markerId: MarkerId(center.id),
-              position: position,
-              infoWindow: InfoWindow(
-                title: center.name,
-                snippet: center.phone,
-              ),
-              icon: BitmapDescriptor.defaultMarkerWithHue(
-                center.onlineCounseling
-                    ? BitmapDescriptor.hueGreen
-                    : BitmapDescriptor.hueRed,
-              ),
-            ),
-          );
+        try {
+          final location = await GeocodingPlatform.instance
+              ?.locationFromAddress(center.address);
+          if (location != null && location.isNotEmpty) {
+            final LatLng position =
+                LatLng(location.first.latitude, location.first.longitude);
+
+            final double distanceInMeters = Geolocator.distanceBetween(
+              _currentLocation.latitude,
+              _currentLocation.longitude,
+              position.latitude,
+              position.longitude,
+            );
+
+            if (distanceInMeters <= 5000) {
+              _markers.add(
+                Marker(
+                  markerId: MarkerId(center.id),
+                  position: position,
+                  infoWindow: InfoWindow(
+                    title: center.name,
+                    snippet: center.phone,
+                  ),
+                  icon: BitmapDescriptor.defaultMarkerWithHue(
+                    center.onlineCounseling
+                        ? BitmapDescriptor.hueGreen
+                        : BitmapDescriptor.hueRed,
+                  ),
+                ),
+              );
+            }
+          } else {
+            print('無法解析地址：${center.address}');
+          }
+        } catch (e) {
+          print('Geocoding 發生錯誤：${e.toString()}');
         }
       }
 
       if (mounted) {
         setState(() {
-          _mapStatus = '已找到 ${counselingCenters.length} 間診所';
+          _mapStatus = '已找到 ${_markers.length - 1} 間診所';
         });
       }
     } catch (e) {
@@ -141,7 +159,7 @@ class _MapsPageState extends State<MapsPage> {
 
   void _onMapCreated(GoogleMapController controller) {
     mapController = controller;
-    _loadAllData();
+    _loadAllData(); // 在這裡呼叫 _loadAllData()，確保 mapController 已初始化
   }
 
   @override

@@ -23,6 +23,9 @@ class LocationService {
 
     final response = await http.get(uri);
 
+    print('API Response Status: ${response.statusCode}');
+    print('API Response Body: ${response.body}');
+
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
       return (data['counseling_centers'] as List)
