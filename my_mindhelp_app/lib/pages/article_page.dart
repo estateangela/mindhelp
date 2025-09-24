@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../core/theme.dart';
 import '../models/article.dart';
+import '../widgets/custom_app_bar.dart';
 
 class ArticlePage extends StatelessWidget {
   ArticlePage({super.key});
@@ -36,17 +37,17 @@ class ArticlePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: Text('專家專欄', style: Theme.of(context).textTheme.headlineLarge),
-        centerTitle: true,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications, color: AppColors.textHigh),
-            onPressed: () => Navigator.pushNamed(context, '/notify'),
-          ),
-        ],
+      appBar: CustomAppBar(
+        showBackButton: false,
+        titleWidget: const Image(
+          image: AssetImage('assets/images/mindhelp.png'),
+          width: 200,
+          fit: BoxFit.contain,
+        ),
+        rightIcon: IconButton(
+          icon: const Icon(Icons.notifications, color: AppColors.textHigh),
+          onPressed: () => Navigator.pushNamed(context, '/notify'),
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),

@@ -25,7 +25,6 @@ class _MapsPageState extends State<MapsPage> {
   @override
   void initState() {
     super.initState();
-    _loadAllData();
   }
 
   Future<void> _loadAllData() async {
@@ -35,7 +34,6 @@ class _MapsPageState extends State<MapsPage> {
         _isLoading = true;
       });
 
-      // 取得使用者當前位置
       Position position =
           await _determinePosition().timeout(const Duration(seconds: 10));
 
@@ -43,7 +41,6 @@ class _MapsPageState extends State<MapsPage> {
         setState(() {
           _currentLocation = LatLng(position.latitude, position.longitude);
         });
-        mapController.animateCamera(CameraUpdate.newLatLng(_currentLocation));
       }
     } catch (e) {
       if (mounted) {
@@ -53,7 +50,6 @@ class _MapsPageState extends State<MapsPage> {
         );
       }
     } finally {
-      // 不管定位成功或失敗，都載入附近的諮商中心
       await _loadNearbyClinics();
     }
   }
@@ -91,7 +87,6 @@ class _MapsPageState extends State<MapsPage> {
     try {
       _markers.clear();
 
-      // 標示使用者位置
       _markers.add(
         Marker(
           markerId: const MarkerId('current_location'),
@@ -101,7 +96,6 @@ class _MapsPageState extends State<MapsPage> {
         ),
       );
 
-      // 後端 counseling centers
       final List<CounselingCenter> counselingCenters =
           await _locationService.getCounselingCenters();
 
@@ -147,6 +141,7 @@ class _MapsPageState extends State<MapsPage> {
 
   void _onMapCreated(GoogleMapController controller) {
     mapController = controller;
+    _loadAllData();
   }
 
   @override

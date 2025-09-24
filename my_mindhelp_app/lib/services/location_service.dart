@@ -5,8 +5,6 @@ import '../models/counseling_center.dart';
 class LocationService {
   // 將基底 URL 替換為你的後端 API 網址
   final String _baseUrl = 'https://mindhelp.onrender.com/api/v1';
-  // TODO: 請替換為您實際的 JWT Token
-  final String _authHeader = 'Bearer <YOUR_JWT_TOKEN>';
 
   // 獲取諮商所列表
   Future<List<CounselingCenter>> getCounselingCenters({
@@ -42,7 +40,6 @@ class LocationService {
   Future<CounselingCenter> getCounselingCenterDetails(String centerId) async {
     final response = await http.get(
       Uri.parse('$_baseUrl/counseling-centers/$centerId'),
-      headers: {'Authorization': _authHeader},
     );
 
     if (response.statusCode == 200) {

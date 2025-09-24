@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import '../core/theme.dart';
+import '../services/location_service.dart'; // 導入地圖服務
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -13,10 +14,28 @@ class _SplashPageState extends State<SplashPage> {
   @override
   void initState() {
     super.initState();
-    // 等待 3 秒後自動跳轉到主頁
-    Future.delayed(const Duration(seconds: 3), () {
-      Navigator.pushReplacementNamed(context, '/home');
-    });
+    _initializeApp();
+  }
+
+  Future<void> _initializeApp() async {
+    // 模擬載入時間，確保使用者能看到 Logo
+    await Future.delayed(const Duration(seconds: 3));
+
+    try {
+      // 在跳轉前，先呼叫地圖的資料
+      await LocationService().getCounselingCenters();
+
+      // 在所有資料載入完成後，跳轉到主頁
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/home');
+      }
+    } catch (e) {
+      // 處理 API 錯誤，例如顯示錯誤訊息並仍然跳轉
+      print('初始化失敗：$e');
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/home');
+      }
+    }
   }
 
   @override
