@@ -3,10 +3,8 @@ import 'dart:convert';
 import '../models/counseling_center.dart';
 
 class LocationService {
-  // 將基底 URL 替換為你的後端 API 網址
   final String _baseUrl = 'https://mindhelp.onrender.com/api/v1';
 
-  // 獲取諮商所列表
   Future<List<CounselingCenter>> getCounselingCenters({
     int page = 1,
     int pageSize = 10,
@@ -36,18 +34,18 @@ class LocationService {
     }
   }
 
-  // 獲取單一諮商所詳情
-  Future<CounselingCenter> getCounselingCenterDetails(String centerId) async {
-    final response = await http.get(
-      Uri.parse('$_baseUrl/counseling-centers/$centerId'),
-    );
-
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      return CounselingCenter.fromJson(data['data']);
-    } else {
-      throw Exception(
-          'Failed to load counseling center details: ${response.statusCode}');
-    }
-  }
+  // You will need to implement getCounselingCenterDetails if you plan to use it.
+  // The method below is a placeholder for future implementation.
+  //
+  // Future<CounselingCenter> getCounselingCenterDetails(String centerId) async {
+  //   final response = await http.get(
+  //     Uri.parse('$_baseUrl/counseling-centers/$centerId'),
+  //   );
+  //   if (response.statusCode == 200) {
+  //     final data = json.decode(response.body);
+  //     return CounselingCenter.fromJson(data['data']);
+  //   } else {
+  //     throw Exception('Failed to load counseling center details: ${response.statusCode}');
+  //   }
+  // }
 }
