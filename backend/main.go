@@ -64,9 +64,15 @@ func main() {
 	// 設定路由
 	router := routes.SetupRoutes(cfg)
 
+	// 獲取端口 - Render 使用 PORT 環境變數
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = cfg.Server.Port
+	}
+
 	// 創建 HTTP 伺服器
 	srv := &http.Server{
-		Addr:         ":" + cfg.Server.Port,
+		Addr:         "0.0.0.0:" + port, // 綁定到所有介面
 		Handler:      router,
 		ReadTimeout:  15 * time.Second,
 		WriteTimeout: 15 * time.Second,
@@ -75,7 +81,7 @@ func main() {
 
 	// 在 goroutine 中啟動伺服器
 	go func() {
-		log.Printf("Starting server on port %s", cfg.Server.Port)
+		log.Printf("Starting server on 0.0.0.0:%s", port)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("Failed to start server: %v", err)
 		}
