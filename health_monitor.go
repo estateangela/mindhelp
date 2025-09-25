@@ -160,7 +160,7 @@ func (hm *HealthMonitor) Start() {
 	}
 }
 
-func main() {
+func Health_Monitor() {
 	// 預設配置
 	config := MonitorConfig{
 		URL:          "https://mind-map-api.estateangela.dpdns.org/health",
