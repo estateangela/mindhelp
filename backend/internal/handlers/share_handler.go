@@ -535,7 +535,7 @@ func (h *ShareHandler) generateShortURL() string {
 }
 
 // generateQRCode 生成 QR Code (簡化實現)
-func (h *ShareHandler) generateQRCode(url string) string {
+func (h *ShareHandler) generateQRCode(_ string) string {
 	// 實際實現中應該使用 QR Code 生成庫
 	// 這裡返回一個佔位符 base64 字符串
 	return "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/59BPwAHogJ/jTeLNAAAAAElFTkSuQmCC"

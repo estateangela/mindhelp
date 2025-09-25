@@ -34,10 +34,10 @@ func Connect(cfg *config.Config) error {
 	// 連接到 PostgreSQL - 加入重試機制和 Supabase 優化
 	maxRetries := 5
 	retryDelay := 2 * time.Second
-	
+
 	for i := 0; i < maxRetries; i++ {
 		log.Printf("嘗試連接資料庫 (第 %d/%d 次)...", i+1, maxRetries)
-		
+
 		DB, err = gorm.Open(postgres.Open(cfg.Database.DSN), gormConfig)
 		if err == nil {
 			// 測試連接是否真的可用
@@ -55,7 +55,7 @@ func Connect(cfg *config.Config) error {
 				err = testErr
 			}
 		}
-		
+
 		if err != nil {
 			log.Printf("資料庫連接失敗 (第 %d/%d 次): %v", i+1, maxRetries, err)
 			if i < maxRetries-1 {
@@ -65,7 +65,7 @@ func Connect(cfg *config.Config) error {
 			}
 		}
 	}
-	
+
 	if err != nil {
 		return fmt.Errorf("資料庫連接失敗，已重試 %d 次: %w", maxRetries, err)
 	}
@@ -187,14 +187,14 @@ func GetConnectionStats() (map[string]interface{}, error) {
 // Reconnect 重新連接資料庫
 func Reconnect(cfg *config.Config) error {
 	log.Println("嘗試重新連接資料庫...")
-	
+
 	// 關閉現有連接
 	if DB != nil {
 		if sqlDB, err := DB.DB(); err == nil {
 			sqlDB.Close()
 		}
 	}
-	
+
 	// 重新連接
 	return Connect(cfg)
 }
@@ -204,15 +204,15 @@ func IsHealthy() bool {
 	if DB == nil {
 		return false
 	}
-	
+
 	sqlDB, err := DB.DB()
 	if err != nil {
 		return false
 	}
-	
+
 	if err := sqlDB.Ping(); err != nil {
 		return false
 	}
-	
+
 	return true
 }
