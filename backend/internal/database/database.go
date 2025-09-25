@@ -39,18 +39,16 @@ func Connect(cfg *config.Config) error {
 	for i := 0; i < maxRetries; i++ {
 		log.Printf("嘗試連接資料庫 (第 %d/%d 次)...", i+1, maxRetries)
 
-		// 嘗試多種連接配置
+		// 嘗試多種連接配置 - 優先使用正確的 Transaction Pooler 端口 6543
 		testDSNs := []string{
-			// 0. 範本範本
-			"postgresql://postgres.haunuvdhisdygfradaya:MIND_HELP_2025@aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres",
-			// 1. 環境變數中的 DATABASE_URL
+			// 1. Supabase Transaction Pooler (正確的端口 6543)
+			"postgresql://postgres.haunuvdhisdygfradaya:MIND_HELP_2025@aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres",
+			// 2. 環境變數中的 DATABASE_URL
 			getEnv("DATABASE_URL", ""),
-			// 2. 硬編碼的正確連接字串
-			"postgresql://postgres.haunuvdhisdygfradaya:MIND_HELP_2025@aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres?sslmode=require&connect_timeout=30",
-			// 3. 無 SSL 版本
-			"postgresql://postgres.haunuvdhisdygfradaya:MIND_HELP_2025@aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres?sslmode=disable&connect_timeout=30",
-			// 4. 標準端口版本
-			"postgresql://postgres.haunuvdhisdygfradaya:MIND_HELP_2025@aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres?sslmode=require&connect_timeout=30",
+			// 3. 帶 SSL 的 Transaction Pooler
+			"postgresql://postgres.haunuvdhisdygfradaya:MIND_HELP_2025@aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres?sslmode=require",
+			// 4. 無 SSL 的 Transaction Pooler
+			"postgresql://postgres.haunuvdhisdygfradaya:MIND_HELP_2025@aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres?sslmode=disable",
 		}
 
 		// 移除空的 DSN
