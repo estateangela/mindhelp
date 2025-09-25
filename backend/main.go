@@ -47,6 +47,9 @@ func main() {
 	if port == "" {
 		port = cfg.Server.Port
 	}
+	log.Printf("環境變數 PORT: %s", os.Getenv("PORT"))
+	log.Printf("配置檔案端口: %s", cfg.Server.Port)
+	log.Printf("最終使用端口: %s", port)
 
 	// 設定路由 (不需要資料庫連接也能啟動基本路由)
 	router := routes.SetupRoutes(cfg)

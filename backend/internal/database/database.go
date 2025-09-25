@@ -39,15 +39,17 @@ func Connect(cfg *config.Config) error {
 	for i := 0; i < maxRetries; i++ {
 		log.Printf("嘗試連接資料庫 (第 %d/%d 次)...", i+1, maxRetries)
 
-		// 嘗試多種連接配置 - 優先使用正確的 Transaction Pooler 端口 6543
+		// 嘗試多種連接配置 - 針對 Supabase 免費版優化
 		testDSNs := []string{
-			// 1. Supabase Transaction Pooler (正確的端口 6543)
-			"postgresql://postgres.haunuvdhisdygfradaya:MIND_HELP_2025@aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres",
-			// 2. 環境變數中的 DATABASE_URL
+			// 1. 環境變數中的 DATABASE_URL (優先)
 			getEnv("DATABASE_URL", ""),
-			// 3. 帶 SSL 的 Transaction Pooler
+			// 2. Transaction Pooler 簡潔版
+			"postgresql://postgres.haunuvdhisdygfradaya:MIND_HELP_2025@aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres",
+			// 3. 直接連接版本 (5432)
+			"postgresql://postgres.haunuvdhisdygfradaya:MIND_HELP_2025@aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres",
+			// 4. 帶 SSL 的版本
 			"postgresql://postgres.haunuvdhisdygfradaya:MIND_HELP_2025@aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres?sslmode=require",
-			// 4. 無 SSL 的 Transaction Pooler
+			// 5. 無 SSL 的版本
 			"postgresql://postgres.haunuvdhisdygfradaya:MIND_HELP_2025@aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres?sslmode=disable",
 		}
 
@@ -59,30 +61,44 @@ func Connect(cfg *config.Config) error {
 			}
 		}
 
-		if len(validDSNs) > 0 {
-			// 使用第一個有效的 DSN
-			cfg.Database.DSN = validDSNs[0]
-			log.Printf("使用連接字串 (%d/%d): %s", 1, len(validDSNs), maskDSN(cfg.Database.DSN))
-		} else {
-			log.Printf("無有效連接字串，使用預設配置")
-		}
+		// 嘗試每個有效的 DSN，直到找到一個能連接的
+		var lastErr error
+		connected := false
 
-		DB, err = gorm.Open(postgres.Open(cfg.Database.DSN), gormConfig)
-		if err == nil {
-			// 測試連接是否真的可用
-			sqlDB, testErr := DB.DB()
-			if testErr == nil {
-				if pingErr := sqlDB.Ping(); pingErr == nil {
-					log.Printf("資料庫連接成功!")
-					break
+		for dsnIndex, dsn := range validDSNs {
+			log.Printf("嘗試連接字串 (%d/%d): %s", dsnIndex+1, len(validDSNs), maskDSN(dsn))
+			cfg.Database.DSN = dsn
+
+			DB, err = gorm.Open(postgres.Open(cfg.Database.DSN), gormConfig)
+			if err == nil {
+				// 測試連接是否真的可用
+				sqlDB, testErr := DB.DB()
+				if testErr == nil {
+					if pingErr := sqlDB.Ping(); pingErr == nil {
+						log.Printf("資料庫連接成功! 使用連接字串: %s", maskDSN(dsn))
+						connected = true
+						break
+					} else {
+						lastErr = pingErr
+						log.Printf("Ping 失敗: %v", pingErr)
+					}
 				} else {
-					log.Printf("資料庫 Ping 失敗: %v", pingErr)
-					err = pingErr
+					lastErr = testErr
+					log.Printf("取得 DB 實例失敗: %v", testErr)
 				}
 			} else {
-				log.Printf("無法獲取資料庫實例: %v", testErr)
-				err = testErr
+				lastErr = err
+				log.Printf("GORM 連接失敗: %v", err)
 			}
+		}
+
+		if connected {
+			break
+		}
+
+		// 如果所有 DSN 都失敗，使用最後一個錯誤
+		if lastErr != nil {
+			err = lastErr
 		}
 
 		if err != nil {
