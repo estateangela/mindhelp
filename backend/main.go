@@ -43,8 +43,17 @@ func main() {
 	}
 
 	// 連接到資料庫
+
 	if err := database.Connect(cfg); err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
+		log.Println(os.Getenv("DATABASE_URL"))
+		log.Println(os.Getenv("DB_HOST"))
+		log.Println(os.Getenv("DB_PORT"))
+		log.Println(os.Getenv("DB_USER"))
+		log.Println(os.Getenv("DB_PASSWORD"))
+		log.Println(os.Getenv("DB_NAME"))
+		log.Println(os.Getenv("DB_SSL_MODE"))
+
 	}
 	defer database.Close()
 

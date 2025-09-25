@@ -41,9 +41,12 @@ func Connect(cfg *config.Config) error {
 
 		// 嘗試重新構建 DSN 以確保最新配置
 		if dsn := getEnv("DATABASE_URL", ""); dsn != "" {
-			// 如果提供了完整的 DATABASE_URL，直接使用
+			log.Printf("使用 DATABASE_URL 環境變數: %s", maskDSN(dsn))
 			cfg.Database.DSN = dsn
 		} else {
+			log.Printf("DATABASE_URL 未設定，使用個別參數構建連接字串")
+			log.Printf("DB_HOST: %s, DB_PORT: %s, DB_USER: %s, DB_NAME: %s",
+				cfg.Database.Host, cfg.Database.Port, cfg.Database.User, cfg.Database.Name)
 			// 否則使用個別參數構建
 			cfg.Database.DSN = fmt.Sprintf(
 				"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s connect_timeout=30",
@@ -54,6 +57,7 @@ func Connect(cfg *config.Config) error {
 				cfg.Database.Name,
 				cfg.Database.SSLMode,
 			)
+			log.Printf("構建的 DSN: %s", maskDSN(cfg.Database.DSN))
 		}
 
 		DB, err = gorm.Open(postgres.Open(cfg.Database.DSN), gormConfig)
@@ -166,6 +170,19 @@ func getEnv(key, defaultValue string) string {
 		return value
 	}
 	return defaultValue
+}
+
+// maskDSN 遮罩資料庫連接字串中的敏感資訊
+func maskDSN(dsn string) string {
+	// 簡單的密碼遮罩 - 找到 password= 到下一個空格
+	parts := strings.Split(dsn, " ")
+	for i, part := range parts {
+		if strings.HasPrefix(part, "password=") {
+			parts[i] = "password=***"
+			break
+		}
+	}
+	return strings.Join(parts, " ")
 }
 
 // GetDB 獲取資料庫實例
