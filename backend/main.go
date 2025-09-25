@@ -73,6 +73,7 @@ func main() {
 		log.Println("Connecting to database in background...")
 		if err := database.Connect(cfg); err != nil {
 			log.Printf("Failed to connect to database: %v", err)
+			log.Println(os.Getenv("DATABASE_URL"))
 			// 不要讓資料庫連接失敗導致整個服務崩潰
 			return
 		}
