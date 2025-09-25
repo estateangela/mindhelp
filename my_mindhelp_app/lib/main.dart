@@ -4,16 +4,11 @@ import 'pages/article_page.dart';
 import 'pages/quiz_page.dart';
 import 'pages/maps_page.dart';
 import 'pages/chat_page.dart';
-import 'pages/profile_page.dart';
-import 'pages/login_page.dart';
-import 'pages/sign_up_page.dart';
-import 'pages/edit_nickname_page.dart';
-import 'pages/change_password_page.dart';
-import 'pages/forgot_code_page.dart';
-import 'pages/forgot_reset_page.dart';
 import 'pages/notify_page.dart';
 import 'core/theme.dart';
 import 'config/secrets.dart';
+import 'pages/splash_page.dart';
+import 'pages/ArticleDetailPage.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -37,21 +32,15 @@ class MindHelpApp extends StatelessWidget {
       title: 'MindHelp',
       theme: AppTheme.lightTheme,
       debugShowCheckedModeBanner: false,
-      initialRoute: '/login',
+      initialRoute: '/splash',
       routes: {
-        '/notify': (context) => const NotifyPage(),
-        '/login': (context) => const LoginPage(),
-        '/signup': (context) => SignUpPage(),
-        '/forgot_code': (context) => const ForgotCodePage(),
-        '/forgot_reset': (context) => const ForgotResetPage(),
-        '/home': (context) => const HomePage(),
-        '/chat': (context) => const ChatPage(),
-        '/maps': (context) => const MapsPage(),
-        '/profile': (context) => const ProfilePage(),
+        '/notify': (context) => NotifyPage(),
+        '/home': (context) => HomePage(),
+        '/chat': (context) => ChatPage(),
+        '/maps': (context) => MapsPage(),
         '/articles': (context) => ArticlePage(),
-        '/quiz': (context) => const QuizPage(),
-        '/edit-nickname': (context) => const EditNicknamePage(),
-        '/change-password': (context) => const ChangePasswordPage(),
+        '/quiz': (context) => QuizPage(),
+        '/splash': (context) => SplashPage(),
       },
     );
   }

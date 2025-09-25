@@ -155,16 +155,12 @@ class _HomePageState extends State<HomePage> {
           case 2:
             Navigator.pushReplacementNamed(ctx, '/chat');
             break;
-          case 3:
-            Navigator.pushReplacementNamed(ctx, '/profile');
-            break;
         }
       },
       items: const [
         BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
         BottomNavigationBarItem(icon: Icon(Icons.location_on), label: 'Maps'),
         BottomNavigationBarItem(icon: Icon(Icons.chat_bubble), label: 'Chat'),
-        BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
       ],
     );
   }

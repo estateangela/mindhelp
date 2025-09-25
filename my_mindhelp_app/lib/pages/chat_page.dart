@@ -1,10 +1,10 @@
 // lib/pages/chat_page.dart
 import 'package:flutter/material.dart';
-
 import '../core/theme.dart';
 import '../models/chat_message.dart';
 import '../services/ai_service.dart'; // 導入新的 AI 服務
 import '../widgets/input_field.dart';
+import '../widgets/custom_app_bar.dart';
 
 class ChatPage extends StatefulWidget {
   const ChatPage({super.key});
@@ -122,9 +122,6 @@ class ChatPageState extends State<ChatPage> {
       case 2:
         // already on Chat
         break;
-      case 3:
-        Navigator.pushReplacementNamed(context, '/profile');
-        break;
     }
   }
 
@@ -132,17 +129,17 @@ class ChatPageState extends State<ChatPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: Text('Chat', style: Theme.of(context).textTheme.headlineLarge),
-        centerTitle: true,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications, color: AppColors.textHigh),
-            onPressed: () => Navigator.pushNamed(context, '/notify'),
-          ),
-        ],
+      appBar: CustomAppBar(
+        showBackButton: false,
+        titleWidget: const Image(
+          image: AssetImage('assets/images/mindhelp.png'),
+          width: 200,
+          fit: BoxFit.contain,
+        ),
+        rightIcon: IconButton(
+          icon: const Icon(Icons.notifications, color: AppColors.textHigh),
+          onPressed: () => Navigator.pushNamed(context, '/notify'),
+        ),
       ),
       body: Column(
         children: [
@@ -233,7 +230,6 @@ class ChatPageState extends State<ChatPage> {
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.location_on), label: 'Maps'),
           BottomNavigationBarItem(icon: Icon(Icons.chat_bubble), label: 'Chat'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
       ),
     );

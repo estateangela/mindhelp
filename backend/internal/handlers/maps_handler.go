@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"mindhelp-backend/internal/config"
 	"mindhelp-backend/internal/database"
 	"mindhelp-backend/internal/models"
 	"mindhelp-backend/internal/vo"
@@ -12,11 +13,17 @@ import (
 )
 
 // MapsHandler 地圖相關處理器
-type MapsHandler struct{}
+type MapsHandler struct {
+	config *config.Config
+	googleMapsHandler *GoogleMapsHandler
+}
 
 // NewMapsHandler 創建新的地圖處理器
-func NewMapsHandler() *MapsHandler {
-	return &MapsHandler{}
+func NewMapsHandler(cfg *config.Config) *MapsHandler {
+	return &MapsHandler{
+		config: cfg,
+		googleMapsHandler: NewGoogleMapsHandler(cfg),
+	}
 }
 
 // AddressInfo 地址資訊結構
