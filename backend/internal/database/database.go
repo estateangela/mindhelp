@@ -39,25 +39,34 @@ func Connect(cfg *config.Config) error {
 	for i := 0; i < maxRetries; i++ {
 		log.Printf("嘗試連接資料庫 (第 %d/%d 次)...", i+1, maxRetries)
 
-		// 嘗試重新構建 DSN 以確保最新配置
-		if dsn := getEnv("DATABASE_URL", ""); dsn != "" {
-			log.Printf("使用 DATABASE_URL 環境變數: %s", maskDSN(dsn))
-			cfg.Database.DSN = dsn
+		// 嘗試多種連接配置
+		testDSNs := []string{
+			// 0. 範本範本
+			"postgresql://postgres.haunuvdhisdygfradaya:MIND_HELP_2025@aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres",
+			// 1. 環境變數中的 DATABASE_URL
+			getEnv("DATABASE_URL", ""),
+			// 2. 硬編碼的正確連接字串
+			"postgresql://postgres.haunuvdhisdygfradaya:MIND_HELP_2025@aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres?sslmode=require&connect_timeout=30",
+			// 3. 無 SSL 版本
+			"postgresql://postgres.haunuvdhisdygfradaya:MIND_HELP_2025@aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres?sslmode=disable&connect_timeout=30",
+			// 4. 標準端口版本
+			"postgresql://postgres.haunuvdhisdygfradaya:MIND_HELP_2025@aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres?sslmode=require&connect_timeout=30",
+		}
+
+		// 移除空的 DSN
+		var validDSNs []string
+		for _, dsn := range testDSNs {
+			if dsn != "" {
+				validDSNs = append(validDSNs, dsn)
+			}
+		}
+
+		if len(validDSNs) > 0 {
+			// 使用第一個有效的 DSN
+			cfg.Database.DSN = validDSNs[0]
+			log.Printf("使用連接字串 (%d/%d): %s", 1, len(validDSNs), maskDSN(cfg.Database.DSN))
 		} else {
-			log.Printf("DATABASE_URL 未設定，使用個別參數構建連接字串")
-			log.Printf("DB_HOST: %s, DB_PORT: %s, DB_USER: %s, DB_NAME: %s",
-				cfg.Database.Host, cfg.Database.Port, cfg.Database.User, cfg.Database.Name)
-			// 否則使用個別參數構建
-			cfg.Database.DSN = fmt.Sprintf(
-				"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s connect_timeout=30",
-				cfg.Database.Host,
-				cfg.Database.Port,
-				cfg.Database.User,
-				cfg.Database.Password,
-				cfg.Database.Name,
-				cfg.Database.SSLMode,
-			)
-			log.Printf("構建的 DSN: %s", maskDSN(cfg.Database.DSN))
+			log.Printf("無有效連接字串，使用預設配置")
 		}
 
 		DB, err = gorm.Open(postgres.Open(cfg.Database.DSN), gormConfig)
