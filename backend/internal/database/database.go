@@ -3,6 +3,7 @@ package database
 import (
 	"fmt"
 	"log"
+	"os"
 	"strings"
 	"time"
 
@@ -32,11 +33,28 @@ func Connect(cfg *config.Config) error {
 	}
 
 	// 連接到 PostgreSQL - 加入重試機制和 Supabase 優化
-	maxRetries := 5
-	retryDelay := 2 * time.Second
+	maxRetries := 10              // 增加重試次數
+	retryDelay := 5 * time.Second // 增加初始延遲
 
 	for i := 0; i < maxRetries; i++ {
 		log.Printf("嘗試連接資料庫 (第 %d/%d 次)...", i+1, maxRetries)
+
+		// 嘗試重新構建 DSN 以確保最新配置
+		if dsn := getEnv("DATABASE_URL", ""); dsn != "" {
+			// 如果提供了完整的 DATABASE_URL，直接使用
+			cfg.Database.DSN = dsn
+		} else {
+			// 否則使用個別參數構建
+			cfg.Database.DSN = fmt.Sprintf(
+				"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s connect_timeout=30",
+				cfg.Database.Host,
+				cfg.Database.Port,
+				cfg.Database.User,
+				cfg.Database.Password,
+				cfg.Database.Name,
+				cfg.Database.SSLMode,
+			)
+		}
 
 		DB, err = gorm.Open(postgres.Open(cfg.Database.DSN), gormConfig)
 		if err == nil {
@@ -61,7 +79,11 @@ func Connect(cfg *config.Config) error {
 			if i < maxRetries-1 {
 				log.Printf("等待 %v 後重試...", retryDelay)
 				time.Sleep(retryDelay)
-				retryDelay *= 2 // 指數退避
+				retryDelay = time.Duration(float64(retryDelay) * 1.5) // 指數退避
+				// 最多等待 60 秒
+				if retryDelay > 60*time.Second {
+					retryDelay = 60 * time.Second
+				}
 			}
 		}
 	}
@@ -136,6 +158,14 @@ func Close() error {
 		return sqlDB.Close()
 	}
 	return nil
+}
+
+// getEnv 獲取環境變數，如果不存在則返回預設值
+func getEnv(key, defaultValue string) string {
+	if value := os.Getenv(key); value != "" {
+		return value
+	}
+	return defaultValue
 }
 
 // GetDB 獲取資料庫實例
