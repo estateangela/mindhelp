@@ -39,18 +39,18 @@ func Connect(cfg *config.Config) error {
 	for i := 0; i < maxRetries; i++ {
 		log.Printf("嘗試連接資料庫 (第 %d/%d 次)...", i+1, maxRetries)
 
-		// 嘗試多種連接配置 - 針對 Supabase 免費版優化
+		// 嘗試多種連接配置 - 根據 Supabase 日誌優化順序
 		testDSNs := []string{
 			// 1. 環境變數中的 DATABASE_URL (優先)
 			getEnv("DATABASE_URL", ""),
-			// 2. Transaction Pooler 簡潔版
-			"postgresql://postgres.haunuvdhisdygfradaya:MIND_HELP_2025@aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres",
-			// 3. 直接連接版本 (5432)
+			// 2. 直接連接到資料庫 (5432) - 避免 Pooler 自動關閉問題
 			"postgresql://postgres.haunuvdhisdygfradaya:MIND_HELP_2025@aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres",
-			// 4. 帶 SSL 的版本
-			"postgresql://postgres.haunuvdhisdygfradaya:MIND_HELP_2025@aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres?sslmode=require",
-			// 5. 無 SSL 的版本
-			"postgresql://postgres.haunuvdhisdygfradaya:MIND_HELP_2025@aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres?sslmode=disable",
+			// 3. 直接連接帶 SSL
+			"postgresql://postgres.haunuvdhisdygfradaya:MIND_HELP_2025@aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres?sslmode=require",
+			// 4. Transaction Pooler (可能會自動關閉)
+			"postgresql://postgres.haunuvdhisdygfradaya:MIND_HELP_2025@aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres",
+			// 5. Session Pooler 模式
+			"postgresql://postgres.haunuvdhisdygfradaya:MIND_HELP_2025@aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres?pgbouncer=true",
 		}
 
 		// 移除空的 DSN
