@@ -91,14 +91,21 @@ func (h *MapsHandler) GetAllAddresses(c *gin.Context) {
 	// 獲取推薦醫師地址（從描述中提取）
 	if addressType == "" || addressType == "recommended_doctor" {
 		var doctors []models.RecommendedDoctor
-		if err := database.GetDB().Select("id, name, description").Where("name IS NOT NULL AND name != '' AND description IS NOT NULL AND description != ''").Limit(limit).Find(&doctors).Error; err == nil {
+		// 使用更安全的查詢，避免 name 欄位不存在的錯誤
+		if err := database.GetDB().Select("id, description").Where("description IS NOT NULL AND description != ''").Limit(limit).Find(&doctors).Error; err == nil {
 			for _, doctor := range doctors {
 				// 嘗試從描述中提取地址資訊
 				address := extractAddressFromDescription(doctor.Description)
 				if address != "" {
+					// 使用 ID 作為名稱，如果 name 欄位不存在
+					name := doctor.Name
+					if name == "" {
+						name = "推薦醫師 " + doctor.ID.String()[:8]
+					}
+					
 					addresses = append(addresses, AddressInfo{
 						ID:          doctor.ID.String(),
-						Name:        doctor.Name,
+						Name:        name,
 						Address:     address,
 						Type:        "recommended_doctor",
 						Description: doctor.Description,
@@ -191,13 +198,19 @@ func (h *MapsHandler) fetchAllAddresses() ([]AddressInfo, error) {
 
 	// 獲取推薦醫師地址
 	var doctors []models.RecommendedDoctor
-	if err := database.GetDB().Select("id, name, description").Where("name IS NOT NULL AND name != '' AND description IS NOT NULL AND description != ''").Find(&doctors).Error; err == nil {
+	if err := database.GetDB().Select("id, description").Where("description IS NOT NULL AND description != ''").Find(&doctors).Error; err == nil {
 		for _, doctor := range doctors {
 			address := extractAddressFromDescription(doctor.Description)
 			if address != "" {
+				// 使用 ID 作為名稱，如果 name 欄位不存在
+				name := doctor.Name
+				if name == "" {
+					name = "推薦醫師 " + doctor.ID.String()[:8]
+				}
+				
 				addresses = append(addresses, AddressInfo{
 					ID:          doctor.ID.String(),
-					Name:        doctor.Name,
+					Name:        name,
 					Address:     address,
 					Type:        "recommended_doctor",
 					Description: doctor.Description,

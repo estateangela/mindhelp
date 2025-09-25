@@ -31,20 +31,43 @@ func Connect(cfg *config.Config) error {
 		DisableForeignKeyConstraintWhenMigrating: true,  // 禁用外鍵約束
 	}
 
-	// 連接到 PostgreSQL - 加入重試機制
-	maxRetries := 3
+	// 連接到 PostgreSQL - 加入重試機制和 Supabase 優化
+	maxRetries := 5
+	retryDelay := 2 * time.Second
+	
 	for i := 0; i < maxRetries; i++ {
+		log.Printf("嘗試連接資料庫 (第 %d/%d 次)...", i+1, maxRetries)
+		
 		DB, err = gorm.Open(postgres.Open(cfg.Database.DSN), gormConfig)
 		if err == nil {
-			break
+			// 測試連接是否真的可用
+			sqlDB, testErr := DB.DB()
+			if testErr == nil {
+				if pingErr := sqlDB.Ping(); pingErr == nil {
+					log.Printf("資料庫連接成功!")
+					break
+				} else {
+					log.Printf("資料庫 Ping 失敗: %v", pingErr)
+					err = pingErr
+				}
+			} else {
+				log.Printf("無法獲取資料庫實例: %v", testErr)
+				err = testErr
+			}
 		}
-		if i < maxRetries-1 {
-			log.Printf("Database connection attempt %d failed, retrying in 5 seconds...", i+1)
-			time.Sleep(5 * time.Second)
+		
+		if err != nil {
+			log.Printf("資料庫連接失敗 (第 %d/%d 次): %v", i+1, maxRetries, err)
+			if i < maxRetries-1 {
+				log.Printf("等待 %v 後重試...", retryDelay)
+				time.Sleep(retryDelay)
+				retryDelay *= 2 // 指數退避
+			}
 		}
 	}
+	
 	if err != nil {
-		return fmt.Errorf("failed to connect to database after %d attempts: %w", maxRetries, err)
+		return fmt.Errorf("資料庫連接失敗，已重試 %d 次: %w", maxRetries, err)
 	}
 
 	// 設定連接池
@@ -54,10 +77,10 @@ func Connect(cfg *config.Config) error {
 	}
 
 	// 設定連接池參數 - 針對 Supabase 優化
-	sqlDB.SetMaxIdleConns(5)                   // 減少閒置連接
-	sqlDB.SetMaxOpenConns(20)                  // 減少最大連接數
-	sqlDB.SetConnMaxLifetime(30 * time.Minute) // 縮短連接生命週期
-	sqlDB.SetConnMaxIdleTime(10 * time.Minute) // 設定閒置超時
+	sqlDB.SetMaxIdleConns(2)                   // Supabase 限制較嚴，減少閒置連接
+	sqlDB.SetMaxOpenConns(10)                  // Supabase 限制較嚴，減少最大連接數
+	sqlDB.SetConnMaxLifetime(15 * time.Minute) // Supabase 連接超時較短
+	sqlDB.SetConnMaxIdleTime(5 * time.Minute)  // 縮短閒置超時
 
 	log.Println("Successfully connected to database")
 	return nil
@@ -159,4 +182,37 @@ func GetConnectionStats() (map[string]interface{}, error) {
 		"max_idle_closed":     stats.MaxIdleClosed,
 		"max_lifetime_closed": stats.MaxLifetimeClosed,
 	}, nil
+}
+
+// Reconnect 重新連接資料庫
+func Reconnect(cfg *config.Config) error {
+	log.Println("嘗試重新連接資料庫...")
+	
+	// 關閉現有連接
+	if DB != nil {
+		if sqlDB, err := DB.DB(); err == nil {
+			sqlDB.Close()
+		}
+	}
+	
+	// 重新連接
+	return Connect(cfg)
+}
+
+// IsHealthy 檢查資料庫健康狀態
+func IsHealthy() bool {
+	if DB == nil {
+		return false
+	}
+	
+	sqlDB, err := DB.DB()
+	if err != nil {
+		return false
+	}
+	
+	if err := sqlDB.Ping(); err != nil {
+		return false
+	}
+	
+	return true
 }

@@ -23,12 +23,12 @@ type HealthCheckResponse struct {
 
 // MonitorConfig 監控配置
 type MonitorConfig struct {
-	URL           string        `json:"url"`
-	Interval      time.Duration `json:"interval"`
-	Timeout       time.Duration `json:"timeout"`
-	LogFile       string        `json:"log_file"`
-	AlertOnError  bool          `json:"alert_on_error"`
-	MaxRetries    int           `json:"max_retries"`
+	URL          string        `json:"url"`
+	Interval     time.Duration `json:"interval"`
+	Timeout      time.Duration `json:"timeout"`
+	LogFile      string        `json:"log_file"`
+	AlertOnError bool          `json:"alert_on_error"`
+	MaxRetries   int           `json:"max_retries"`
 }
 
 // HealthMonitor 健康監控器
@@ -98,7 +98,7 @@ func (hm *HealthMonitor) CheckHealth() (*HealthCheckResponse, error) {
 // LogHealthStatus 記錄健康狀態
 func (hm *HealthMonitor) LogHealthStatus(health *HealthCheckResponse, err error) {
 	timestamp := time.Now().Format("2006-01-02 15:04:05")
-	
+
 	if err != nil {
 		hm.logger.Printf("[ERROR] %s - 健康檢查失敗: %v", timestamp, err)
 		if hm.config.AlertOnError {
@@ -112,8 +112,8 @@ func (hm *HealthMonitor) LogHealthStatus(health *HealthCheckResponse, err error)
 	if health.Status != "ok" {
 		status = "⚠️"
 	}
-	
-	hm.logger.Printf("[%s] %s 服務狀態: %s, 運行時間: %s", 
+
+	hm.logger.Printf("[%s] %s 服務狀態: %s, 運行時間: %s",
 		timestamp, status, health.Status, health.Uptime)
 
 	// 記錄詳細檢查結果
@@ -134,7 +134,7 @@ func (hm *HealthMonitor) LogHealthStatus(health *HealthCheckResponse, err error)
 	}
 
 	// 控制台輸出
-	fmt.Printf("%s [%s] %s 狀態: %s | 運行: %s\n", 
+	fmt.Printf("%s [%s] %s 狀態: %s | 運行: %s\n",
 		status, timestamp, health.Service, health.Status, health.Uptime)
 }
 
@@ -145,7 +145,7 @@ func (hm *HealthMonitor) Start() {
 	fmt.Printf("📍 監控端點: %s\n", hm.config.URL)
 	fmt.Printf("⏰ 檢查間隔: %v\n", hm.config.Interval)
 	fmt.Printf("📝 日誌檔案: %s\n", hm.config.LogFile)
-	fmt.Printf("=" + "="*50 + "\n")
+	fmt.Printf("%s\n", strings.Repeat("=", 50))
 
 	ticker := time.NewTicker(hm.config.Interval)
 	defer ticker.Stop()

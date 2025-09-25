@@ -104,9 +104,9 @@ func Load() (*Config, error) {
 		// 如果提供了完整的 DATABASE_URL，直接使用
 		config.Database.DSN = dsn
 	} else {
-		// 否則使用個別參數構建
+		// 否則使用個別參數構建 - 針對 Supabase 優化
 		config.Database.DSN = fmt.Sprintf(
-			"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
+			"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s connect_timeout=30",
 			config.Database.Host,
 			config.Database.Port,
 			config.Database.User,
