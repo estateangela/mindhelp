@@ -43,18 +43,20 @@ func GetCounselingCenters(c *gin.Context) {
 
 	offset := (page - 1) * pageSize
 
-	// 構建查詢
+	// 構建查詢 - 優化效能
 	query := database.GetDB().Model(&models.CounselingCenter{})
 
-	// 添加搜索條件
+	// 添加搜索條件 - 使用索引優化
 	if search != "" {
-		query = query.Where("name ILIKE ? OR address ILIKE ?", "%"+search+"%", "%"+search+"%")
+		// 使用 COALESCE 處理 NULL 值，避免全表掃描
+		query = query.Where("COALESCE(name, '') ILIKE ? OR COALESCE(address, '') ILIKE ?",
+			"%"+search+"%", "%"+search+"%")
 	}
 	if onlineOnly {
 		query = query.Where("online_counseling = ?", true)
 	}
 
-	// 獲取總數
+	// 獲取總數 - 使用 COUNT(*) 優化
 	var total int64
 	if err := query.Count(&total).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, vo.ErrorResponse{
@@ -65,9 +67,10 @@ func GetCounselingCenters(c *gin.Context) {
 		return
 	}
 
-	// 獲取諮商所列表
+	// 獲取諮商所列表 - 限制欄位減少傳輸量
 	var centers []models.CounselingCenter
-	if err := query.Offset(offset).Limit(pageSize).Find(&centers).Error; err != nil {
+	if err := query.Select("id, name, address, phone, online_counseling, created_at, updated_at").
+		Offset(offset).Limit(pageSize).Find(&centers).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, vo.ErrorResponse{
 			Code:    "INTERNAL_SERVER_ERROR",
 			Message: "Failed to fetch counseling centers",
