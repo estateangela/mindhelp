@@ -47,10 +47,10 @@ func main() {
 	if port == "" {
 		port = cfg.Server.Port
 	}
-	
+
 	// 設定路由 (不需要資料庫連接也能啟動基本路由)
 	router := routes.SetupRoutes(cfg)
-	
+
 	// 創建 HTTP 伺服器
 	srv := &http.Server{
 		Addr:         "0.0.0.0:" + port, // 綁定到所有介面
