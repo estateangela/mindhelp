@@ -103,7 +103,13 @@ func (h *LocationHandler) CreateLocation(c *gin.Context) {
 		IsPublic:    req.IsPublic,
 	}
 
-	if err := h.db.Create(&location).Error; err != nil {
+	// 獲取資料庫連接
+	db, ok := h.getDB(c)
+	if !ok {
+		return
+	}
+
+	if err := db.Create(&location).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, vo.NewErrorResponse(
 			"internal_error",
 			"Failed to create location",
@@ -312,7 +318,13 @@ func (h *LocationHandler) GetLocation(c *gin.Context) {
 	}
 
 	var location models.Location
-	if err := h.db.Where("id = ? AND is_public = ?", parsedID, true).First(&location).Error; err != nil {
+	// 獲取資料庫連接
+	db, ok := h.getDB(c)
+	if !ok {
+		return
+	}
+
+	if err := db.Where("id = ? AND is_public = ?", parsedID, true).First(&location).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			c.JSON(http.StatusNotFound, vo.NewErrorResponse(
 				"not_found",
@@ -500,7 +512,7 @@ func (h *LocationHandler) UpdateLocation(c *gin.Context) {
 	}
 
 	// 執行更新
-	if err := h.db.Model(&location).Updates(updates).Error; err != nil {
+	if err := db.Model(&location).Updates(updates).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, vo.NewErrorResponse(
 			"internal_error",
 			"Failed to update location",
