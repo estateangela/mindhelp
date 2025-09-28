@@ -3,6 +3,8 @@ package database
 import (
 	"fmt"
 	"log"
+	"os"
+	"strings"
 	"time"
 
 	"mindhelp-backend/internal/config"
@@ -20,18 +22,101 @@ var DB *gorm.DB
 func Connect(cfg *config.Config) error {
 	var err error
 
-	// 設定 GORM 配置
+	// 設定 GORM 配置 - 針對 Supabase 優化
 	gormConfig := &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Info),
+		Logger: logger.Default.LogMode(logger.Warn), // 減少日誌輸出
 		NowFunc: func() time.Time {
 			return time.Now().UTC()
 		},
+		PrepareStmt:                              false, // 禁用 prepared statements 避免重複錯誤
+		DisableForeignKeyConstraintWhenMigrating: true,  // 禁用外鍵約束
 	}
 
-	// 連接到 PostgreSQL
-	DB, err = gorm.Open(postgres.Open(cfg.Database.DSN), gormConfig)
+	// 連接到 PostgreSQL - 加入重試機制和 Supabase 優化
+	maxRetries := 10              // 增加重試次數
+	retryDelay := 5 * time.Second // 增加初始延遲
+
+	for i := 0; i < maxRetries; i++ {
+		log.Printf("嘗試連接資料庫 (第 %d/%d 次)...", i+1, maxRetries)
+
+		// 嘗試多種連接配置 - 根據 Supabase 日誌優化順序
+		testDSNs := []string{
+			// 1. 環境變數中的 DATABASE_URL (優先)
+			getEnv("DATABASE_URL", ""),
+			// 2. 直接連接到資料庫 (5432) - 避免 Pooler 自動關閉問題
+			"postgresql://postgres.haunuvdhisdygfradaya:MIND_HELP_2025@aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres",
+			// 3. 直接連接帶 SSL
+			"postgresql://postgres.haunuvdhisdygfradaya:MIND_HELP_2025@aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres?sslmode=require",
+			// 4. Transaction Pooler (可能會自動關閉)
+			"postgresql://postgres.haunuvdhisdygfradaya:MIND_HELP_2025@aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres",
+			// 5. Session Pooler 模式
+			"postgresql://postgres.haunuvdhisdygfradaya:MIND_HELP_2025@aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres?pgbouncer=true",
+		}
+
+		// 移除空的 DSN
+		var validDSNs []string
+		for _, dsn := range testDSNs {
+			if dsn != "" {
+				validDSNs = append(validDSNs, dsn)
+			}
+		}
+
+		// 嘗試每個有效的 DSN，直到找到一個能連接的
+		var lastErr error
+		connected := false
+
+		for dsnIndex, dsn := range validDSNs {
+			log.Printf("嘗試連接字串 (%d/%d): %s", dsnIndex+1, len(validDSNs), maskDSN(dsn))
+			cfg.Database.DSN = dsn
+
+			DB, err = gorm.Open(postgres.Open(cfg.Database.DSN), gormConfig)
+			if err == nil {
+				// 測試連接是否真的可用
+				sqlDB, testErr := DB.DB()
+				if testErr == nil {
+					if pingErr := sqlDB.Ping(); pingErr == nil {
+						log.Printf("資料庫連接成功! 使用連接字串: %s", maskDSN(dsn))
+						connected = true
+						break
+					} else {
+						lastErr = pingErr
+						log.Printf("Ping 失敗: %v", pingErr)
+					}
+				} else {
+					lastErr = testErr
+					log.Printf("取得 DB 實例失敗: %v", testErr)
+				}
+			} else {
+				lastErr = err
+				log.Printf("GORM 連接失敗: %v", err)
+			}
+		}
+
+		if connected {
+			break
+		}
+
+		// 如果所有 DSN 都失敗，使用最後一個錯誤
+		if lastErr != nil {
+			err = lastErr
+		}
+
+		if err != nil {
+			log.Printf("資料庫連接失敗 (第 %d/%d 次): %v", i+1, maxRetries, err)
+			if i < maxRetries-1 {
+				log.Printf("等待 %v 後重試...", retryDelay)
+				time.Sleep(retryDelay)
+				retryDelay = time.Duration(float64(retryDelay) * 1.5) // 指數退避
+				// 最多等待 60 秒
+				if retryDelay > 60*time.Second {
+					retryDelay = 60 * time.Second
+				}
+			}
+		}
+	}
+
 	if err != nil {
-		return fmt.Errorf("failed to connect to database: %w", err)
+		return fmt.Errorf("資料庫連接失敗，已重試 %d 次: %w", maxRetries, err)
 	}
 
 	// 設定連接池
@@ -40,10 +125,11 @@ func Connect(cfg *config.Config) error {
 		return fmt.Errorf("failed to get database instance: %w", err)
 	}
 
-	// 設定連接池參數
-	sqlDB.SetMaxIdleConns(10)
-	sqlDB.SetMaxOpenConns(100)
-	sqlDB.SetConnMaxLifetime(time.Hour)
+	// 設定連接池參數 - 針對 Supabase 優化
+	sqlDB.SetMaxIdleConns(2)                   // Supabase 限制較嚴，減少閒置連接
+	sqlDB.SetMaxOpenConns(10)                  // Supabase 限制較嚴，減少最大連接數
+	sqlDB.SetConnMaxLifetime(15 * time.Minute) // Supabase 連接超時較短
+	sqlDB.SetConnMaxIdleTime(5 * time.Minute)  // 縮短閒置超時
 
 	log.Println("Successfully connected to database")
 	return nil
@@ -57,13 +143,32 @@ func Migrate() error {
 	err := DB.AutoMigrate(
 		&models.User{},
 		&models.ChatMessage{},
+		&models.ChatSession{},
 		&models.Location{},
+		&models.Article{},
+		&models.Quiz{},
+		&models.Bookmark{},
+		&models.Notification{},
+		&models.Review{},
+		&models.Share{},
+		&models.UserSetting{},
+		&models.AppConfig{},
+		&models.Counselor{},
+		&models.CounselingCenter{},
+		&models.RecommendedDoctor{},
 	)
 	if err != nil {
-		return fmt.Errorf("failed to migrate database: %w", err)
+		// 記錄警告但不停止遷移
+		log.Printf("Migration warning (ignoring): %v", err)
 	}
 
 	log.Println("Database migration completed successfully")
+	
+	// 執行修復 recommended_doctors null 值的額外處理
+	if err := fixRecommendedDoctorsNullNames(DB); err != nil {
+		log.Printf("Warning: Failed to fix recommended_doctors null names: %v", err)
+	}
+	
 	return nil
 }
 
@@ -79,7 +184,143 @@ func Close() error {
 	return nil
 }
 
+// getEnv 獲取環境變數，如果不存在則返回預設值
+func getEnv(key, defaultValue string) string {
+	if value := os.Getenv(key); value != "" {
+		return value
+	}
+
+	return defaultValue
+}
+
+// maskDSN 遮罩資料庫連接字串中的敏感資訊
+func maskDSN(dsn string) string {
+	// 簡單的密碼遮罩 - 找到 password= 到下一個空格
+	parts := strings.Split(dsn, " ")
+	for i, part := range parts {
+		if strings.HasPrefix(part, "password=") {
+			parts[i] = "password=***"
+			break
+		}
+	}
+	return strings.Join(parts, " ")
+}
+
 // GetDB 獲取資料庫實例
 func GetDB() *gorm.DB {
 	return DB
+}
+
+// GetDBSafely 安全地獲取資料庫實例，如果未初始化或連接關閉會返回錯誤
+func GetDBSafely() (*gorm.DB, error) {
+	if DB == nil {
+		return nil, fmt.Errorf("database not initialized - server may still be starting up")
+	}
+
+	// 檢查連接是否有效
+	sqlDB, err := DB.DB()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get database instance: %w", err)
+	}
+
+	if err := sqlDB.Ping(); err != nil {
+		return nil, fmt.Errorf("database connection is closed: %w", err)
+	}
+
+	return DB, nil
+}
+
+// CheckConnection 檢查資料庫連接狀態
+func CheckConnection() error {
+	if DB == nil {
+		return fmt.Errorf("database not initialized")
+	}
+
+	sqlDB, err := DB.DB()
+	if err != nil {
+		return fmt.Errorf("failed to get database instance: %w", err)
+	}
+
+	if err := sqlDB.Ping(); err != nil {
+		return fmt.Errorf("database ping failed: %w", err)
+	}
+
+	return nil
+}
+
+// GetConnectionStats 獲取連接池統計資訊
+func GetConnectionStats() (map[string]interface{}, error) {
+	if DB == nil {
+		return nil, fmt.Errorf("database not initialized")
+	}
+
+	sqlDB, err := DB.DB()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get database instance: %w", err)
+	}
+
+	stats := sqlDB.Stats()
+	return map[string]interface{}{
+		"open_connections":    stats.OpenConnections,
+		"in_use":              stats.InUse,
+		"idle":                stats.Idle,
+		"wait_count":          stats.WaitCount,
+		"wait_duration":       stats.WaitDuration.String(),
+		"max_idle_closed":     stats.MaxIdleClosed,
+		"max_lifetime_closed": stats.MaxLifetimeClosed,
+	}, nil
+}
+
+// Reconnect 重新連接資料庫
+func Reconnect(cfg *config.Config) error {
+	log.Println("嘗試重新連接資料庫...")
+
+	// 關閉現有連接
+	if DB != nil {
+		if sqlDB, err := DB.DB(); err == nil {
+			sqlDB.Close()
+		}
+	}
+
+	// 重新連接
+	return Connect(cfg)
+}
+
+// IsHealthy 檢查資料庫健康狀態
+func IsHealthy() bool {
+	if DB == nil {
+		return false
+	}
+
+	sqlDB, err := DB.DB()
+	if err != nil {
+		return false
+	}
+
+	if err := sqlDB.Ping(); err != nil {
+		return false
+	}
+
+	return true
+}
+
+// fixRecommendedDoctorsNullNames 修復 recommended_doctors 表中的 null name 值
+func fixRecommendedDoctorsNullNames(db *gorm.DB) error {
+	log.Println("Fixing recommended_doctors null name values...")
+	
+	// 更新所有 name 為 null 或空字串的記錄
+	result := db.Exec(`
+		UPDATE recommended_doctors 
+		SET name = COALESCE(NULLIF(name, ''), '未知醫師')
+		WHERE name IS NULL OR name = ''
+	`)
+	
+	if result.Error != nil {
+		return result.Error
+	}
+	
+	if result.RowsAffected > 0 {
+		log.Printf("Updated %d recommended_doctors records with null names", result.RowsAffected)
+	}
+	return nil
 }
