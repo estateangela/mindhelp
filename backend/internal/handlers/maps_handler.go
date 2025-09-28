@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"mindhelp-backend/internal/config"
 	"mindhelp-backend/internal/database"
 	"mindhelp-backend/internal/models"
 	"mindhelp-backend/internal/vo"
@@ -12,18 +11,13 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// MapsHandler 地圖相關處理器
+// MapsHandler 地圖處理器
 type MapsHandler struct {
-	config *config.Config
-	googleMapsHandler *GoogleMapsHandler
 }
 
 // NewMapsHandler 創建新的地圖處理器
-func NewMapsHandler(cfg *config.Config) *MapsHandler {
-	return &MapsHandler{
-		config: cfg,
-		googleMapsHandler: NewGoogleMapsHandler(cfg),
-	}
+func NewMapsHandler() *MapsHandler {
+	return &MapsHandler{}
 }
 
 // AddressInfo 地址資訊結構
@@ -47,7 +41,6 @@ type AddressInfo struct {
 // @Success 200 {object} map[string]interface{}
 // @Failure 500 {object} vo.ErrorResponse
 // @Router /maps/addresses [get]
-
 func (h *MapsHandler) GetAllAddresses(c *gin.Context) {
 	// 獲取資料庫連接
 	db, err := database.GetDBSafely()
@@ -83,6 +76,7 @@ func (h *MapsHandler) GetAllAddresses(c *gin.Context) {
 					Type:    "counselor",
 				})
 			}
+		}
 	}
 
 	// 獲取諮商所地址
@@ -98,23 +92,21 @@ func (h *MapsHandler) GetAllAddresses(c *gin.Context) {
 					Phone:   center.Phone,
 				})
 			}
+		}
 	}
 
-	// 獲取推薦醫師地址（從描述中提取）
+	// 獲取推薦醫師地址
 	if addressType == "" || addressType == "recommended_doctor" {
 		var doctors []models.RecommendedDoctor
-		// 使用更安全的查詢，避免 name 欄位不存在的錯誤
-		if err := db.Select("id, description").Where("description IS NOT NULL AND description != ''").Limit(limit).Find(&doctors).Error; err == nil {
+		if err := db.Select("id, name, description").Where("description IS NOT NULL AND description != ''").Limit(limit).Find(&doctors).Error; err == nil {
 			for _, doctor := range doctors {
-				// 嘗試從描述中提取地址資訊
 				address := extractAddressFromDescription(doctor.Description)
 				if address != "" {
-					// 使用 ID 作為名稱，如果 name 欄位不存在
 					name := doctor.Name
 					if name == "" {
 						name = "推薦醫師 " + doctor.ID.String()[:8]
 					}
-					
+
 					addresses = append(addresses, AddressInfo{
 						ID:          doctor.ID.String(),
 						Name:        name,
@@ -124,20 +116,17 @@ func (h *MapsHandler) GetAllAddresses(c *gin.Context) {
 					})
 				}
 			}
+		}
 	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
-		"data": gin.H{
-			"addresses": addresses,
-			"total":     len(addresses),
-			"type":      addressType,
-		},
-		"message": "成功獲取地址資訊",
+		"data":    addresses,
+		"message": "地址資訊已準備就緒",
 	})
 }
 
-// GetAddressesForGoogleMaps 獲取用於 Google Maps 的地址資訊
+// GetAddressesForGoogleMaps 獲取 Google Maps 地址資訊
 // @Summary 獲取 Google Maps 地址資訊
 // @Description 獲取格式化的地址資訊，適合 Google Maps API 使用
 // @Tags maps
@@ -152,51 +141,55 @@ func (h *MapsHandler) GetAddressesForGoogleMaps(c *gin.Context) {
 
 	addresses, err := h.fetchAllAddresses()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, vo.ErrorResponse{
-			Code:    "INTERNAL_SERVER_ERROR",
-			Message: "Failed to fetch addresses",
-			Error:   err.Error(),
-		})
+		c.JSON(http.StatusInternalServerError, vo.NewErrorResponse(
+			"internal_error",
+			"Failed to fetch addresses",
+			"INTERNAL_ERROR",
+			nil,
+			c.Request.URL.Path,
+		))
 		return
 	}
 
-	switch format {
-	case "geojson":
-		c.JSON(http.StatusOK, h.convertToGeoJSON(addresses))
-	default:
+	if format == "geojson" {
+		geoJSON := h.convertToGeoJSON(addresses)
+		c.JSON(http.StatusOK, geoJSON)
+	} else {
 		c.JSON(http.StatusOK, gin.H{
 			"success": true,
-			"data": gin.H{
-				"addresses": addresses,
-				"total":     len(addresses),
-				"format":    "google_maps_ready",
-			},
-			"message": "Google Maps 地址資訊已準備就緒",
+			"data":    addresses,
+			"message": "地址資訊已準備就緒",
 		})
 	}
 }
 
 // fetchAllAddresses 獲取所有地址資訊
 func (h *MapsHandler) fetchAllAddresses() ([]AddressInfo, error) {
+	// 獲取資料庫連接
+	db, err := database.GetDBSafely()
+	if err != nil {
+		return nil, err
+	}
+
 	var addresses []AddressInfo
+	limit := 100
 
 	// 獲取諮商師地址
 	var counselors []models.Counselor
-	if err := db.Select("id, name, work_location").Where("work_location IS NOT NULL AND work_location != ''").Find(&counselors).Error; err != nil {
-		return nil, err
-	}
-	for _, counselor := range counselors {
-		addresses = append(addresses, AddressInfo{
-			ID:   counselor.ID.String(),
-			Name: counselor.Name,
+	if err := db.Select("id, name, work_location").Where("work_location IS NOT NULL AND work_location != ''").Limit(limit).Find(&counselors).Error; err == nil {
+		for _, counselor := range counselors {
+			addresses = append(addresses, AddressInfo{
+				ID:      counselor.ID.String(),
+				Name:    counselor.Name,
 				Address: counselor.WorkLocation,
 				Type:    "counselor",
 			})
+		}
 	}
 
 	// 獲取諮商所地址
 	var centers []models.CounselingCenter
-	if err := db.Select("id, name, address, phone").Where("address IS NOT NULL AND address != ''").Find(&centers).Error; err == nil {
+	if err := db.Select("id, name, address, phone").Where("address IS NOT NULL AND address != ''").Limit(limit).Find(&centers).Error; err == nil {
 		for _, center := range centers {
 			addresses = append(addresses, AddressInfo{
 				ID:      center.ID.String(),
@@ -205,20 +198,20 @@ func (h *MapsHandler) fetchAllAddresses() ([]AddressInfo, error) {
 				Type:    "counseling_center",
 				Phone:   center.Phone,
 			})
+		}
 	}
 
 	// 獲取推薦醫師地址
 	var doctors []models.RecommendedDoctor
-	if err := db.Select("id, description").Where("description IS NOT NULL AND description != ''").Find(&doctors).Error; err == nil {
+	if err := db.Select("id, name, description").Where("description IS NOT NULL AND description != ''").Limit(limit).Find(&doctors).Error; err == nil {
 		for _, doctor := range doctors {
 			address := extractAddressFromDescription(doctor.Description)
 			if address != "" {
-				// 使用 ID 作為名稱，如果 name 欄位不存在
 				name := doctor.Name
 				if name == "" {
 					name = "推薦醫師 " + doctor.ID.String()[:8]
 				}
-				
+
 				addresses = append(addresses, AddressInfo{
 					ID:          doctor.ID.String(),
 					Name:        name,
@@ -227,6 +220,7 @@ func (h *MapsHandler) fetchAllAddresses() ([]AddressInfo, error) {
 					Description: doctor.Description,
 				})
 			}
+		}
 	}
 
 	return addresses, nil
@@ -249,7 +243,7 @@ func (h *MapsHandler) convertToGeoJSON(addresses []AddressInfo) map[string]inter
 			},
 			"geometry": map[string]interface{}{
 				"type":        "Point",
-				"coordinates": []float64{0, 0}, // 需要地理編碼服務來獲取實際座標
+				"coordinates": []float64{0, 0}, // 需要實際的經緯度
 			},
 		}
 		features = append(features, feature)
@@ -280,6 +274,7 @@ func extractAddressFromDescription(description string) string {
 				return description[:50] + "..."
 			}
 			return description
+		}
 	}
 
 	return ""
