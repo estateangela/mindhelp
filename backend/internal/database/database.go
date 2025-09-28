@@ -172,6 +172,12 @@ func Migrate() error {
 	}
 
 	log.Println("Database migration completed successfully")
+	
+	// 執行修復 recommended_doctors null 值的額外處理
+	if err := fixRecommendedDoctorsNullNames(DB); err != nil {
+		log.Printf("Warning: Failed to fix recommended_doctors null names: %v", err)
+	}
+	
 	return nil
 }
 
@@ -211,6 +217,25 @@ func maskDSN(dsn string) string {
 // GetDB 獲取資料庫實例
 func GetDB() *gorm.DB {
 	return DB
+}
+
+// GetDBSafely 安全地獲取資料庫實例，如果未初始化或連接關閉會返回錯誤
+func GetDBSafely() (*gorm.DB, error) {
+	if DB == nil {
+		return nil, fmt.Errorf("database not initialized - server may still be starting up")
+	}
+
+	// 檢查連接是否有效
+	sqlDB, err := DB.DB()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get database instance: %w", err)
+	}
+
+	if err := sqlDB.Ping(); err != nil {
+		return nil, fmt.Errorf("database connection is closed: %w", err)
+	}
+
+	return DB, nil
 }
 
 // CheckConnection 檢查資料庫連接狀態
