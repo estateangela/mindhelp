@@ -34,7 +34,7 @@ func (h *AdminHandler) SeedDatabase(c *gin.Context) {
 			"database_unavailable",
 			"資料庫暫時無法使用，請稍後再試",
 			"DATABASE_UNAVAILABLE",
-			err.Error(),
+			[]string{err.Error()},
 			c.Request.URL.Path,
 		))
 		return
@@ -47,7 +47,7 @@ func (h *AdminHandler) SeedDatabase(c *gin.Context) {
 			"database_error",
 			"無法獲取資料庫實例",
 			"DATABASE_ERROR",
-			err.Error(),
+			[]string{err.Error()},
 			c.Request.URL.Path,
 		))
 		return
