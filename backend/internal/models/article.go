@@ -1,4 +1,4 @@
-package models
+﻿package models
 
 import (
 	"time"
@@ -7,22 +7,37 @@ import (
 	"gorm.io/gorm"
 )
 
-// Article 文章模型
+// Article 專家文章資料模型
 type Article struct {
-	ID          uuid.UUID `gorm:"type:uuid;primaryKey" json:"id"`
-	Title       string    `gorm:"size:500;not null" json:"title"`
-	Content     string    `gorm:"type:text;not null" json:"content"`
-	Summary     string    `gorm:"size:1000" json:"summary"`
-	Author      string    `gorm:"size:255" json:"author"`
-	Category    string    `gorm:"size:100;index" json:"category"`
-	Tags        string    `gorm:"type:text" json:"tags"` // JSON 格式存儲標籤
-	Views       int       `gorm:"default:0" json:"views"`
-	PublishDate time.Time `gorm:"index" json:"publish_date"`
-	IsPublished bool      `gorm:"default:false;index" json:"is_published"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
-	DeletedAt   gorm.DeletedAt `gorm:"index" json:"-"`
+	ID          uuid.UUID      `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
+	Title       string         `json:"title" gorm:"size:200;not null"`
+	Author      string         `json:"author" gorm:"size:100;not null"`
+	AuthorTitle string         `json:"author_title" gorm:"size:100"`
+	PublishDate time.Time      `json:"publish_date" gorm:"not null"`
+	Summary     string         `json:"summary" gorm:"size:500"`
+	Content     string         `json:"content" gorm:"type:text;not null"`
+	Tags        string         `json:"tags" gorm:"type:text"` // JSON array stored as text
+	ImageURL    string         `json:"image_url" gorm:"size:255"`
+	IsPublished bool           `json:"is_published" gorm:"default:true"`
+	ViewCount   int64          `json:"view_count" gorm:"default:0"`
+	CreatedAt   time.Time      `json:"created_at"`
+	UpdatedAt   time.Time      `json:"updated_at"`
+	DeletedAt   gorm.DeletedAt `json:"-" gorm:"index"`
 
 	// 關聯
-	Bookmarks []Bookmark `gorm:"foreignKey:ResourceID;references:ID" json:"bookmarks,omitempty"`
+	Bookmarks []Bookmark `json:"bookmarks,omitempty" gorm:"foreignKey:ArticleID"`
 }
+
+// TableName 指定資料表名稱名稱
+func (Article) TableName() string {
+	return "articles"
+}
+
+// BeforeCreate 在創建前設定前設定 UUID
+func (a *Article) BeforeCreate(tx *gorm.DB) error {
+	if a.ID == uuid.Nil {
+		a.ID = uuid.New()
+	}
+	return nil
+}
+

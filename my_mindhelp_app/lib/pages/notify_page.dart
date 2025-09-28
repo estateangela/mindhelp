@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../core/theme.dart';
+import '../widgets/custom_app_bar.dart';
 
 class NotifyPage extends StatelessWidget {
   final List<String> notifications = const [
@@ -15,22 +16,13 @@ class NotifyPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        leading: IconButton(
-          icon: Icon(Icons.settings),
-          onPressed: () => Navigator.pushNamed(context, '/settings'),
+      appBar: const CustomAppBar(
+        showBackButton: true,
+        titleWidget: Image(
+          image: AssetImage('assets/images/mindhelp.png'),
+          width: 200,
+          fit: BoxFit.contain,
         ),
-        title:
-            Text('mindhelp', style: Theme.of(context).textTheme.headlineLarge),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: Icon(Icons.notifications),
-            onPressed: () {}, // 当前页
-          )
-        ],
-        backgroundColor: Colors.transparent,
-        elevation: 0,
       ),
       body: ListView.separated(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
@@ -52,7 +44,7 @@ class NotifyPage extends StatelessWidget {
         },
       ),
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 2, // 通知页对应 Chat 的位置
+        currentIndex: 0,
         selectedItemColor: AppColors.accent,
         unselectedItemColor: AppColors.textBody,
         onTap: (idx) {
@@ -64,10 +56,7 @@ class NotifyPage extends StatelessWidget {
               Navigator.pushReplacementNamed(context, '/maps');
               break;
             case 2:
-              // already here
-              break;
-            case 3:
-              Navigator.pushReplacementNamed(context, '/profile');
+              Navigator.pushReplacementNamed(context, '/chat');
               break;
           }
         },
@@ -75,7 +64,6 @@ class NotifyPage extends StatelessWidget {
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.location_on), label: 'Maps'),
           BottomNavigationBarItem(icon: Icon(Icons.chat_bubble), label: 'Chat'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
       ),
     );

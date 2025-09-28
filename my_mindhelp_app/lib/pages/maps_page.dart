@@ -1,170 +1,224 @@
-// lib/pages/maps_page.dart
-
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show rootBundle;
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:http/http.dart' as http;
+import 'package:geocoding/geocoding.dart';
+import '../services/location_service.dart';
 import '../core/theme.dart';
 import '../widgets/custom_app_bar.dart';
+import '../models/counseling_center.dart';
 
 class MapsPage extends StatefulWidget {
+  const MapsPage({super.key});
+
   @override
-  _MapsPageState createState() => _MapsPageState();
+  State<MapsPage> createState() => _MapsPageState();
 }
 
 class _MapsPageState extends State<MapsPage> {
-  late GoogleMapController _mapCtrl;
-  CameraPosition _initialCamera =
-      const CameraPosition(target: LatLng(25.0330, 121.5654), zoom: 12);
-  final Set<Marker> _markers = {};
+  late GoogleMapController mapController;
+  final LocationService _locationService = LocationService();
+  LatLng _currentLocation = const LatLng(25.0487, 121.5175); // 台北商業大學
   bool _isLoading = true;
-  String? _errorMessage;
+  final Set<Marker> _markers = {};
+  String _mapStatus = '正在載入地圖...';
 
   @override
   void initState() {
     super.initState();
-    _setupMap();
+    // 移除這裡的 _loadAllData()，改為在 _onMapCreated 中呼叫
   }
 
-  Future<void> _setupMap() async {
-    double lat = 25.0330, lng = 121.5654;
+  Future<void> _loadAllData() async {
+    try {
+      setState(() {
+        _mapStatus = '正在獲取您的位置...';
+        _isLoading = true;
+      });
+
+      Position position =
+          await _determinePosition().timeout(const Duration(seconds: 10));
+
+      if (mounted) {
+        setState(() {
+          _currentLocation = LatLng(position.latitude, position.longitude);
+        });
+        mapController.animateCamera(CameraUpdate.newLatLng(_currentLocation));
+      }
+    } catch (e) {
+      if (mounted) {
+        _mapStatus = '無法獲取位置，使用預設座標。錯誤：${e.toString()}';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(_mapStatus)),
+        );
+      }
+    } finally {
+      await _loadNearbyClinics();
+    }
+  }
+
+  Future<Position> _determinePosition() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      return Future.error('定位服務已停用。');
+    }
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        return Future.error('定位權限被拒絕。');
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      return Future.error('定位權限永久被拒絕，請在設定中啟用。');
+    }
+
+    return await Geolocator.getCurrentPosition();
+  }
+
+  Future<void> _loadNearbyClinics() async {
+    setState(() {
+      _mapStatus = '正在搜尋附近診所...';
+      _isLoading = true;
+    });
 
     try {
-      // 请求权限并取得使用者位置
-      var perm = await Geolocator.checkPermission();
-      if (perm == LocationPermission.denied) {
-        perm = await Geolocator.requestPermission();
-        if (perm == LocationPermission.denied) {
-          throw '用户拒绝位置权限';
+      _markers.clear();
+
+      _markers.add(
+        Marker(
+          markerId: const MarkerId('current_location'),
+          position: _currentLocation,
+          infoWindow: const InfoWindow(title: '我的位置'),
+          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
+        ),
+      );
+
+      final List<CounselingCenter> counselingCenters =
+          await _locationService.getCounselingCenters();
+
+      for (var center in counselingCenters) {
+        try {
+          final location = await GeocodingPlatform.instance
+              ?.locationFromAddress(center.address);
+          if (location != null && location.isNotEmpty) {
+            final LatLng position =
+                LatLng(location.first.latitude, location.first.longitude);
+
+            final double distanceInMeters = Geolocator.distanceBetween(
+              _currentLocation.latitude,
+              _currentLocation.longitude,
+              position.latitude,
+              position.longitude,
+            );
+
+            if (distanceInMeters <= 5000) {
+              _markers.add(
+                Marker(
+                  markerId: MarkerId(center.id),
+                  position: position,
+                  infoWindow: InfoWindow(
+                    title: center.name,
+                    snippet: center.phone,
+                  ),
+                  icon: BitmapDescriptor.defaultMarkerWithHue(
+                    center.onlineCounseling
+                        ? BitmapDescriptor.hueGreen
+                        : BitmapDescriptor.hueRed,
+                  ),
+                ),
+              );
+            }
+          } else {
+            print('無法解析地址：${center.address}');
+          }
+        } catch (e) {
+          print('Geocoding 發生錯誤：${e.toString()}');
         }
       }
-      final pos = await Geolocator.getCurrentPosition();
-      lat = pos.latitude;
-      lng = pos.longitude;
 
-      setState(() {
-        _initialCamera = CameraPosition(target: LatLng(lat, lng), zoom: 14);
-        // 先把用户标记加入
-        _markers.add(Marker(
-          markerId: const MarkerId('user'),
-          position: LatLng(lat, lng),
-          icon:
-              BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
-          infoWindow: const InfoWindow(title: '您的位置'),
-        ));
-      });
+      if (mounted) {
+        setState(() {
+          _mapStatus = '已找到 ${_markers.length - 1} 間診所';
+        });
+      }
     } catch (e) {
-      // 定位失败，记录错误但继续拉资源
-      debugPrint('📍 定位失败: $e');
-      _errorMessage = e.toString();
+      _mapStatus = '無法載入診所資訊：${e.toString()}';
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
-
-    // 使用定位结果（或默认中心）去拉附近资源
-    await _fetchNearbyResources(lat, lng);
   }
 
-  Future<void> _fetchNearbyResources(double lat, double lng) async {
-    List data;
-    final uri =
-        Uri.parse('https://your-backend.com/api/resources?lat=$lat&lng=$lng');
-
-    try {
-      final resp = await http.get(uri);
-      debugPrint('🔗 请求 URL: $uri  状态: ${resp.statusCode}');
-      if (resp.statusCode == 200) {
-        data = jsonDecode(resp.body) as List;
-      } else {
-        throw 'HTTP 错误 ${resp.statusCode}';
-      }
-    } catch (e) {
-      debugPrint('❗️ 拉取线上资源失败: $e ，改用 Mock');
-      // 从 assets/mock_resources.json 载入 mock 数据
-      final jsonStr = await rootBundle.loadString('assets/mock_resources.json');
-      data = jsonDecode(jsonStr) as List;
-    }
-
-    setState(() {
-      // 只 clear 资源标记，保留用户标记
-      _markers.removeWhere((m) => m.markerId.value != 'user');
-
-      for (var item in data) {
-        _markers.add(Marker(
-          markerId: MarkerId(item['id'].toString()),
-          position:
-              LatLng(item['latitude'] as double, item['longitude'] as double),
-          infoWindow: InfoWindow(
-            title: item['name'] as String,
-            snippet: item['address'] as String? ?? '',
-          ),
-        ));
-      }
-
-      _isLoading = false;
-    });
+  void _onMapCreated(GoogleMapController controller) {
+    mapController = controller;
+    _loadAllData(); // 在這裡呼叫 _loadAllData()，確保 mapController 已初始化
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-
-      // 顶部统一 Logo + 返回 + 通知
-      appBar: const CustomAppBar(
-        showBackButton: true,
-        titleWidget: Image(
+      appBar: CustomAppBar(
+        showBackButton: false,
+        titleWidget: const Image(
           image: AssetImage('assets/images/mindhelp.png'),
           width: 200,
           fit: BoxFit.contain,
         ),
+        rightIcon: IconButton(
+          icon: const Icon(Icons.notifications, color: AppColors.textHigh),
+          onPressed: () => Navigator.pushNamed(context, '/notify'),
+        ),
       ),
-
       body: Stack(
         children: [
-          // 加载中或错误提示
+          GoogleMap(
+            onMapCreated: _onMapCreated,
+            initialCameraPosition: CameraPosition(
+              target: _currentLocation,
+              zoom: 14.0,
+            ),
+            markers: _markers,
+            myLocationEnabled: true,
+            myLocationButtonEnabled: false,
+          ),
           if (_isLoading)
-            const Center(child: CircularProgressIndicator())
-          else if (_errorMessage != null)
-            Center(child: Text(_errorMessage!, style: TextStyle(color: Colors.red))),
-          // 地图
-          if (!_isLoading && _errorMessage == null)
-            GoogleMap(
-              initialCameraPosition: _initialCamera,
-              myLocationEnabled: true,
-              onMapCreated: (c) => _mapCtrl = c,
-              markers: _markers,
+            Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation(AppColors.accent),
+              ),
             ),
         ],
       ),
-
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 1, // Maps 在索引 1
+        currentIndex: 1, // 地圖頁的索引
         selectedItemColor: AppColors.accent,
         unselectedItemColor: AppColors.textBody,
-        onTap: (i) {
-          switch (i) {
+        onTap: (idx) {
+          switch (idx) {
             case 0:
               Navigator.pushReplacementNamed(context, '/home');
               break;
             case 1:
-              // already here
+              // 已在地圖頁面，不做動作
               break;
             case 2:
               Navigator.pushReplacementNamed(context, '/chat');
-              break;
-            case 3:
-              Navigator.pushReplacementNamed(context, '/profile');
               break;
           }
         },
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.location_on), label: 'Maps'),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.chat_bubble), label: 'Chat'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+          BottomNavigationBarItem(icon: Icon(Icons.location_on), label: 'Maps'),
+          BottomNavigationBarItem(icon: Icon(Icons.chat_bubble), label: 'Chat'),
         ],
       ),
     );

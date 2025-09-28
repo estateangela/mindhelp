@@ -1,4 +1,4 @@
-package models
+﻿package models
 
 import (
 	"time"
@@ -11,25 +11,27 @@ import (
 type ChatMessage struct {
 	ID        uuid.UUID      `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
 	UserID    uuid.UUID      `json:"user_id" gorm:"type:uuid;not null;index"`
+	SessionID *uuid.UUID     `json:"session_id" gorm:"type:uuid;index"` // 會話ID，可為null以向後相容
 	Role      string         `json:"role" gorm:"size:10;not null"` // 'user' 或 'bot'
 	Content   string         `json:"content" gorm:"type:text;not null"`
 	Timestamp int64          `json:"timestamp" gorm:"not null"` // Unix milliseconds
-	Model     string         `json:"model" gorm:"size:50"`       // AI 模型名稱
-	Tokens    int            `json:"tokens" gorm:"default:0"`    // 使用的 token 數量
+	Model     string         `json:"model" gorm:"size:50"`      // AI 模型名稱
+	Tokens    int            `json:"tokens" gorm:"default:0"`   // 使用的 token 數量
 	CreatedAt time.Time      `json:"created_at"`
 	UpdatedAt time.Time      `json:"updated_at"`
 	DeletedAt gorm.DeletedAt `json:"-" gorm:"index"`
 
 	// 關聯
-	User User `json:"user,omitempty" gorm:"foreignKey:UserID"`
+	User    User         `json:"user,omitempty" gorm:"foreignKey:UserID"`
+	Session *ChatSession `json:"session,omitempty" gorm:"foreignKey:SessionID"`
 }
 
-// TableName 指定資料表名稱
+// TableName 指定資料表名稱名稱
 func (ChatMessage) TableName() string {
 	return "chat_messages"
 }
 
-// BeforeCreate 在創建前設定 UUID 和時間戳
+// BeforeCreate 在創建前設定前設定 UUID 和時間戳
 func (cm *ChatMessage) BeforeCreate(tx *gorm.DB) error {
 	if cm.ID == uuid.Nil {
 		cm.ID = uuid.New()
@@ -49,3 +51,4 @@ func (cm *ChatMessage) IsUser() bool {
 func (cm *ChatMessage) IsBot() bool {
 	return cm.Role == "bot"
 }
+

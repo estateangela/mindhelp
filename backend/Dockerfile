@@ -1,5 +1,5 @@
 # 使用官方 Go 映像作為構建階段
-FROM golang:1.21-alpine AS builder
+FROM golang:1.24-alpine AS builder
 
 # 設定工作目錄
 WORKDIR /app
@@ -37,6 +37,12 @@ COPY --from=builder /app/main .
 
 # 複製環境變數文件
 COPY --from=builder /app/env.example .env
+
+# 複製 CSV 資料文件
+COPY --from=builder /app/document/ ./document/
+
+# 複製 Swagger 文檔
+COPY --from=builder /app/docs/ ./docs/
 
 # 變更檔案擁有者
 RUN chown -R appuser:appgroup /root/

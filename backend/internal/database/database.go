@@ -139,7 +139,7 @@ func Connect(cfg *config.Config) error {
 func Migrate() error {
 	log.Println("Starting database migration...")
 
-	// 自動遷移所有模型
+	// 自動遷移所有模型 - AutoMigrate 會自動處理已存在的表
 	err := DB.AutoMigrate(
 		&models.User{},
 		&models.ChatMessage{},
@@ -147,19 +147,28 @@ func Migrate() error {
 		&models.Location{},
 		&models.Article{},
 		&models.Quiz{},
+		&models.Review{},
 		&models.Bookmark{},
 		&models.Notification{},
-		&models.Review{},
-		&models.Share{},
 		&models.UserSetting{},
 		&models.AppConfig{},
+		&models.Share{},
 		&models.Counselor{},
 		&models.CounselingCenter{},
 		&models.RecommendedDoctor{},
 	)
 	if err != nil {
-		// 記錄警告但不停止遷移
-		log.Printf("Migration warning (ignoring): %v", err)
+		// 檢查是否為可忽略的錯誤
+		errorStr := fmt.Sprintf("%v", err)
+		if strings.Contains(errorStr, "already exists") ||
+			strings.Contains(errorStr, "contains null values") ||
+			strings.Contains(errorStr, "prepared statement") ||
+			strings.Contains(errorStr, "duplicate key") ||
+			strings.Contains(errorStr, "constraint") {
+			log.Printf("Migration warning (ignoring): %v", err)
+			return nil
+		}
+		return fmt.Errorf("failed to migrate database: %w", err)
 	}
 
 	log.Println("Database migration completed successfully")
@@ -189,7 +198,6 @@ func getEnv(key, defaultValue string) string {
 	if value := os.Getenv(key); value != "" {
 		return value
 	}
-
 	return defaultValue
 }
 
@@ -302,25 +310,4 @@ func IsHealthy() bool {
 	}
 
 	return true
-}
-
-// fixRecommendedDoctorsNullNames 修復 recommended_doctors 表中的 null name 值
-func fixRecommendedDoctorsNullNames(db *gorm.DB) error {
-	log.Println("Fixing recommended_doctors null name values...")
-	
-	// 更新所有 name 為 null 或空字串的記錄
-	result := db.Exec(`
-		UPDATE recommended_doctors 
-		SET name = COALESCE(NULLIF(name, ''), '未知醫師')
-		WHERE name IS NULL OR name = ''
-	`)
-	
-	if result.Error != nil {
-		return result.Error
-	}
-	
-	if result.RowsAffected > 0 {
-		log.Printf("Updated %d recommended_doctors records with null names", result.RowsAffected)
-	}
-	return nil
 }

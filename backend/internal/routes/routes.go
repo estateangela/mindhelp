@@ -187,11 +187,11 @@ func SetupRoutes(cfg *config.Config) *gin.Engine {
 			admin := protected.Group("/admin")
 			{
 				adminHandler := handlers.NewAdminHandler()
-
+				
 				// 資料庫管理
 				admin.POST("/seed-database", adminHandler.SeedDatabase)
 				admin.GET("/database-stats", adminHandler.GetDatabaseStats)
-
+				
 				// 諮商師管理
 				admin.POST("/counselors", handlers.CreateCounselor)
 				admin.PUT("/counselors/:id", handlers.UpdateCounselor)
@@ -266,11 +266,11 @@ func SetupRoutes(cfg *config.Config) *gin.Engine {
 				googleMaps.POST("/search-places", googleMapsHandler.SearchPlaces)
 				googleMaps.POST("/directions", googleMapsHandler.GetDirections)
 				googleMaps.POST("/distance-matrix", googleMapsHandler.GetDistanceMatrix)
-
+				
 				// 專業功能
 				googleMaps.GET("/nearby-mental-health", googleMapsHandler.GetNearbyMentalHealthServices)
 				googleMaps.POST("/batch-geocode", googleMapsHandler.BatchGeocode)
-
+				
 				// 管理功能
 				googleMaps.GET("/usage-stats", googleMapsHandler.GetAPIUsageStats)
 				googleMaps.POST("/clear-cache", googleMapsHandler.ClearCache)
