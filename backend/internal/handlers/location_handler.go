@@ -16,15 +16,27 @@ import (
 )
 
 // LocationHandler 位置處理器
-type LocationHandler struct {
-	db *gorm.DB
-}
+type LocationHandler struct {}
 
 // NewLocationHandler 創建新的位置處理器
 func NewLocationHandler() *LocationHandler {
-	return &LocationHandler{
-		db: database.GetDB(),
+	return &LocationHandler{}
+}
+
+// getDB 獲取資料庫連接，如果失敗會向客戶端返回錯誤
+func (h *LocationHandler) getDB(c *gin.Context) (*gorm.DB, bool) {
+	db, err := database.GetDBSafely()
+	if err != nil {
+		c.JSON(http.StatusServiceUnavailable, vo.NewErrorResponse(
+			"database_unavailable",
+			"資料庫暫時無法使用，請稍後再試",
+			"DATABASE_UNAVAILABLE",
+			err.Error(),
+			c.Request.URL.Path,
+		))
+		return nil, false
 	}
+	return db, true
 }
 
 // CreateLocation 創建位置
@@ -163,8 +175,21 @@ func (h *LocationHandler) SearchLocations(c *gin.Context) {
 
 	offset := (page - 1) * pageSize
 
+	// 獲取資料庫連接
+	db, err := database.GetDBSafely()
+	if err != nil {
+		c.JSON(http.StatusServiceUnavailable, vo.NewErrorResponse(
+			"database_unavailable",
+			"資料庫暫時無法使用，請稍後再試",
+			"DATABASE_UNAVAILABLE",
+			err.Error(),
+			c.Request.URL.Path,
+		))
+		return
+	}
+
 	// 構建查詢
-	dbQuery := h.db.Model(&models.Location{}).Where("is_public = ?", true)
+	dbQuery := db.Model(&models.Location{}).Where("is_public = ?", true)
 
 	// 添加關鍵字搜尋
 	if query != "" {
