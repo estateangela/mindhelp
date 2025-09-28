@@ -487,7 +487,7 @@ func (h *LocationHandler) UpdateLocation(c *gin.Context) {
 	}
 
 	// 重新獲取更新後的位置（防止 SQL Injection，明確指定主鍵查詢）
-	if err := h.db.Where("id = ?", locationID).First(&location).Error; err != nil {
+	if err := db.Where("id = ?", locationID).First(&location).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, vo.NewErrorResponse(
 			"internal_error",
 			"Failed to get updated location",
