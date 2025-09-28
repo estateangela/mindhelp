@@ -37,7 +37,7 @@ func GetRecommendedDoctors(c *gin.Context) {
 			"database_unavailable",
 			"資料庫暫時無法使用，請稍後再試",
 			"DATABASE_UNAVAILABLE",
-			err.Error(),
+			[]string{err.Error()},
 			c.Request.URL.Path,
 		))
 		return
@@ -99,7 +99,7 @@ func GetRecommendedDoctor(c *gin.Context) {
 			"invalid_id",
 			"Invalid recommended doctor ID format",
 			"VALIDATION_ERROR",
-			[]string{err.Error()},
+			[]string{[]string{err.Error()}},
 			c.Request.URL.Path,
 		))
 		return
@@ -112,7 +112,7 @@ func GetRecommendedDoctor(c *gin.Context) {
 			"database_unavailable",
 			"資料庫暫時無法使用，請稍後再試",
 			"DATABASE_UNAVAILABLE",
-			err.Error(),
+			[]string{err.Error()},
 			c.Request.URL.Path,
 		))
 		return
@@ -151,7 +151,7 @@ func CreateRecommendedDoctor(c *gin.Context) {
 			"invalid_input",
 			"Invalid request format",
 			"VALIDATION_ERROR",
-			err.Error(),
+			[]string{err.Error()},
 			c.Request.URL.Path,
 		))
 		return
@@ -164,7 +164,7 @@ func CreateRecommendedDoctor(c *gin.Context) {
 			"database_unavailable",
 			"資料庫暫時無法使用，請稍後再試",
 			"DATABASE_UNAVAILABLE",
-			err.Error(),
+			[]string{err.Error()},
 			c.Request.URL.Path,
 		))
 		return
@@ -193,7 +193,7 @@ func UpdateRecommendedDoctor(c *gin.Context) {
 			"invalid_id",
 			"Invalid recommended doctor ID format",
 			"VALIDATION_ERROR",
-			[]string{err.Error()},
+			[]string{[]string{err.Error()}},
 			c.Request.URL.Path,
 		))
 		return
@@ -206,7 +206,7 @@ func UpdateRecommendedDoctor(c *gin.Context) {
 			"database_unavailable",
 			"資料庫暫時無法使用，請稍後再試",
 			"DATABASE_UNAVAILABLE",
-			err.Error(),
+			[]string{err.Error()},
 			c.Request.URL.Path,
 		))
 		return
@@ -239,7 +239,7 @@ func UpdateRecommendedDoctor(c *gin.Context) {
 			"invalid_input",
 			"Invalid request format",
 			"VALIDATION_ERROR",
-			err.Error(),
+			[]string{err.Error()},
 			c.Request.URL.Path,
 		))
 		return
@@ -268,7 +268,7 @@ func DeleteRecommendedDoctor(c *gin.Context) {
 			"invalid_id",
 			"Invalid recommended doctor ID format",
 			"VALIDATION_ERROR",
-			[]string{err.Error()},
+			[]string{[]string{err.Error()}},
 			c.Request.URL.Path,
 		))
 		return
@@ -281,7 +281,7 @@ func DeleteRecommendedDoctor(c *gin.Context) {
 			"database_unavailable",
 			"資料庫暫時無法使用，請稍後再試",
 			"DATABASE_UNAVAILABLE",
-			err.Error(),
+			[]string{err.Error()},
 			c.Request.URL.Path,
 		))
 		return

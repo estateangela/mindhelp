@@ -16,15 +16,11 @@ import (
 )
 
 // LocationHandler 位置處理器
-type LocationHandler struct {
-	db *gorm.DB
-}
+type LocationHandler struct{}
 
 // NewLocationHandler 創建新的位置處理器
 func NewLocationHandler() *LocationHandler {
-	return &LocationHandler{
-		db: database.GetDB(),
-	}
+	return &LocationHandler{}
 }
 
 // CreateLocation 創建位置
@@ -89,6 +85,12 @@ func (h *LocationHandler) CreateLocation(c *gin.Context) {
 		Website:     req.Website,
 		Rating:      req.Rating,
 		IsPublic:    req.IsPublic,
+	}
+
+	// 獲取資料庫連接
+	db, ok := h.getDB(c)
+	if !ok {
+		return
 	}
 
 	if err := db.Create(&location).Error; err != nil {

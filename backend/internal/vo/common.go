@@ -57,6 +57,16 @@ func NewErrorResponse(error, message, code string, details []string, path string
 	}
 }
 
+// NewResponse 創建成功回應
+func NewResponse(message string, data interface{}) Response {
+	return Response{
+		Success:   true,
+		Message:   message,
+		Data:      data,
+		Timestamp: time.Now(),
+	}
+}
+
 // PaginationResponse 分頁回應
 func NewPaginationResponse(data interface{}, total int64, page, pageSize int) PaginationResponse {
 	totalPages := int((total + int64(pageSize) - 1) / int64(pageSize))

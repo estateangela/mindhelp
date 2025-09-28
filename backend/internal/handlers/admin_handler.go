@@ -58,7 +58,7 @@ func (h *AdminHandler) SeedDatabase(c *gin.Context) {
 			"database_error",
 			"資料庫連接測試失敗",
 			"DATABASE_ERROR",
-			err.Error(),
+			[]string{err.Error()},
 			c.Request.URL.Path,
 		))
 		return
@@ -87,7 +87,7 @@ func (h *AdminHandler) GetDatabaseStats(c *gin.Context) {
 			"database_error",
 			"無法獲取資料庫統計資訊",
 			"DATABASE_ERROR",
-			err.Error(),
+			[]string{err.Error()},
 			c.Request.URL.Path,
 		))
 		return

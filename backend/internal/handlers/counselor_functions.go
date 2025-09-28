@@ -34,7 +34,7 @@ func GetCounselors(c *gin.Context) {
 			"database_unavailable",
 			"資料庫暫時無法使用，請稍後再試",
 			"DATABASE_UNAVAILABLE",
-			err.Error(),
+			[]string{err.Error()},
 			c.Request.URL.Path,
 		))
 		return
@@ -84,7 +84,7 @@ func GetCounselor(c *gin.Context) {
 			"invalid_id",
 			"Invalid counselor ID format",
 			"VALIDATION_ERROR",
-			[]string{err.Error()},
+			[]string{[]string{err.Error()}},
 			c.Request.URL.Path,
 		))
 		return
@@ -97,7 +97,7 @@ func GetCounselor(c *gin.Context) {
 			"database_unavailable",
 			"資料庫暫時無法使用，請稍後再試",
 			"DATABASE_UNAVAILABLE",
-			err.Error(),
+			[]string{err.Error()},
 			c.Request.URL.Path,
 		))
 		return
@@ -136,7 +136,7 @@ func CreateCounselor(c *gin.Context) {
 			"invalid_input",
 			"Invalid request format",
 			"VALIDATION_ERROR",
-			err.Error(),
+			[]string{err.Error()},
 			c.Request.URL.Path,
 		))
 		return
@@ -149,7 +149,7 @@ func CreateCounselor(c *gin.Context) {
 			"database_unavailable",
 			"資料庫暫時無法使用，請稍後再試",
 			"DATABASE_UNAVAILABLE",
-			err.Error(),
+			[]string{err.Error()},
 			c.Request.URL.Path,
 		))
 		return
@@ -178,7 +178,7 @@ func UpdateCounselor(c *gin.Context) {
 			"invalid_id",
 			"Invalid counselor ID format",
 			"VALIDATION_ERROR",
-			[]string{err.Error()},
+			[]string{[]string{err.Error()}},
 			c.Request.URL.Path,
 		))
 		return
@@ -191,7 +191,7 @@ func UpdateCounselor(c *gin.Context) {
 			"database_unavailable",
 			"資料庫暫時無法使用，請稍後再試",
 			"DATABASE_UNAVAILABLE",
-			err.Error(),
+			[]string{err.Error()},
 			c.Request.URL.Path,
 		))
 		return
@@ -224,7 +224,7 @@ func UpdateCounselor(c *gin.Context) {
 			"invalid_input",
 			"Invalid request format",
 			"VALIDATION_ERROR",
-			err.Error(),
+			[]string{err.Error()},
 			c.Request.URL.Path,
 		))
 		return
@@ -253,7 +253,7 @@ func DeleteCounselor(c *gin.Context) {
 			"invalid_id",
 			"Invalid counselor ID format",
 			"VALIDATION_ERROR",
-			[]string{err.Error()},
+			[]string{[]string{err.Error()}},
 			c.Request.URL.Path,
 		))
 		return
@@ -266,7 +266,7 @@ func DeleteCounselor(c *gin.Context) {
 			"database_unavailable",
 			"資料庫暫時無法使用，請稍後再試",
 			"DATABASE_UNAVAILABLE",
-			err.Error(),
+			[]string{err.Error()},
 			c.Request.URL.Path,
 		))
 		return
