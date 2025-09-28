@@ -16,7 +16,7 @@ import (
 )
 
 // LocationHandler 位置處理器
-type LocationHandler struct {}
+type LocationHandler struct{}
 
 // NewLocationHandler 創建新的位置處理器
 func NewLocationHandler() *LocationHandler {
@@ -31,7 +31,7 @@ func (h *LocationHandler) getDB(c *gin.Context) (*gorm.DB, bool) {
 			"database_unavailable",
 			"資料庫暫時無法使用，請稍後再試",
 			"DATABASE_UNAVAILABLE",
-			err.Error(),
+			[]string{err.Error()},
 			c.Request.URL.Path,
 		))
 		return nil, false
@@ -43,6 +43,7 @@ func (h *LocationHandler) getDB(c *gin.Context) (*gorm.DB, bool) {
 // @Summary 創建位置
 // @Description 創建新的心理健康資源位置
 // @Tags location
+
 // @Accept json
 // @Produce json
 // @Security BearerAuth
@@ -188,7 +189,7 @@ func (h *LocationHandler) SearchLocations(c *gin.Context) {
 			"database_unavailable",
 			"資料庫暫時無法使用，請稍後再試",
 			"DATABASE_UNAVAILABLE",
-			err.Error(),
+			[]string{err.Error()},
 			c.Request.URL.Path,
 		))
 		return
@@ -331,12 +332,6 @@ func (h *LocationHandler) GetLocation(c *gin.Context) {
 	}
 
 	var location models.Location
-	// 獲取資料庫連接
-	db, ok := h.getDB(c)
-	if !ok {
-		return
-	}
-
 	if err := db.Where("id = ? AND is_public = ?", parsedID, true).First(&location).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			c.JSON(http.StatusNotFound, vo.NewErrorResponse(

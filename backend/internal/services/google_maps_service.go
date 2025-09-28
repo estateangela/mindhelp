@@ -19,11 +19,11 @@ import (
 
 // GoogleMapsService Google Maps API 服務
 type GoogleMapsService struct {
-	config     *config.Config
-	client     *http.Client
+	config      *config.Config
+	client      *http.Client
 	rateLimiter *rate.Limiter
-	cache      *Cache
-	mu         sync.RWMutex
+	cache       *Cache
+	mu          sync.RWMutex
 }
 
 // Cache 簡單的記憶體快取
@@ -42,7 +42,7 @@ type CacheEntry struct {
 func NewGoogleMapsService(cfg *config.Config) *GoogleMapsService {
 	// 設定速率限制：每秒最多 10 個請求，突發最多 20 個
 	limiter := rate.NewLimiter(rate.Limit(10), 20)
-	
+
 	return &GoogleMapsService{
 		config:      cfg,
 		client:      &http.Client{Timeout: 30 * time.Second},
@@ -57,17 +57,17 @@ func NewGoogleMapsService(cfg *config.Config) *GoogleMapsService {
 func (c *Cache) Get(key string) (interface{}, bool) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
-	
+
 	entry, exists := c.data[key]
 	if !exists {
 		return nil, false
 	}
-	
+
 	if time.Now().After(entry.ExpiresAt) {
 		delete(c.data, key)
 		return nil, false
 	}
-	
+
 	return entry.Value, true
 }
 
@@ -75,7 +75,7 @@ func (c *Cache) Get(key string) (interface{}, bool) {
 func (c *Cache) Set(key string, value interface{}, duration time.Duration) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	
+
 	c.data[key] = CacheEntry{
 		Value:     value,
 		ExpiresAt: time.Now().Add(duration),
@@ -86,7 +86,7 @@ func (c *Cache) Set(key string, value interface{}, duration time.Duration) {
 func (s *GoogleMapsService) GeocodeWithCache(ctx context.Context, req dto.GeocodeRequest) (*dto.GeocodeResponse, error) {
 	// 生成快取鍵
 	cacheKey := fmt.Sprintf("geocode:%s:%s:%s", req.Address, req.Language, req.Region)
-	
+
 	// 嘗試從快取獲取
 	if cached, found := s.cache.Get(cacheKey); found {
 		if response, ok := cached.(*dto.GeocodeResponse); ok {
@@ -108,7 +108,7 @@ func (s *GoogleMapsService) GeocodeWithCache(ctx context.Context, req dto.Geocod
 	params := url.Values{}
 	params.Add("address", req.Address)
 	params.Add("key", s.config.GoogleMaps.APIKey)
-	
+
 	if req.Language != "" {
 		params.Add("language", req.Language)
 	}
@@ -156,9 +156,9 @@ func (s *GoogleMapsService) GeocodeWithCache(ctx context.Context, req dto.Geocod
 // ReverseGeocodeWithCache 帶快取的反向地理編碼
 func (s *GoogleMapsService) ReverseGeocodeWithCache(ctx context.Context, req dto.ReverseGeocodeRequest) (*dto.GeocodeResponse, error) {
 	// 生成快取鍵
-	cacheKey := fmt.Sprintf("reverse_geocode:%.6f,%.6f:%s:%s:%s", 
+	cacheKey := fmt.Sprintf("reverse_geocode:%.6f,%.6f:%s:%s:%s",
 		req.Latitude, req.Longitude, req.Language, req.ResultType, req.LocationType)
-	
+
 	// 嘗試從快取獲取
 	if cached, found := s.cache.Get(cacheKey); found {
 		if response, ok := cached.(*dto.GeocodeResponse); ok {
@@ -180,7 +180,7 @@ func (s *GoogleMapsService) ReverseGeocodeWithCache(ctx context.Context, req dto
 	params := url.Values{}
 	params.Add("latlng", fmt.Sprintf("%.8f,%.8f", req.Latitude, req.Longitude))
 	params.Add("key", s.config.GoogleMaps.APIKey)
-	
+
 	if req.Language != "" {
 		params.Add("language", req.Language)
 	}
@@ -244,7 +244,7 @@ func (s *GoogleMapsService) BatchGeocode(ctx context.Context, addresses []string
 		wg.Add(1)
 		go func(index int, addr string) {
 			defer wg.Done()
-			
+
 			// 獲取信號量
 			semaphore <- struct{}{}
 			defer func() { <-semaphore }()
@@ -287,7 +287,7 @@ func (s *GoogleMapsService) BatchGeocode(ctx context.Context, addresses []string
 func (s *GoogleMapsService) SearchNearbyMentalHealthServices(ctx context.Context, latitude, longitude float64, radius int, keyword string) (*dto.PlacesSearchResponse, error) {
 	// 生成快取鍵
 	cacheKey := fmt.Sprintf("mental_health:%.6f,%.6f:%d:%s", latitude, longitude, radius, keyword)
-	
+
 	// 嘗試從快取獲取
 	if cached, found := s.cache.Get(cacheKey); found {
 		if response, ok := cached.(*dto.PlacesSearchResponse); ok {
@@ -399,9 +399,9 @@ func (s *GoogleMapsService) SearchNearbyMentalHealthServices(ctx context.Context
 // GetDirectionsWithCache 帶快取的路線規劃
 func (s *GoogleMapsService) GetDirectionsWithCache(ctx context.Context, req dto.DirectionsRequest) (*dto.DirectionsResponse, error) {
 	// 生成快取鍵
-	cacheKey := fmt.Sprintf("directions:%s:%s:%s:%s:%t", 
+	cacheKey := fmt.Sprintf("directions:%s:%s:%s:%s:%t",
 		req.Origin, req.Destination, req.Mode, req.Language, req.Alternatives)
-	
+
 	// 嘗試從快取獲取
 	if cached, found := s.cache.Get(cacheKey); found {
 		if response, ok := cached.(*dto.DirectionsResponse); ok {
@@ -424,7 +424,7 @@ func (s *GoogleMapsService) GetDirectionsWithCache(ctx context.Context, req dto.
 	params.Add("origin", req.Origin)
 	params.Add("destination", req.Destination)
 	params.Add("key", s.config.GoogleMaps.APIKey)
-	
+
 	if req.Mode != "" {
 		params.Add("mode", req.Mode)
 	}
@@ -492,18 +492,18 @@ func (s *GoogleMapsService) ClearCache() {
 func (s *GoogleMapsService) GetCacheStats() map[string]int {
 	s.cache.mu.RLock()
 	defer s.cache.mu.RUnlock()
-	
+
 	stats := map[string]int{
-		"total_entries": len(s.cache.data),
+		"total_entries":   len(s.cache.data),
 		"expired_entries": 0,
 	}
-	
+
 	now := time.Now()
 	for _, entry := range s.cache.data {
 		if now.After(entry.ExpiresAt) {
 			stats["expired_entries"]++
 		}
 	}
-	
+
 	return stats
 }

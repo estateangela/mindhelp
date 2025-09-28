@@ -172,12 +172,20 @@ func Migrate() error {
 	}
 
 	log.Println("Database migration completed successfully")
-	
+
 	// 執行修復 recommended_doctors null 值的額外處理
-	if err := fixRecommendedDoctorsNullNames(DB); err != nil {
-		log.Printf("Warning: Failed to fix recommended_doctors null names: %v", err)
+	log.Println("Fixing recommended_doctors null name values...")
+	result := DB.Exec(`
+		UPDATE recommended_doctors 
+		SET name = COALESCE(NULLIF(name, ''), '未知醫師') 
+		WHERE name IS NULL OR name = ''
+	`)
+	if result.Error != nil {
+		log.Printf("Warning: Failed to fix recommended_doctors null names: %v", result.Error)
+	} else {
+		log.Printf("Fixed %d records in recommended_doctors table", result.RowsAffected)
 	}
-	
+
 	return nil
 }
 
