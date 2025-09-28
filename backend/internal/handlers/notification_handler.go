@@ -18,14 +18,11 @@ import (
 
 // NotificationHandler 通知處理器
 type NotificationHandler struct {
-	db *gorm.DB
 }
 
 // NewNotificationHandler 創建新的通知處理器
 func NewNotificationHandler() *NotificationHandler {
-	return &NotificationHandler{
-		db: database.GetDB(),
-	}
+	return &NotificationHandler{}
 }
 
 // GetNotifications 獲取通知列表
@@ -54,6 +51,19 @@ func (h *NotificationHandler) GetNotifications(c *gin.Context) {
 		return
 	}
 
+	// 獲取資料庫連接
+	db, err := database.GetDBSafely()
+	if err != nil {
+		c.JSON(http.StatusServiceUnavailable, vo.NewErrorResponse(
+			"database_unavailable",
+			"Database service is currently unavailable",
+			"SERVICE_UNAVAILABLE",
+			nil,
+			c.Request.URL.Path,
+		))
+		return
+	}
+
 	// 解析查詢參數
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
@@ -70,7 +80,7 @@ func (h *NotificationHandler) GetNotifications(c *gin.Context) {
 	offset := (page - 1) * limit
 
 	// 構建查詢
-	dbQuery := h.db.Model(&models.Notification{}).Where("user_id = ?", userID)
+	dbQuery := db.Model(&models.Notification{}).Where("user_id = ?", userID)
 	if unreadOnly {
 		dbQuery = dbQuery.Where("is_read = ?", false)
 	}
@@ -90,7 +100,7 @@ func (h *NotificationHandler) GetNotifications(c *gin.Context) {
 
 	// 獲取未讀數量
 	var unreadCount int64
-	h.db.Model(&models.Notification{}).Where("user_id = ? AND is_read = ?", userID, false).Count(&unreadCount)
+	db.Model(&models.Notification{}).Where("user_id = ? AND is_read = ?", userID, false).Count(&unreadCount)
 
 	// 獲取通知列表
 	var notifications []models.Notification
@@ -212,7 +222,7 @@ func (h *NotificationHandler) MarkAsRead(c *gin.Context) {
 	}
 
 	// 標記為已讀（只能標記自己的通知）
-	result := h.db.Model(&models.Notification{}).
+	result := db.Model(&models.Notification{}).
 		Where("user_id = ? AND id IN ?", userID, notificationIDs).
 		Update("is_read", true)
 
@@ -257,7 +267,7 @@ func (h *NotificationHandler) GetNotificationSettings(c *gin.Context) {
 
 	// 查找使用者設定
 	var settings models.UserSetting
-	if err := h.db.Where("user_id = ?", userID).First(&settings).Error; err != nil {
+	if err := db.Where("user_id = ?", userID).First(&settings).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			// 如果沒有設定，返回預設值
 			response := dto.NotificationSettingsResponse{
@@ -339,7 +349,7 @@ func (h *NotificationHandler) UpdateNotificationSettings(c *gin.Context) {
 
 	// 查找或創建使用者設定
 	var settings models.UserSetting
-	err := h.db.Where("user_id = ?", userID).First(&settings).Error
+	err := db.Where("user_id = ?", userID).First(&settings).Error
 	if err == gorm.ErrRecordNotFound {
 		// 創建新設定
 		settings = models.UserSetting{
@@ -348,7 +358,7 @@ func (h *NotificationHandler) UpdateNotificationSettings(c *gin.Context) {
 			NotifyPromotions:    false,
 			NotifySystemUpdates: true,
 		}
-		if err := h.db.Create(&settings).Error; err != nil {
+		if err := db.Create(&settings).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, vo.NewErrorResponse(
 				"internal_error",
 				"Failed to create notification settings",
@@ -383,7 +393,7 @@ func (h *NotificationHandler) UpdateNotificationSettings(c *gin.Context) {
 
 	// 執行更新
 	if len(updates) > 0 {
-		if err := h.db.Model(&settings).Updates(updates).Error; err != nil {
+		if err := db.Model(&settings).Updates(updates).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, vo.NewErrorResponse(
 				"internal_error",
 				"Failed to update notification settings",
@@ -396,7 +406,7 @@ func (h *NotificationHandler) UpdateNotificationSettings(c *gin.Context) {
 	}
 
 	// 重新獲取更新後的設定
-	if err := h.db.Where("user_id = ?", userID).First(&settings).Error; err != nil {
+	if err := db.Where("user_id = ?", userID).First(&settings).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, vo.NewErrorResponse(
 			"internal_error",
 			"Failed to get updated notification settings",
@@ -468,7 +478,7 @@ func (h *NotificationHandler) UpdatePushToken(c *gin.Context) {
 
 	// 查找或創建使用者設定
 	var settings models.UserSetting
-	err := h.db.Where("user_id = ?", userID).First(&settings).Error
+	err := db.Where("user_id = ?", userID).First(&settings).Error
 	if err == gorm.ErrRecordNotFound {
 		// 創建新設定
 		settings = models.UserSetting{
@@ -479,7 +489,7 @@ func (h *NotificationHandler) UpdatePushToken(c *gin.Context) {
 			PushToken:          req.Token,
 			Platform:           req.Platform,
 		}
-		if err := h.db.Create(&settings).Error; err != nil {
+		if err := db.Create(&settings).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, vo.NewErrorResponse(
 				"internal_error",
 				"Failed to save push token",
@@ -504,7 +514,7 @@ func (h *NotificationHandler) UpdatePushToken(c *gin.Context) {
 			"push_token": req.Token,
 			"platform":   req.Platform,
 		}
-		if err := h.db.Model(&settings).Updates(updates).Error; err != nil {
+		if err := db.Model(&settings).Updates(updates).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, vo.NewErrorResponse(
 				"internal_error",
 				"Failed to update push token",

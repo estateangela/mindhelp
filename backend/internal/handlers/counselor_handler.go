@@ -45,8 +45,21 @@ func GetCounselors(c *gin.Context) {
 
 	offset := (page - 1) * pageSize
 
+	// 獲取資料庫連接
+	db, err := database.GetDBSafely()
+	if err != nil {
+		c.JSON(http.StatusServiceUnavailable, vo.NewErrorResponse(
+			"database_unavailable",
+			"Database service is currently unavailable",
+			"SERVICE_UNAVAILABLE",
+			nil,
+			c.Request.URL.Path,
+		))
+		return
+	}
+
 	// 構建查詢
-	query := database.GetDB().Model(&models.Counselor{})
+	query := db.Model(&models.Counselor{})
 
 	// 添加搜索條件
 	if search != "" {
@@ -134,7 +147,7 @@ func GetCounselor(c *gin.Context) {
 	}
 
 	var counselor models.Counselor
-	if err := database.GetDB().First(&counselor, "id = ?", counselorID).Error; err != nil {
+	if err := db.First(&counselor, "id = ?", counselorID).Error; err != nil {
 		c.JSON(http.StatusNotFound, vo.ErrorResponse{
 			Code:    "NOT_FOUND",
 			Message: "Counselor not found",
@@ -195,7 +208,7 @@ func CreateCounselor(c *gin.Context) {
 		TreatmentMethods: req.TreatmentMethods,
 	}
 
-	if err := database.GetDB().Create(&counselor).Error; err != nil {
+	if err := db.Create(&counselor).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, vo.ErrorResponse{
 			Code:    "INTERNAL_SERVER_ERROR",
 			Message: "Failed to create counselor",
@@ -257,7 +270,7 @@ func UpdateCounselor(c *gin.Context) {
 	}
 
 	var counselor models.Counselor
-	if err := database.GetDB().First(&counselor, "id = ?", counselorID).Error; err != nil {
+	if err := db.First(&counselor, "id = ?", counselorID).Error; err != nil {
 		c.JSON(http.StatusNotFound, vo.ErrorResponse{
 			Code:    "NOT_FOUND",
 			Message: "Counselor not found",
@@ -278,7 +291,7 @@ func UpdateCounselor(c *gin.Context) {
 	counselor.PsychologySchool = req.PsychologySchool
 	counselor.TreatmentMethods = req.TreatmentMethods
 
-	if err := database.GetDB().Save(&counselor).Error; err != nil {
+	if err := db.Save(&counselor).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, vo.ErrorResponse{
 			Code:    "INTERNAL_SERVER_ERROR",
 			Message: "Failed to update counselor",
@@ -327,7 +340,7 @@ func DeleteCounselor(c *gin.Context) {
 		return
 	}
 
-	if err := database.GetDB().Delete(&models.Counselor{}, "id = ?", counselorID).Error; err != nil {
+	if err := db.Delete(&models.Counselor{}, "id = ?", counselorID).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, vo.ErrorResponse{
 			Code:    "INTERNAL_SERVER_ERROR",
 			Message: "Failed to delete counselor",

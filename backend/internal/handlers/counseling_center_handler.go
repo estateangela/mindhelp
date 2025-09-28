@@ -43,8 +43,21 @@ func GetCounselingCenters(c *gin.Context) {
 
 	offset := (page - 1) * pageSize
 
+	// 獲取資料庫連接
+	db, err := database.GetDBSafely()
+	if err != nil {
+		c.JSON(http.StatusServiceUnavailable, vo.NewErrorResponse(
+			"database_unavailable",
+			"Database service is currently unavailable",
+			"SERVICE_UNAVAILABLE",
+			nil,
+			c.Request.URL.Path,
+		))
+		return
+	}
+
 	// 構建查詢 - 優化效能
-	query := database.GetDB().Model(&models.CounselingCenter{})
+	query := db.Model(&models.CounselingCenter{})
 
 	// 添加搜索條件 - 使用索引優化
 	if search != "" {

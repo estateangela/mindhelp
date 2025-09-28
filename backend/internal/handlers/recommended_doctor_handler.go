@@ -45,8 +45,21 @@ func GetRecommendedDoctors(c *gin.Context) {
 
 	offset := (page - 1) * pageSize
 
+	// 獲取資料庫連接
+	db, err := database.GetDBSafely()
+	if err != nil {
+		c.JSON(http.StatusServiceUnavailable, vo.NewErrorResponse(
+			"database_unavailable",
+			"Database service is currently unavailable",
+			"SERVICE_UNAVAILABLE",
+			nil,
+			c.Request.URL.Path,
+		))
+		return
+	}
+
 	// 構建查詢 - 排除名稱為空的記錄
-	query := database.GetDB().Model(&models.RecommendedDoctor{}).Where("name IS NOT NULL AND name != ''")
+	query := db.Model(&models.RecommendedDoctor{}).Where("name IS NOT NULL AND name != ''")
 
 	// 添加搜索條件
 	if search != "" {
