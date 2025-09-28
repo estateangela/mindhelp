@@ -66,7 +66,7 @@ func (h *ArticleHandler) GetArticles(c *gin.Context) {
 
 	// 添加搜尋條件
 	if query != "" {
-		dbQuery = dbQuery.Where("title ILIKE ? OR content ILIKE ? OR author ILIKE ?", 
+		dbQuery = dbQuery.Where("title ILIKE ? OR content ILIKE ? OR author ILIKE ?",
 			"%"+query+"%", "%"+query+"%", "%"+query+"%")
 	}
 
@@ -126,7 +126,7 @@ func (h *ArticleHandler) GetArticles(c *gin.Context) {
 		if userID != "" {
 			var count int64
 			h.db.Model(&models.Bookmark{}).Where(
-				"user_id = ? AND resource_type = ? AND article_id = ?", 
+				"user_id = ? AND resource_type = ? AND article_id = ?",
 				userID, "article", article.ID).Count(&count)
 			isBookmarked = count > 0
 		}
@@ -235,7 +235,7 @@ func (h *ArticleHandler) GetArticle(c *gin.Context) {
 	if userID != "" {
 		var count int64
 		h.db.Model(&models.Bookmark{}).Where(
-			"user_id = ? AND resource_type = ? AND article_id = ?", 
+			"user_id = ? AND resource_type = ? AND article_id = ?",
 			userID, "article", article.ID).Count(&count)
 		isBookmarked = count > 0
 	}
@@ -324,7 +324,7 @@ func (h *ArticleHandler) BookmarkArticle(c *gin.Context) {
 
 	// 檢查是否已收藏
 	var existingBookmark models.Bookmark
-	if err := h.db.Where("user_id = ? AND resource_type = ? AND article_id = ?", 
+	if err := h.db.Where("user_id = ? AND resource_type = ? AND article_id = ?",
 		userID, "article", parsedID).First(&existingBookmark).Error; err == nil {
 		c.JSON(http.StatusConflict, vo.NewErrorResponse(
 			"conflict",
@@ -397,9 +397,9 @@ func (h *ArticleHandler) UnbookmarkArticle(c *gin.Context) {
 	}
 
 	// 查找並刪除收藏
-	result := h.db.Where("user_id = ? AND resource_type = ? AND article_id = ?", 
+	result := h.db.Where("user_id = ? AND resource_type = ? AND article_id = ?",
 		userID, "article", parsedID).Delete(&models.Bookmark{})
-	
+
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, vo.NewErrorResponse(
 			"internal_error",

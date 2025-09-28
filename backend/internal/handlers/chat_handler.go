@@ -1,17 +1,44 @@
 package handlers
 
 import (
+	"bytes"
+	"encoding/json"
+	"fmt"
 	"net/http"
+	"strconv"
+	"time"
 
 	"mindhelp-backend/internal/config"
+	"mindhelp-backend/internal/database"
+	"mindhelp-backend/internal/dto"
+	"mindhelp-backend/internal/middleware"
+	"mindhelp-backend/internal/models"
 	"mindhelp-backend/internal/vo"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 // ChatHandler 聊天處理器
 type ChatHandler struct {
 	cfg *config.Config
+}
+
+// getDB 安全地獲取資料庫連接
+func (h *ChatHandler) getDB(c *gin.Context) (*gorm.DB, error) {
+	db, err := database.GetDBSafely()
+	if err != nil {
+		c.JSON(http.StatusServiceUnavailable, vo.NewErrorResponse(
+			"database_unavailable",
+			"Database service is currently unavailable",
+			"SERVICE_UNAVAILABLE",
+			[]string{err.Error()},
+			c.Request.URL.Path,
+		))
+		return nil, err
+	}
+	return db, nil
 }
 
 // NewChatHandler 創建新的聊天處理器
@@ -90,7 +117,11 @@ func (h *ChatHandler) SendMessage(c *gin.Context) {
 
 		// 驗證 session 是否屬於當前使用者
 		var session models.ChatSession
-		if err := h.db.Where("id = ? AND user_id = ?", parsedSessionID, userID).First(&session).Error; err != nil {
+		db, err := h.getDB(c)
+		if err != nil {
+			return
+		}
+		if err := db.Where("id = ? AND user_id = ?", parsedSessionID, userID).First(&session).Error; err != nil {
 			if err == gorm.ErrRecordNotFound {
 				c.JSON(http.StatusNotFound, vo.NewErrorResponse(
 					"not_found",
@@ -121,7 +152,11 @@ func (h *ChatHandler) SendMessage(c *gin.Context) {
 			IsActive:            true,
 		}
 
-		if err := h.db.Create(&newSession).Error; err != nil {
+		db, err := h.getDB(c)
+		if err != nil {
+			return
+		}
+		if err := db.Create(&newSession).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, vo.NewErrorResponse(
 				"internal_error",
 				"Failed to create chat session",
@@ -135,6 +170,10 @@ func (h *ChatHandler) SendMessage(c *gin.Context) {
 	}
 
 	// 保存使用者訊息
+	db, err := h.getDB(c)
+	if err != nil {
+		return
+	}
 	userMessage := models.ChatMessage{
 		UserID:    uuid.MustParse(userID),
 		SessionID: sessionID,
@@ -144,7 +183,7 @@ func (h *ChatHandler) SendMessage(c *gin.Context) {
 		Model:     req.Model,
 	}
 
-	if err := h.db.Create(&userMessage).Error; err != nil {
+	if err := db.Create(&userMessage).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, vo.NewErrorResponse(
 			"internal_error",
 			"Failed to save user message",
@@ -156,7 +195,7 @@ func (h *ChatHandler) SendMessage(c *gin.Context) {
 	}
 
 	// 調用 OpenRouter API
-	aiResponse, err := h.callOpenRouterAPI(req.Content, req.Model)
+	aiResponse, err := h.callOpenRouterAPI(c, req.Content, req.Model)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, vo.NewErrorResponse(
 			"internal_error",
@@ -179,7 +218,7 @@ func (h *ChatHandler) SendMessage(c *gin.Context) {
 		Tokens:    aiResponse.Usage.TotalTokens,
 	}
 
-	if err := h.db.Create(&botMessage).Error; err != nil {
+	if err := db.Create(&botMessage).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, vo.NewErrorResponse(
 			"internal_error",
 			"Failed to save bot message",
@@ -191,7 +230,11 @@ func (h *ChatHandler) SendMessage(c *gin.Context) {
 	}
 
 	// 更新 session 統計
-	h.db.Model(&models.ChatSession{}).Where("id = ?", sessionID).
+	db, err = h.getDB(c)
+	if err != nil {
+		return
+	}
+	db.Model(&models.ChatSession{}).Where("id = ?", sessionID).
 		Updates(map[string]interface{}{
 			"last_updated_at": time.Now(),
 			"message_count":   gorm.Expr("message_count + ?", 2), // user + bot message
@@ -249,17 +292,6 @@ func (h *ChatHandler) GetChatHistory(c *gin.Context) {
 }
 
 // GetSessions 獲取聊天會話列表
-func (h *ChatHandler) GetSessions(c *gin.Context) {
-	c.JSON(http.StatusNotImplemented, vo.NewErrorResponse(
-		"not_implemented",
-		"此功能尚未實現",
-		"NOT_IMPLEMENTED",
-		nil,
-		c.Request.URL.Path,
-	))
-}
-
-// GetSessions 獲取聊天會話列表
 // @Summary 獲取聊天會話列表
 // @Description 獲取使用者的聊天會話列表
 // @Tags chat
@@ -299,8 +331,12 @@ func (h *ChatHandler) GetSessions(c *gin.Context) {
 	offset := (page - 1) * limit
 
 	// 獲取總數
+	db, err := h.getDB(c)
+	if err != nil {
+		return
+	}
 	var total int64
-	if err := h.db.Model(&models.ChatSession{}).Where("user_id = ? AND is_active = ?", userID, true).Count(&total).Error; err != nil {
+	if err := db.Model(&models.ChatSession{}).Where("user_id = ? AND is_active = ?", userID, true).Count(&total).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, vo.NewErrorResponse(
 			"internal_error",
 			"Failed to count chat sessions",
@@ -313,7 +349,7 @@ func (h *ChatHandler) GetSessions(c *gin.Context) {
 
 	// 獲取會話列表
 	var sessions []models.ChatSession
-	if err := h.db.Where("user_id = ? AND is_active = ?", userID, true).
+	if err := db.Where("user_id = ? AND is_active = ?", userID, true).
 		Order("last_updated_at DESC").
 		Offset(offset).Limit(limit).
 		Find(&sessions).Error; err != nil {
@@ -407,6 +443,10 @@ func (h *ChatHandler) CreateSession(c *gin.Context) {
 	}
 
 	// 創建會話
+	db, err := h.getDB(c)
+	if err != nil {
+		return
+	}
 	session := models.ChatSession{
 		UserID:        uuid.MustParse(userID),
 		Title:         req.Title,
@@ -415,7 +455,7 @@ func (h *ChatHandler) CreateSession(c *gin.Context) {
 		IsActive:      true,
 	}
 
-	if err := h.db.Create(&session).Error; err != nil {
+	if err := db.Create(&session).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, vo.NewErrorResponse(
 			"internal_error",
 			"Failed to create chat session",
@@ -482,6 +522,10 @@ func (h *ChatHandler) GetSessionMessages(c *gin.Context) {
 	}
 
 	// 驗證 UUID 格式
+	db, err := h.getDB(c)
+	if err != nil {
+		return
+	}
 	parsedSessionID, err := uuid.Parse(sessionID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, vo.NewErrorResponse(
@@ -496,7 +540,7 @@ func (h *ChatHandler) GetSessionMessages(c *gin.Context) {
 
 	// 驗證 session 是否屬於當前使用者
 	var session models.ChatSession
-	if err := h.db.Where("id = ? AND user_id = ?", parsedSessionID, userID).First(&session).Error; err != nil {
+	if err := db.Where("id = ? AND user_id = ?", parsedSessionID, userID).First(&session).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			c.JSON(http.StatusNotFound, vo.NewErrorResponse(
 				"not_found",
@@ -518,6 +562,10 @@ func (h *ChatHandler) GetSessionMessages(c *gin.Context) {
 	}
 
 	// 解析查詢參數
+	db, err = h.getDB(c)
+	if err != nil {
+		return
+	}
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "50"))
 
@@ -533,7 +581,7 @@ func (h *ChatHandler) GetSessionMessages(c *gin.Context) {
 
 	// 獲取總數
 	var total int64
-	if err := h.db.Model(&models.ChatMessage{}).Where("session_id = ?", parsedSessionID).Count(&total).Error; err != nil {
+	if err := db.Model(&models.ChatMessage{}).Where("session_id = ?", parsedSessionID).Count(&total).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, vo.NewErrorResponse(
 			"internal_error",
 			"Failed to count messages",
@@ -546,7 +594,7 @@ func (h *ChatHandler) GetSessionMessages(c *gin.Context) {
 
 	// 獲取訊息列表
 	var messages []models.ChatMessage
-	if err := h.db.Where("session_id = ?", parsedSessionID).
+	if err := db.Where("session_id = ?", parsedSessionID).
 		Order("timestamp ASC"). // 按時間順序排列
 		Offset(offset).Limit(limit).
 		Find(&messages).Error; err != nil {
@@ -622,6 +670,10 @@ func (h *ChatHandler) SendSessionMessage(c *gin.Context) {
 		return
 	}
 
+	db, err := h.getDB(c)
+	if err != nil {
+		return
+	}
 	sessionID := c.Param("sessionId")
 	if sessionID == "" {
 		c.JSON(http.StatusBadRequest, vo.NewErrorResponse(
@@ -649,7 +701,7 @@ func (h *ChatHandler) SendSessionMessage(c *gin.Context) {
 
 	// 驗證 session 是否屬於當前使用者
 	var session models.ChatSession
-	if err := h.db.Where("id = ? AND user_id = ? AND is_active = ?", parsedSessionID, userID, true).First(&session).Error; err != nil {
+	if err := db.Where("id = ? AND user_id = ? AND is_active = ?", parsedSessionID, userID, true).First(&session).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			c.JSON(http.StatusNotFound, vo.NewErrorResponse(
 				"not_found",
@@ -700,7 +752,7 @@ func (h *ChatHandler) SendSessionMessage(c *gin.Context) {
 		if len(snippet) > 100 {
 			snippet = snippet[:100]
 		}
-		h.db.Model(&session).Update("first_message_snippet", snippet)
+		db.Model(&session).Update("first_message_snippet", snippet)
 	}
 
 	// 保存使用者訊息
@@ -713,7 +765,7 @@ func (h *ChatHandler) SendSessionMessage(c *gin.Context) {
 		Model:     req.Model,
 	}
 
-	if err := h.db.Create(&userMessage).Error; err != nil {
+	if err := db.Create(&userMessage).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, vo.NewErrorResponse(
 			"internal_error",
 			"Failed to save user message",
@@ -726,7 +778,7 @@ func (h *ChatHandler) SendSessionMessage(c *gin.Context) {
 
 	// 獲取會話歷史以提供更好的上下文
 	var recentMessages []models.ChatMessage
-	h.db.Where("session_id = ?", parsedSessionID).
+	db.Where("session_id = ?", parsedSessionID).
 		Order("timestamp DESC").
 		Limit(10). // 取最近的10條訊息作為上下文
 		Find(&recentMessages)
@@ -752,7 +804,7 @@ func (h *ChatHandler) SendSessionMessage(c *gin.Context) {
 	})
 
 	// 調用 OpenRouter API 使用完整對話歷史
-	aiResponse, err := h.callOpenRouterAPIWithHistory(conversationHistory, req.Model)
+	aiResponse, err := h.callOpenRouterAPIWithHistory(c, conversationHistory, req.Model)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, vo.NewErrorResponse(
 			"internal_error",
@@ -775,7 +827,7 @@ func (h *ChatHandler) SendSessionMessage(c *gin.Context) {
 		Tokens:    aiResponse.Usage.TotalTokens,
 	}
 
-	if err := h.db.Create(&botMessage).Error; err != nil {
+	if err := db.Create(&botMessage).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, vo.NewErrorResponse(
 			"internal_error",
 			"Failed to save bot message",
@@ -787,7 +839,7 @@ func (h *ChatHandler) SendSessionMessage(c *gin.Context) {
 	}
 
 	// 更新 session 統計
-	h.db.Model(&models.ChatSession{}).Where("id = ?", parsedSessionID).
+	db.Model(&models.ChatSession{}).Where("id = ?", parsedSessionID).
 		Updates(map[string]interface{}{
 			"last_updated_at": time.Now(),
 			"message_count":   gorm.Expr("message_count + ?", 2), // user + bot message
@@ -809,8 +861,61 @@ func (h *ChatHandler) SendSessionMessage(c *gin.Context) {
 	c.JSON(http.StatusOK, vo.SuccessResponse(response, "Message sent successfully"))
 }
 
+// callOpenRouterAPI 調用 OpenRouter API
+func (h *ChatHandler) callOpenRouterAPI(c *gin.Context, message, model string) (*dto.OpenRouterResponse, error) {
+	// 構建請求
+	request := dto.OpenRouterRequest{
+		Model: model,
+		Messages: []dto.Message{
+			{
+				Role:    "user",
+				Content: message,
+			},
+		},
+		Temperature: 0.7,
+		MaxTokens:   512,
+	}
+
+	// 如果沒有指定模型，使用預設模型
+	if model == "" {
+		request.Model = "google/gemma-3n-e4b-it:free"
+	}
+
+	// 序列化請求
+	requestBody, err := json.Marshal(request)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal request: %w", err)
+	}
+
+	// 創建 HTTP 請求
+	req, err := http.NewRequest("POST", h.cfg.OpenRouter.BaseURL+"/chat/completions", bytes.NewBuffer(requestBody))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	// 設置標頭
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+h.cfg.OpenRouter.APIKey)
+
+	// 發送請求
+	client := &http.Client{Timeout: 30 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to send request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	// 解析回應
+	var response dto.OpenRouterResponse
+	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+		return nil, fmt.Errorf("failed to decode response: %w", err)
+	}
+
+	return &response, nil
+}
+
 // callOpenRouterAPIWithHistory 使用對話歷史調用 OpenRouter API
-func (h *ChatHandler) callOpenRouterAPIWithHistory(messages []dto.Message, model string) (*dto.OpenRouterResponse, error) {
+func (h *ChatHandler) callOpenRouterAPIWithHistory(c *gin.Context, messages []dto.Message, model string) (*dto.OpenRouterResponse, error) {
 	// 構建請求
 	request := dto.OpenRouterRequest{
 		Model:       model,

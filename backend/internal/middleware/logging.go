@@ -54,7 +54,7 @@ func StructuredLogger(logFile string) gin.HandlerFunc {
 				UserAgent:    param.Request.UserAgent(),
 				RequestID:    param.Request.Header.Get("X-Request-ID"),
 				RequestSize:  int(param.Request.ContentLength),
-				ResponseSize: param.BodySize,
+				ResponseSize: int(param.BodySize),
 			}
 
 			// 如果有錯誤，記錄錯誤級別
