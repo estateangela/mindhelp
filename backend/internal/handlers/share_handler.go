@@ -23,14 +23,28 @@ import (
 
 // ShareHandler 分享處理器
 type ShareHandler struct {
-	db  *gorm.DB
 	cfg *config.Config
+}
+
+// getDB 安全地獲取資料庫連接
+func (h *ShareHandler) getDB(c *gin.Context) (*gorm.DB, error) {
+	db, err := database.GetDBSafely()
+	if err != nil {
+		c.JSON(http.StatusServiceUnavailable, vo.NewErrorResponse(
+			"database_unavailable",
+			"Database service is currently unavailable",
+			"SERVICE_UNAVAILABLE",
+			[]string{err.Error()},
+			c.Request.URL.Path,
+		))
+		return nil, err
+	}
+	return db, nil
 }
 
 // NewShareHandler 創建新的分享處理器
 func NewShareHandler(cfg *config.Config) *ShareHandler {
 	return &ShareHandler{
-		db:  database.GetDB(),
 		cfg: cfg,
 	}
 }

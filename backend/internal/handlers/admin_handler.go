@@ -237,13 +237,26 @@ func (h *AdminHandler) SeedDatabase(c *gin.Context) {
 // @Failure 500 {object} vo.ErrorResponse
 // @Router /admin/database-stats [get]
 func (h *AdminHandler) GetDatabaseStats(c *gin.Context) {
+	// 獲取資料庫連接
+	db, err := database.GetDBSafely()
+	if err != nil {
+		c.JSON(http.StatusServiceUnavailable, vo.NewErrorResponse(
+			"database_unavailable",
+			"Database service is currently unavailable",
+			"SERVICE_UNAVAILABLE",
+			[]string{err.Error()},
+			c.Request.URL.Path,
+		))
+		return
+	}
+
 	var counselorCount int64
 	var centerCount int64
 	var doctorCount int64
 	var userCount int64
 
-	// 計算各表記錄數，統一使用 h.db，避免未定義變數
-	if err := h.db.Model(&models.Counselor{}).Count(&counselorCount).Error; err != nil {
+	// 計算各表記錄數
+	if err := db.Model(&models.Counselor{}).Count(&counselorCount).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, vo.ErrorResponse{
 			Code:    "DB_ERROR",
 			Message: "無法取得諮商師數量",
@@ -251,7 +264,7 @@ func (h *AdminHandler) GetDatabaseStats(c *gin.Context) {
 		})
 		return
 	}
-	if err := h.db.Model(&models.CounselingCenter{}).Count(&centerCount).Error; err != nil {
+	if err := db.Model(&models.CounselingCenter{}).Count(&centerCount).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, vo.ErrorResponse{
 			Code:    "DB_ERROR",
 			Message: "無法取得諮商中心數量",
@@ -259,7 +272,7 @@ func (h *AdminHandler) GetDatabaseStats(c *gin.Context) {
 		})
 		return
 	}
-	if err := h.db.Model(&models.RecommendedDoctor{}).Count(&doctorCount).Error; err != nil {
+	if err := db.Model(&models.RecommendedDoctor{}).Count(&doctorCount).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, vo.ErrorResponse{
 			Code:    "DB_ERROR",
 			Message: "無法取得推薦醫師數量",
@@ -267,7 +280,7 @@ func (h *AdminHandler) GetDatabaseStats(c *gin.Context) {
 		})
 		return
 	}
-	if err := h.db.Model(&models.User{}).Count(&userCount).Error; err != nil {
+	if err := db.Model(&models.User{}).Count(&userCount).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, vo.ErrorResponse{
 			Code:    "DB_ERROR",
 			Message: "無法取得使用者數量",
@@ -281,9 +294,37 @@ func (h *AdminHandler) GetDatabaseStats(c *gin.Context) {
 	var centerWithAddressCount int64
 	var doctorWithDescriptionCount int64
 
-	db.Model(&models.Counselor{}).Where("work_location IS NOT NULL AND work_location != ''").Count(&counselorWithLocationCount)
-	db.Model(&models.CounselingCenter{}).Where("address IS NOT NULL AND address != ''").Count(&centerWithAddressCount)
-	db.Model(&models.RecommendedDoctor{}).Where("description IS NOT NULL AND description != ''").Count(&doctorWithDescriptionCount)
+	// 使用 h.DB（注意大小寫，確保正確存取 DB 實例）並加上錯誤處理，避免未定義變數與潛在 SQL 錯誤
+	if err := h.DB.Model(&models.Counselor{}).
+		Where("work_location IS NOT NULL AND work_location != ''").
+		Count(&counselorWithLocationCount).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, vo.ErrorResponse{
+			Code:    "DB_ERROR",
+			Message: "無法取得有工作地點的諮商師數量",
+			Error:   "Counselor with location count error: " + err.Error(),
+		})
+		return
+	}
+	if err := db.Model(&models.CounselingCenter{}).
+		Where("address IS NOT NULL AND address != ''").
+		Count(&centerWithAddressCount).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, vo.ErrorResponse{
+			Code:    "DB_ERROR",
+			Message: "無法取得有地址的諮商中心數量",
+			Error:   "CounselingCenter with address count error: " + err.Error(),
+		})
+		return
+	}
+	if err := db.Model(&models.RecommendedDoctor{}).
+		Where("description IS NOT NULL AND description != ''").
+		Count(&doctorWithDescriptionCount).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, vo.ErrorResponse{
+			Code:    "DB_ERROR",
+			Message: "無法取得有描述的推薦醫師數量",
+			Error:   "RecommendedDoctor with description count error: " + err.Error(),
+		})
+		return
+	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
