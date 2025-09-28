@@ -23,6 +23,22 @@ func NewLocationHandler() *LocationHandler {
 	return &LocationHandler{}
 }
 
+// getDB 獲取資料庫連接，如果失敗會向客戶端返回錯誤
+func (h *LocationHandler) getDB(c *gin.Context) (*gorm.DB, bool) {
+	db, err := database.GetDBSafely()
+	if err != nil {
+		c.JSON(http.StatusServiceUnavailable, vo.NewErrorResponse(
+			"database_unavailable",
+			"資料庫暫時無法使用，請稍後再試",
+			"DATABASE_UNAVAILABLE",
+			[]string{err.Error()},
+			c.Request.URL.Path,
+		))
+		return nil, false
+	}
+	return db, true
+}
+
 // CreateLocation 創建位置
 // @Summary 創建位置
 // @Description 創建新的心理健康資源位置
@@ -165,6 +181,19 @@ func (h *LocationHandler) SearchLocations(c *gin.Context) {
 
 	offset := (page - 1) * pageSize
 
+	// 獲取資料庫連接
+	db, err := database.GetDBSafely()
+	if err != nil {
+		c.JSON(http.StatusServiceUnavailable, vo.NewErrorResponse(
+			"database_unavailable",
+			"資料庫暫時無法使用，請稍後再試",
+			"DATABASE_UNAVAILABLE",
+			[]string{err.Error()},
+			c.Request.URL.Path,
+		))
+		return
+	}
+
 	// 構建查詢
 	dbQuery := db.Model(&models.Location{}).Where("is_public = ?", true)
 
@@ -283,6 +312,19 @@ func (h *LocationHandler) GetLocation(c *gin.Context) {
 			"Invalid location ID format",
 			"VALIDATION_ERROR",
 			nil,
+			c.Request.URL.Path,
+		))
+		return
+	}
+
+	// 獲取資料庫連接
+	db, err := database.GetDBSafely()
+	if err != nil {
+		c.JSON(http.StatusServiceUnavailable, vo.NewErrorResponse(
+			"database_unavailable",
+			"資料庫暫時無法使用，請稍後再試",
+			"DATABASE_UNAVAILABLE",
+			[]string{err.Error()},
 			c.Request.URL.Path,
 		))
 		return

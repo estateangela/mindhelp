@@ -99,7 +99,7 @@ func GetRecommendedDoctor(c *gin.Context) {
 			"invalid_id",
 			"Invalid recommended doctor ID format",
 			"VALIDATION_ERROR",
-			[]string{[]string{err.Error()}},
+			[]string{err.Error()},
 			c.Request.URL.Path,
 		))
 		return
@@ -193,7 +193,7 @@ func UpdateRecommendedDoctor(c *gin.Context) {
 			"invalid_id",
 			"Invalid recommended doctor ID format",
 			"VALIDATION_ERROR",
-			[]string{[]string{err.Error()}},
+			[]string{err.Error()},
 			c.Request.URL.Path,
 		))
 		return
@@ -268,7 +268,7 @@ func DeleteRecommendedDoctor(c *gin.Context) {
 			"invalid_id",
 			"Invalid recommended doctor ID format",
 			"VALIDATION_ERROR",
-			[]string{[]string{err.Error()}},
+			[]string{err.Error()},
 			c.Request.URL.Path,
 		))
 		return

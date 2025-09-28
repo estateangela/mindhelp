@@ -84,7 +84,7 @@ func GetCounselor(c *gin.Context) {
 			"invalid_id",
 			"Invalid counselor ID format",
 			"VALIDATION_ERROR",
-			[]string{[]string{err.Error()}},
+			[]string{err.Error()},
 			c.Request.URL.Path,
 		))
 		return
@@ -178,7 +178,7 @@ func UpdateCounselor(c *gin.Context) {
 			"invalid_id",
 			"Invalid counselor ID format",
 			"VALIDATION_ERROR",
-			[]string{[]string{err.Error()}},
+			[]string{err.Error()},
 			c.Request.URL.Path,
 		))
 		return
@@ -253,7 +253,7 @@ func DeleteCounselor(c *gin.Context) {
 			"invalid_id",
 			"Invalid counselor ID format",
 			"VALIDATION_ERROR",
-			[]string{[]string{err.Error()}},
+			[]string{err.Error()},
 			c.Request.URL.Path,
 		))
 		return

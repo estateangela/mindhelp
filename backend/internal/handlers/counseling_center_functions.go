@@ -84,7 +84,7 @@ func GetCounselingCenter(c *gin.Context) {
 			"invalid_id",
 			"Invalid counseling center ID format",
 			"VALIDATION_ERROR",
-			[]string{[]string{err.Error()}},
+			[]string{err.Error()},
 			c.Request.URL.Path,
 		))
 		return
@@ -178,7 +178,7 @@ func UpdateCounselingCenter(c *gin.Context) {
 			"invalid_id",
 			"Invalid counseling center ID format",
 			"VALIDATION_ERROR",
-			[]string{[]string{err.Error()}},
+			[]string{err.Error()},
 			c.Request.URL.Path,
 		))
 		return
@@ -253,7 +253,7 @@ func DeleteCounselingCenter(c *gin.Context) {
 			"invalid_id",
 			"Invalid counseling center ID format",
 			"VALIDATION_ERROR",
-			[]string{[]string{err.Error()}},
+			[]string{err.Error()},
 			c.Request.URL.Path,
 		))
 		return
