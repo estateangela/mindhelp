@@ -15,14 +15,11 @@ import (
 
 // ConfigHandler 配置處理器
 type ConfigHandler struct {
-	db *gorm.DB
 }
 
 // NewConfigHandler 創建新的配置處理器
 func NewConfigHandler() *ConfigHandler {
-	return &ConfigHandler{
-		db: database.GetDB(),
-	}
+	return &ConfigHandler{}
 }
 
 // GetConfig 獲取應用程式配置
@@ -37,7 +34,7 @@ func NewConfigHandler() *ConfigHandler {
 func (h *ConfigHandler) GetConfig(c *gin.Context) {
 	// 獲取所有啟用的配置
 	var configs []models.AppConfig
-	if err := h.db.Where("is_active = ?", true).Find(&configs).Error; err != nil {
+	if err := db.Where("is_active = ?", true).Find(&configs).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, vo.NewErrorResponse(
 			"internal_error",
 			"Failed to get app config",
@@ -114,7 +111,7 @@ func (h *ConfigHandler) GetConfig(c *gin.Context) {
 	// 如果沒有配置測驗類別，從資料庫中獲取
 	if len(response.Filters.QuizCategories) == 0 {
 		var categories []string
-		h.db.Model(&models.Quiz{}).Where("is_active = ?", true).Distinct("category").Pluck("category", &categories)
+		db.Model(&models.Quiz{}).Where("is_active = ?", true).Distinct("category").Pluck("category", &categories)
 		
 		for _, category := range categories {
 			displayName := h.getCategoryDisplayName(category)

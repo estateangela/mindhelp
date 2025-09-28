@@ -47,7 +47,21 @@ type AddressInfo struct {
 // @Success 200 {object} map[string]interface{}
 // @Failure 500 {object} vo.ErrorResponse
 // @Router /maps/addresses [get]
+
 func (h *MapsHandler) GetAllAddresses(c *gin.Context) {
+	// 獲取資料庫連接
+	db, err := database.GetDBSafely()
+	if err != nil {
+		c.JSON(http.StatusServiceUnavailable, vo.NewErrorResponse(
+			"database_unavailable",
+			"Database service is currently unavailable",
+			"SERVICE_UNAVAILABLE",
+			nil,
+			c.Request.URL.Path,
+		))
+		return
+	}
+
 	addressType := c.Query("type")
 	limitStr := c.DefaultQuery("limit", "100")
 	limit, err := strconv.Atoi(limitStr)
@@ -60,7 +74,7 @@ func (h *MapsHandler) GetAllAddresses(c *gin.Context) {
 	// 獲取諮商師地址
 	if addressType == "" || addressType == "counselor" {
 		var counselors []models.Counselor
-		if err := database.GetDB().Select("id, name, work_location").Where("work_location IS NOT NULL AND work_location != ''").Limit(limit).Find(&counselors).Error; err == nil {
+		if err := db.Select("id, name, work_location").Where("work_location IS NOT NULL AND work_location != ''").Limit(limit).Find(&counselors).Error; err == nil {
 			for _, counselor := range counselors {
 				addresses = append(addresses, AddressInfo{
 					ID:      counselor.ID.String(),
@@ -69,13 +83,12 @@ func (h *MapsHandler) GetAllAddresses(c *gin.Context) {
 					Type:    "counselor",
 				})
 			}
-		}
 	}
 
 	// 獲取諮商所地址
 	if addressType == "" || addressType == "counseling_center" {
 		var centers []models.CounselingCenter
-		if err := database.GetDB().Select("id, name, address, phone").Where("address IS NOT NULL AND address != ''").Limit(limit).Find(&centers).Error; err == nil {
+		if err := db.Select("id, name, address, phone").Where("address IS NOT NULL AND address != ''").Limit(limit).Find(&centers).Error; err == nil {
 			for _, center := range centers {
 				addresses = append(addresses, AddressInfo{
 					ID:      center.ID.String(),
@@ -85,14 +98,13 @@ func (h *MapsHandler) GetAllAddresses(c *gin.Context) {
 					Phone:   center.Phone,
 				})
 			}
-		}
 	}
 
 	// 獲取推薦醫師地址（從描述中提取）
 	if addressType == "" || addressType == "recommended_doctor" {
 		var doctors []models.RecommendedDoctor
 		// 使用更安全的查詢，避免 name 欄位不存在的錯誤
-		if err := database.GetDB().Select("id, description").Where("description IS NOT NULL AND description != ''").Limit(limit).Find(&doctors).Error; err == nil {
+		if err := db.Select("id, description").Where("description IS NOT NULL AND description != ''").Limit(limit).Find(&doctors).Error; err == nil {
 			for _, doctor := range doctors {
 				// 嘗試從描述中提取地址資訊
 				address := extractAddressFromDescription(doctor.Description)
@@ -112,7 +124,6 @@ func (h *MapsHandler) GetAllAddresses(c *gin.Context) {
 					})
 				}
 			}
-		}
 	}
 
 	c.JSON(http.StatusOK, gin.H{
@@ -171,20 +182,21 @@ func (h *MapsHandler) fetchAllAddresses() ([]AddressInfo, error) {
 
 	// 獲取諮商師地址
 	var counselors []models.Counselor
-	if err := database.GetDB().Select("id, name, work_location").Where("work_location IS NOT NULL AND work_location != ''").Find(&counselors).Error; err == nil {
-		for _, counselor := range counselors {
-			addresses = append(addresses, AddressInfo{
-				ID:      counselor.ID.String(),
-				Name:    counselor.Name,
+	if err := db.Select("id, name, work_location").Where("work_location IS NOT NULL AND work_location != ''").Find(&counselors).Error; err != nil {
+		return nil, err
+	}
+	for _, counselor := range counselors {
+		addresses = append(addresses, AddressInfo{
+			ID:   counselor.ID.String(),
+			Name: counselor.Name,
 				Address: counselor.WorkLocation,
 				Type:    "counselor",
 			})
-		}
 	}
 
 	// 獲取諮商所地址
 	var centers []models.CounselingCenter
-	if err := database.GetDB().Select("id, name, address, phone").Where("address IS NOT NULL AND address != ''").Find(&centers).Error; err == nil {
+	if err := db.Select("id, name, address, phone").Where("address IS NOT NULL AND address != ''").Find(&centers).Error; err == nil {
 		for _, center := range centers {
 			addresses = append(addresses, AddressInfo{
 				ID:      center.ID.String(),
@@ -193,12 +205,11 @@ func (h *MapsHandler) fetchAllAddresses() ([]AddressInfo, error) {
 				Type:    "counseling_center",
 				Phone:   center.Phone,
 			})
-		}
 	}
 
 	// 獲取推薦醫師地址
 	var doctors []models.RecommendedDoctor
-	if err := database.GetDB().Select("id, description").Where("description IS NOT NULL AND description != ''").Find(&doctors).Error; err == nil {
+	if err := db.Select("id, description").Where("description IS NOT NULL AND description != ''").Find(&doctors).Error; err == nil {
 		for _, doctor := range doctors {
 			address := extractAddressFromDescription(doctor.Description)
 			if address != "" {
@@ -216,7 +227,6 @@ func (h *MapsHandler) fetchAllAddresses() ([]AddressInfo, error) {
 					Description: doctor.Description,
 				})
 			}
-		}
 	}
 
 	return addresses, nil
@@ -270,7 +280,6 @@ func extractAddressFromDescription(description string) string {
 				return description[:50] + "..."
 			}
 			return description
-		}
 	}
 
 	return ""

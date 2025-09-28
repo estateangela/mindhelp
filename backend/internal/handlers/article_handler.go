@@ -19,14 +19,11 @@ import (
 
 // ArticleHandler 文章處理器
 type ArticleHandler struct {
-	db *gorm.DB
 }
 
 // NewArticleHandler 創建新的文章處理器
 func NewArticleHandler() *ArticleHandler {
-	return &ArticleHandler{
-		db: database.GetDB(),
-	}
+	return &ArticleHandler{}
 }
 
 // GetArticles 獲取文章列表
@@ -61,8 +58,21 @@ func (h *ArticleHandler) GetArticles(c *gin.Context) {
 
 	offset := (page - 1) * limit
 
+	// 獲取資料庫連接
+	db, err := database.GetDBSafely()
+	if err != nil {
+		c.JSON(http.StatusServiceUnavailable, vo.NewErrorResponse(
+			"database_unavailable",
+			"Database service is currently unavailable",
+			"SERVICE_UNAVAILABLE",
+			nil,
+			c.Request.URL.Path,
+		))
+		return
+	}
+
 	// 構建查詢
-	dbQuery := h.db.Model(&models.Article{}).Where("is_published = ?", true)
+	dbQuery := db.Model(&models.Article{}).Where("is_published = ?", true)
 
 	// 添加搜尋條件
 	if query != "" {
@@ -125,7 +135,7 @@ func (h *ArticleHandler) GetArticles(c *gin.Context) {
 		isBookmarked := false
 		if userID != "" {
 			var count int64
-			h.db.Model(&models.Bookmark{}).Where(
+			db.Model(&models.Bookmark{}).Where(
 				"user_id = ? AND resource_type = ? AND article_id = ?",
 				userID, "article", article.ID).Count(&count)
 			isBookmarked = count > 0
@@ -199,7 +209,7 @@ func (h *ArticleHandler) GetArticle(c *gin.Context) {
 	}
 
 	var article models.Article
-	if err := h.db.Where("id = ? AND is_published = ?", parsedID, true).First(&article).Error; err != nil {
+	if err := db.Where("id = ? AND is_published = ?", parsedID, true).First(&article).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			c.JSON(http.StatusNotFound, vo.NewErrorResponse(
 				"not_found",
@@ -221,7 +231,7 @@ func (h *ArticleHandler) GetArticle(c *gin.Context) {
 	}
 
 	// 增加瀏覽次數
-	h.db.Model(&article).UpdateColumn("view_count", gorm.Expr("view_count + ?", 1))
+	db.Model(&article).UpdateColumn("view_count", gorm.Expr("view_count + ?", 1))
 
 	// 解析標籤
 	var tags []string
@@ -234,7 +244,7 @@ func (h *ArticleHandler) GetArticle(c *gin.Context) {
 	isBookmarked := false
 	if userID != "" {
 		var count int64
-		h.db.Model(&models.Bookmark{}).Where(
+		db.Model(&models.Bookmark{}).Where(
 			"user_id = ? AND resource_type = ? AND article_id = ?",
 			userID, "article", article.ID).Count(&count)
 		isBookmarked = count > 0
@@ -301,7 +311,7 @@ func (h *ArticleHandler) BookmarkArticle(c *gin.Context) {
 
 	// 檢查文章是否存在
 	var article models.Article
-	if err := h.db.Where("id = ? AND is_published = ?", parsedID, true).First(&article).Error; err != nil {
+	if err := db.Where("id = ? AND is_published = ?", parsedID, true).First(&article).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			c.JSON(http.StatusNotFound, vo.NewErrorResponse(
 				"not_found",
@@ -324,7 +334,7 @@ func (h *ArticleHandler) BookmarkArticle(c *gin.Context) {
 
 	// 檢查是否已收藏
 	var existingBookmark models.Bookmark
-	if err := h.db.Where("user_id = ? AND resource_type = ? AND article_id = ?",
+	if err := db.Where("user_id = ? AND resource_type = ? AND article_id = ?",
 		userID, "article", parsedID).First(&existingBookmark).Error; err == nil {
 		c.JSON(http.StatusConflict, vo.NewErrorResponse(
 			"conflict",
@@ -343,7 +353,7 @@ func (h *ArticleHandler) BookmarkArticle(c *gin.Context) {
 		ArticleID:    &parsedID,
 	}
 
-	if err := h.db.Create(&bookmark).Error; err != nil {
+	if err := db.Create(&bookmark).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, vo.NewErrorResponse(
 			"internal_error",
 			"Failed to bookmark article",
@@ -397,7 +407,7 @@ func (h *ArticleHandler) UnbookmarkArticle(c *gin.Context) {
 	}
 
 	// 查找並刪除收藏
-	result := h.db.Where("user_id = ? AND resource_type = ? AND article_id = ?",
+	result := db.Where("user_id = ? AND resource_type = ? AND article_id = ?",
 		userID, "article", parsedID).Delete(&models.Bookmark{})
 
 	if result.Error != nil {

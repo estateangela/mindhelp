@@ -29,6 +29,19 @@ func NewAdminHandler() *AdminHandler {
 // @Failure 500 {object} vo.ErrorResponse
 // @Router /admin/seed-database [post]
 func (h *AdminHandler) SeedDatabase(c *gin.Context) {
+	// 獲取資料庫連接
+	db, err := database.GetDBSafely()
+	if err != nil {
+		c.JSON(http.StatusServiceUnavailable, vo.NewErrorResponse(
+			"database_unavailable",
+			"Database service is currently unavailable",
+			"SERVICE_UNAVAILABLE",
+			[]string{err.Error()},
+			c.Request.URL.Path,
+		))
+		return
+	}
+
 	// 範例諮商師資料
 	counselors := []models.Counselor{
 		{
@@ -128,10 +141,10 @@ func (h *AdminHandler) SeedDatabase(c *gin.Context) {
 	// 插入諮商師
 	for _, counselor := range counselors {
 		var existing models.Counselor
-		result := database.GetDB().Where("license_number = ?", counselor.LicenseNumber).First(&existing)
+		result := db.Where("license_number = ?", counselor.LicenseNumber).First(&existing)
 		if result.Error != nil {
 			// 不存在，創建新記錄
-			if err := database.GetDB().Create(&counselor).Error; err != nil {
+			if err := db.Create(&counselor).Error; err != nil {
 				errors = append(errors, "Failed to create counselor "+counselor.Name+": "+err.Error())
 			} else {
 				createdCount++
@@ -139,7 +152,7 @@ func (h *AdminHandler) SeedDatabase(c *gin.Context) {
 		} else {
 			// 存在，更新記錄
 			counselor.ID = existing.ID
-			if err := database.GetDB().Save(&counselor).Error; err != nil {
+			if err := db.Save(&counselor).Error; err != nil {
 				errors = append(errors, "Failed to update counselor "+counselor.Name+": "+err.Error())
 			} else {
 				updatedCount++
@@ -150,10 +163,10 @@ func (h *AdminHandler) SeedDatabase(c *gin.Context) {
 	// 插入諮商所
 	for _, center := range centers {
 		var existing models.CounselingCenter
-		result := database.GetDB().Where("name = ?", center.Name).First(&existing)
+		result := db.Where("name = ?", center.Name).First(&existing)
 		if result.Error != nil {
 			// 不存在，創建新記錄
-			if err := database.GetDB().Create(&center).Error; err != nil {
+			if err := db.Create(&center).Error; err != nil {
 				errors = append(errors, "Failed to create counseling center "+center.Name+": "+err.Error())
 			} else {
 				createdCount++
@@ -161,7 +174,7 @@ func (h *AdminHandler) SeedDatabase(c *gin.Context) {
 		} else {
 			// 存在，更新記錄
 			center.ID = existing.ID
-			if err := database.GetDB().Save(&center).Error; err != nil {
+			if err := db.Save(&center).Error; err != nil {
 				errors = append(errors, "Failed to update counseling center "+center.Name+": "+err.Error())
 			} else {
 				updatedCount++
@@ -172,10 +185,10 @@ func (h *AdminHandler) SeedDatabase(c *gin.Context) {
 	// 插入推薦醫師
 	for _, doctor := range doctors {
 		var existing models.RecommendedDoctor
-		result := database.GetDB().Where("name = ?", doctor.Name).First(&existing)
+		result := db.Where("name = ?", doctor.Name).First(&existing)
 		if result.Error != nil {
 			// 不存在，創建新記錄
-			if err := database.GetDB().Create(&doctor).Error; err != nil {
+			if err := db.Create(&doctor).Error; err != nil {
 				errors = append(errors, "Failed to create recommended doctor "+doctor.Name+": "+err.Error())
 			} else {
 				createdCount++
@@ -183,7 +196,7 @@ func (h *AdminHandler) SeedDatabase(c *gin.Context) {
 		} else {
 			// 存在，更新記錄
 			doctor.ID = existing.ID
-			if err := database.GetDB().Save(&doctor).Error; err != nil {
+			if err := db.Save(&doctor).Error; err != nil {
 				errors = append(errors, "Failed to update recommended doctor "+doctor.Name+": "+err.Error())
 			} else {
 				updatedCount++
@@ -203,11 +216,11 @@ func (h *AdminHandler) SeedDatabase(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"data": gin.H{
-			"created_count": createdCount,
-			"updated_count": updatedCount,
-			"total_processed": createdCount + updatedCount,
-			"counselors": len(counselors),
-			"counseling_centers": len(centers),
+			"created_count":       createdCount,
+			"updated_count":       updatedCount,
+			"total_processed":     createdCount + updatedCount,
+			"counselors":          len(counselors),
+			"counseling_centers":  len(centers),
 			"recommended_doctors": len(doctors),
 		},
 		"message": "資料庫種子資料插入成功",
@@ -229,35 +242,63 @@ func (h *AdminHandler) GetDatabaseStats(c *gin.Context) {
 	var doctorCount int64
 	var userCount int64
 
-	// 計算各表記錄數
-	database.GetDB().Model(&models.Counselor{}).Count(&counselorCount)
-	database.GetDB().Model(&models.CounselingCenter{}).Count(&centerCount)
-	database.GetDB().Model(&models.RecommendedDoctor{}).Count(&doctorCount)
-	database.GetDB().Model(&models.User{}).Count(&userCount)
+	// 計算各表記錄數，統一使用 h.db，避免未定義變數
+	if err := h.db.Model(&models.Counselor{}).Count(&counselorCount).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, vo.ErrorResponse{
+			Code:    "DB_ERROR",
+			Message: "無法取得諮商師數量",
+			Error:   "Counselor count error: " + err.Error(),
+		})
+		return
+	}
+	if err := h.db.Model(&models.CounselingCenter{}).Count(&centerCount).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, vo.ErrorResponse{
+			Code:    "DB_ERROR",
+			Message: "無法取得諮商中心數量",
+			Error:   "CounselingCenter count error: " + err.Error(),
+		})
+		return
+	}
+	if err := h.db.Model(&models.RecommendedDoctor{}).Count(&doctorCount).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, vo.ErrorResponse{
+			Code:    "DB_ERROR",
+			Message: "無法取得推薦醫師數量",
+			Error:   "RecommendedDoctor count error: " + err.Error(),
+		})
+		return
+	}
+	if err := h.db.Model(&models.User{}).Count(&userCount).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, vo.ErrorResponse{
+			Code:    "DB_ERROR",
+			Message: "無法取得使用者數量",
+			Error:   "User count error: " + err.Error(),
+		})
+		return
+	}
 
 	// 計算有地址的記錄數
 	var counselorWithLocationCount int64
 	var centerWithAddressCount int64
 	var doctorWithDescriptionCount int64
 
-	database.GetDB().Model(&models.Counselor{}).Where("work_location IS NOT NULL AND work_location != ''").Count(&counselorWithLocationCount)
-	database.GetDB().Model(&models.CounselingCenter{}).Where("address IS NOT NULL AND address != ''").Count(&centerWithAddressCount)
-	database.GetDB().Model(&models.RecommendedDoctor{}).Where("description IS NOT NULL AND description != ''").Count(&doctorWithDescriptionCount)
+	db.Model(&models.Counselor{}).Where("work_location IS NOT NULL AND work_location != ''").Count(&counselorWithLocationCount)
+	db.Model(&models.CounselingCenter{}).Where("address IS NOT NULL AND address != ''").Count(&centerWithAddressCount)
+	db.Model(&models.RecommendedDoctor{}).Where("description IS NOT NULL AND description != ''").Count(&doctorWithDescriptionCount)
 
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"data": gin.H{
 			"total_records": gin.H{
-				"counselors": counselorCount,
-				"counseling_centers": centerCount,
+				"counselors":          counselorCount,
+				"counseling_centers":  centerCount,
 				"recommended_doctors": doctorCount,
-				"users": userCount,
+				"users":               userCount,
 			},
 			"records_with_address": gin.H{
 				"counselors_with_location": counselorWithLocationCount,
-				"centers_with_address": centerWithAddressCount,
+				"centers_with_address":     centerWithAddressCount,
 				"doctors_with_description": doctorWithDescriptionCount,
-				"total_addressable": counselorWithLocationCount + centerWithAddressCount + doctorWithDescriptionCount,
+				"total_addressable":        counselorWithLocationCount + centerWithAddressCount + doctorWithDescriptionCount,
 			},
 		},
 		"message": "資料庫統計資訊",

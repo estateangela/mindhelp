@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"mindhelp-backend/internal/database"
+	//"mindhelp-backend/internal/database"
 	"mindhelp-backend/internal/dto"
 	"mindhelp-backend/internal/middleware"
 	"mindhelp-backend/internal/models"
@@ -18,14 +18,11 @@ import (
 
 // BookmarkHandler 收藏處理器
 type BookmarkHandler struct {
-	db *gorm.DB
 }
 
 // NewBookmarkHandler 創建新的收藏處理器
 func NewBookmarkHandler() *BookmarkHandler {
-	return &BookmarkHandler{
-		db: database.GetDB(),
-	}
+	return &BookmarkHandler{}
 }
 
 // GetArticleBookmarks 獲取文章收藏列表
@@ -69,7 +66,7 @@ func (h *BookmarkHandler) GetArticleBookmarks(c *gin.Context) {
 
 	// 獲取總數
 	var total int64
-	if err := h.db.Model(&models.Bookmark{}).
+	if err := db.Model(&models.Bookmark{}).
 		Where("user_id = ? AND resource_type = ?", userID, "article").
 		Count(&total).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, vo.NewErrorResponse(
@@ -84,7 +81,7 @@ func (h *BookmarkHandler) GetArticleBookmarks(c *gin.Context) {
 
 	// 獲取收藏列表
 	var bookmarks []models.Bookmark
-	if err := h.db.Preload("Article").
+	if err := db.Preload("Article").
 		Where("user_id = ? AND resource_type = ?", userID, "article").
 		Order("created_at DESC").
 		Offset(offset).Limit(limit).
@@ -110,17 +107,17 @@ func (h *BookmarkHandler) GetArticleBookmarks(c *gin.Context) {
 			}
 
 			articleResponse := dto.ArticleResponse{
-				ID:          bookmark.Article.ID.String(),
-				Title:       bookmark.Article.Title,
-				Author:      bookmark.Article.Author,
-				AuthorTitle: bookmark.Article.AuthorTitle,
-				PublishDate: bookmark.Article.PublishDate.Format("2006-01-02T15:04:05Z07:00"),
-				Summary:     bookmark.Article.Summary,
-				Tags:        tags,
-				ImageURL:    bookmark.Article.ImageURL,
+				ID:           bookmark.Article.ID.String(),
+				Title:        bookmark.Article.Title,
+				Author:       bookmark.Article.Author,
+				AuthorTitle:  bookmark.Article.AuthorTitle,
+				PublishDate:  bookmark.Article.PublishDate.Format("2006-01-02T15:04:05Z07:00"),
+				Summary:      bookmark.Article.Summary,
+				Tags:         tags,
+				ImageURL:     bookmark.Article.ImageURL,
 				IsBookmarked: true, // 當然是已收藏
-				ViewCount:   bookmark.Article.ViewCount,
-				CreatedAt:   bookmark.Article.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
+				ViewCount:    bookmark.Article.ViewCount,
+				CreatedAt:    bookmark.Article.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
 			}
 
 			response := dto.BookmarkResponse{
@@ -188,7 +185,7 @@ func (h *BookmarkHandler) GetLocationBookmarks(c *gin.Context) {
 
 	// 獲取總數
 	var total int64
-	if err := h.db.Model(&models.Bookmark{}).
+	if err := db.Model(&models.Bookmark{}).
 		Where("user_id = ? AND resource_type = ?", userID, "location").
 		Count(&total).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, vo.NewErrorResponse(
@@ -203,7 +200,7 @@ func (h *BookmarkHandler) GetLocationBookmarks(c *gin.Context) {
 
 	// 獲取收藏列表
 	var bookmarks []models.Bookmark
-	if err := h.db.Preload("Location").
+	if err := db.Preload("Location").
 		Where("user_id = ? AND resource_type = ?", userID, "location").
 		Order("created_at DESC").
 		Offset(offset).Limit(limit).
@@ -350,7 +347,7 @@ func (h *BookmarkHandler) BookmarkResource(c *gin.Context) {
 
 	// 檢查是否已收藏
 	var existingBookmark models.Bookmark
-	query := h.db.Where("user_id = ? AND resource_type = ?", userID, req.ResourceType)
+	query := db.Where("user_id = ? AND resource_type = ?", userID, req.ResourceType)
 	if req.ResourceType == "article" {
 		query = query.Where("article_id = ?", resourceID)
 	} else {
@@ -380,7 +377,7 @@ func (h *BookmarkHandler) BookmarkResource(c *gin.Context) {
 		bookmark.LocationID = &resourceID
 	}
 
-	if err := h.db.Create(&bookmark).Error; err != nil {
+	if err := db.Create(&bookmark).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, vo.NewErrorResponse(
 			"internal_error",
 			"Failed to bookmark resource",
@@ -459,7 +456,7 @@ func (h *BookmarkHandler) UnbookmarkResource(c *gin.Context) {
 	}
 
 	// 查找並刪除收藏
-	query := h.db.Where("user_id = ? AND resource_type = ?", userID, resourceType)
+	query := db.Where("user_id = ? AND resource_type = ?", userID, resourceType)
 	if resourceType == "article" {
 		query = query.Where("article_id = ?", resourceID)
 	} else {
@@ -497,10 +494,10 @@ func (h *BookmarkHandler) checkResourceExists(resourceType string, resourceID uu
 	switch resourceType {
 	case "article":
 		var article models.Article
-		return h.db.Where("id = ? AND is_published = ?", resourceID, true).First(&article).Error
+		return db.Where("id = ? AND is_published = ?", resourceID, true).First(&article).Error
 	case "location":
 		var location models.Location
-		return h.db.Where("id = ? AND is_public = ?", resourceID, true).First(&location).Error
+		return db.Where("id = ? AND is_public = ?", resourceID, true).First(&location).Error
 	default:
 		return gorm.ErrRecordNotFound
 	}
