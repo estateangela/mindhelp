@@ -31,7 +31,7 @@ func (h *LocationHandler) getDB(c *gin.Context) (*gorm.DB, bool) {
 			"database_unavailable",
 			"資料庫暫時無法使用，請稍後再試",
 			"DATABASE_UNAVAILABLE",
-			[]string{err.Error()},
+			nil,
 			c.Request.URL.Path,
 		))
 		return nil, false
@@ -71,7 +71,7 @@ func (h *LocationHandler) CreateLocation(c *gin.Context) {
 			"bad_request",
 			"Invalid request data",
 			"VALIDATION_ERROR",
-			[]string{err.Error()},
+			nil,
 			c.Request.URL.Path,
 		))
 		return
@@ -83,7 +83,7 @@ func (h *LocationHandler) CreateLocation(c *gin.Context) {
 			"bad_request",
 			"Validation failed",
 			"VALIDATION_ERROR",
-			[]string{err.Error()},
+			nil,
 			c.Request.URL.Path,
 		))
 		return
@@ -189,7 +189,7 @@ func (h *LocationHandler) SearchLocations(c *gin.Context) {
 			"database_unavailable",
 			"資料庫暫時無法使用，請稍後再試",
 			"DATABASE_UNAVAILABLE",
-			[]string{err.Error()},
+			nil,
 			c.Request.URL.Path,
 		))
 		return
@@ -325,7 +325,7 @@ func (h *LocationHandler) GetLocation(c *gin.Context) {
 			"database_unavailable",
 			"資料庫暫時無法使用，請稍後再試",
 			"DATABASE_UNAVAILABLE",
-			[]string{err.Error()},
+			nil,
 			c.Request.URL.Path,
 		))
 		return
@@ -433,7 +433,7 @@ func (h *LocationHandler) UpdateLocation(c *gin.Context) {
 			"bad_request",
 			"Invalid request data",
 			"VALIDATION_ERROR",
-			[]string{err.Error()},
+			nil,
 			c.Request.URL.Path,
 		))
 		return
@@ -445,7 +445,7 @@ func (h *LocationHandler) UpdateLocation(c *gin.Context) {
 			"bad_request",
 			"Validation failed",
 			"VALIDATION_ERROR",
-			[]string{err.Error()},
+			nil,
 			c.Request.URL.Path,
 		))
 		return
