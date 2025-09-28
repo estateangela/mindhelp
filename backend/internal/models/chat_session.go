@@ -19,6 +19,10 @@ type ChatSession struct {
 	DeletedAt   gorm.DeletedAt `gorm:"index" json:"-"`
 
 	// 關聯
-	User     User          `gorm:"foreignKey:UserID" json:"user,omitempty"`
-	Messages []ChatMessage `gorm:"foreignKey:SessionID" json:"messages,omitempty"`
+	User User `gorm:"foreignKey:UserID" json:"user,omitempty"`
+}
+
+// TableName 設定表名
+func (ChatSession) TableName() string {
+	return "chat_sessions"
 }
