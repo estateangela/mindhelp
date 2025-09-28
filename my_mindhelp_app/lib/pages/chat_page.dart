@@ -1,25 +1,50 @@
 // lib/pages/chat_page.dart
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import '../core/theme.dart';
 import '../models/chat_message.dart';
+import '../services/ai_service.dart'; // 導入新的 AI 服務
 import '../widgets/input_field.dart';
+import '../widgets/custom_app_bar.dart';
 
 class ChatPage extends StatefulWidget {
-  const ChatPage({Key? key}) : super(key: key);
+  const ChatPage({super.key});
 
   @override
-  _ChatPageState createState() => _ChatPageState();
+  ChatPageState createState() => ChatPageState();
 }
 
-class _ChatPageState extends State<ChatPage> {
+class ChatPageState extends State<ChatPage> {
   final TextEditingController _ctrl = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  final AiService _aiService = AiService(); // 實例化服務
 
-  // 使用一個臨時列表來儲存聊天記錄，不使用任何資料庫
-  List<ChatMessage> _msgs = [];
+  final List<ChatMessage> _msgs = [];
   bool _isBotTyping = false;
+  bool _isInputEmpty = true; // 新增變數來追蹤輸入框狀態
+
+  // 定義 AI 的系統提示（角色設定）
+  final String _systemPrompt = "你是一個有幫助的心理健康助手，專注於提供支持與鼓勵。請用溫暖且富有同理心的語氣回答問題。";
+
+  @override
+  void initState() {
+    super.initState();
+    // 監聽輸入框的變化
+    _ctrl.addListener(_updateInputState);
+  }
+
+  @override
+  void dispose() {
+    _ctrl.removeListener(_updateInputState);
+    _ctrl.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _updateInputState() {
+    setState(() {
+      _isInputEmpty = _ctrl.text.trim().isEmpty;
+    });
+  }
 
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -45,14 +70,17 @@ class _ChatPageState extends State<ChatPage> {
 
     setState(() {
       _msgs.add(userMsg);
-      _isBotTyping = true; // 顯示機器人正在打字
+      _isBotTyping = true;
+      _ctrl.clear(); // 在此處清除文字
     });
 
-    _ctrl.clear();
     _scrollToBottom();
 
     try {
-      final botReply = await _getBotResponse(userMsg.content);
+      final botReply = await _aiService.getOpenRouterCompletion(
+        userMessage: userMsg.content,
+        systemPrompt: _systemPrompt,
+      );
       final botMsg = ChatMessage(
         role: 'bot',
         content: botReply,
@@ -60,44 +88,27 @@ class _ChatPageState extends State<ChatPage> {
       );
       setState(() {
         _msgs.add(botMsg);
-        _isBotTyping = false; // 機器人回覆完成
+        _isBotTyping = false;
       });
     } catch (e) {
+      String errorText = '無法連接到伺服器：$e';
+      if (e.toString().contains('402')) {
+        errorText = 'API 連線失敗：錯誤 402。請檢查您的 OpenRouter API Key 或帳戶餘額。';
+      } else if (e.toString().contains('401')) {
+        errorText = 'API 連線失敗：錯誤 401。API Key 無效或授權失敗。';
+      }
+
       final errorMsg = ChatMessage(
         role: 'bot',
-        content: '無法連接到伺服器：$e',
+        content: errorText,
         timestamp: DateTime.now().millisecondsSinceEpoch,
       );
       setState(() {
         _msgs.add(errorMsg);
-        _isBotTyping = false; // 機器人回覆完成
+        _isBotTyping = false;
       });
     }
     _scrollToBottom();
-  }
-
-  Future<String> _getBotResponse(String userMessage) async {
-    // TODO: 將 'https://your-backend.com/api/chat' 替換為您的後端 API 端點
-    const String backendUrl = 'https://your-backend.com/api/chat';
-
-    final response = await http.post(
-      Uri.parse(backendUrl),
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode({
-        'message': userMessage,
-      }),
-    );
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      // TODO: 根據您的後端回傳格式調整解析邏輯
-      return data['reply'];
-    } else {
-      throw Exception(
-          'Failed to load response from backend: ${response.statusCode}');
-    }
   }
 
   void _onNavTap(int idx) {
@@ -111,9 +122,6 @@ class _ChatPageState extends State<ChatPage> {
       case 2:
         // already on Chat
         break;
-      case 3:
-        Navigator.pushReplacementNamed(context, '/profile');
-        break;
     }
   }
 
@@ -121,21 +129,17 @@ class _ChatPageState extends State<ChatPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.settings, color: AppColors.textHigh),
-          onPressed: () => Navigator.pushNamed(context, '/settings'),
+      appBar: CustomAppBar(
+        showBackButton: false,
+        titleWidget: const Image(
+          image: AssetImage('assets/images/mindhelp.png'),
+          width: 200,
+          fit: BoxFit.contain,
         ),
-        title: Text('Chat', style: Theme.of(context).textTheme.headlineLarge),
-        centerTitle: true,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications, color: AppColors.textHigh),
-            onPressed: () => Navigator.pushNamed(context, '/notify'),
-          ),
-        ],
+        rightIcon: IconButton(
+          icon: const Icon(Icons.notifications, color: AppColors.textHigh),
+          onPressed: () => Navigator.pushNamed(context, '/notify'),
+        ),
       ),
       body: Column(
         children: [
@@ -179,11 +183,17 @@ class _ChatPageState extends State<ChatPage> {
                           isUser ? null : Border.all(color: AppColors.accent),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Text(
-                      m.content,
-                      style: TextStyle(
-                        color: isUser ? Colors.white : AppColors.textBody,
-                      ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (m.content.isNotEmpty)
+                          Text(
+                            m.content,
+                            style: TextStyle(
+                              color: isUser ? Colors.white : AppColors.textBody,
+                            ),
+                          ),
+                      ],
                     ),
                   ),
                 );
@@ -204,7 +214,7 @@ class _ChatPageState extends State<ChatPage> {
                 const SizedBox(width: 8),
                 IconButton(
                   icon: const Icon(Icons.send, color: AppColors.accent),
-                  onPressed: _isBotTyping ? null : _send,
+                  onPressed: _isBotTyping || _isInputEmpty ? null : _send,
                 ),
               ],
             ),
@@ -220,7 +230,6 @@ class _ChatPageState extends State<ChatPage> {
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.location_on), label: 'Maps'),
           BottomNavigationBarItem(icon: Icon(Icons.chat_bubble), label: 'Chat'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
       ),
     );

@@ -1,22 +1,32 @@
-// lib/pages/home_page.dart
-
 import 'package:flutter/material.dart';
 import '../core/theme.dart';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/primary_button.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
+  const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
 
       // 顶部改成共用的带 logo 的 AppBar
-      appBar: const CustomAppBar(
-        titleWidget: Image(
+      appBar: CustomAppBar(
+        showBackButton: false,
+        titleWidget: const Image(
           image: AssetImage('assets/images/mindhelp.png'),
           width: 200,
           fit: BoxFit.contain,
+        ),
+        rightIcon: IconButton(
+          icon: const Icon(Icons.notifications, color: AppColors.textHigh),
+          onPressed: () => Navigator.pushNamed(context, '/notify'),
         ),
       ),
 
@@ -28,7 +38,8 @@ class HomePage extends StatelessWidget {
             // 四格按鈕
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
                 child: GridView.count(
                   crossAxisCount: 2,
                   mainAxisSpacing: 10,
@@ -38,7 +49,7 @@ class HomePage extends StatelessWidget {
                       Navigator.pushNamed(context, '/maps');
                     }),
                     _buildTile(context, Icons.menu_book, '心理師專欄', () {
-                      Navigator.pushNamed(context, '/counselors');
+                      Navigator.pushNamed(context, '/articles');
                     }),
                     _buildTile(context, Icons.chat_bubble_outline, 'AI諮詢', () {
                       Navigator.pushNamed(context, '/chat');
@@ -61,13 +72,6 @@ class HomePage extends StatelessWidget {
                     icon: Icons.info_outline,
                     label: '最新心理健康文章',
                     onTap: () => Navigator.pushNamed(context, '/articles'),
-                  ),
-                  const SizedBox(height: 8),
-                  _buildFunctionCard(
-                    context,
-                    icon: Icons.event_note_outlined,
-                    label: '預約紀錄查詢',
-                    onTap: () => Navigator.pushNamed(context, '/appointments'),
                   ),
                 ],
               ),
@@ -151,16 +155,12 @@ class HomePage extends StatelessWidget {
           case 2:
             Navigator.pushReplacementNamed(ctx, '/chat');
             break;
-          case 3:
-            Navigator.pushReplacementNamed(ctx, '/profile');
-            break;
         }
       },
       items: const [
         BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
         BottomNavigationBarItem(icon: Icon(Icons.location_on), label: 'Maps'),
         BottomNavigationBarItem(icon: Icon(Icons.chat_bubble), label: 'Chat'),
-        BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
       ],
     );
   }

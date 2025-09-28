@@ -1,4 +1,4 @@
-package models
+﻿package models
 
 import (
 	"time"
@@ -9,8 +9,9 @@ import (
 
 // ChatMessage 聊天訊息資料模型
 type ChatMessage struct {
-	ID        uuid.UUID      `json:"id" gorm:"type:uniqueidentifier;primary_key"`
-	UserID    uuid.UUID      `json:"user_id" gorm:"type:uniqueidentifier;not null;index"`
+	ID        uuid.UUID      `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
+	UserID    uuid.UUID      `json:"user_id" gorm:"type:uuid;not null;index"`
+	SessionID *uuid.UUID     `json:"session_id" gorm:"type:uuid;index"` // 會話ID，可為null以向後相容
 	Role      string         `json:"role" gorm:"size:10;not null"` // 'user' 或 'bot'
 	Content   string         `json:"content" gorm:"type:text;not null"`
 	Timestamp int64          `json:"timestamp" gorm:"not null"` // Unix milliseconds
@@ -21,15 +22,16 @@ type ChatMessage struct {
 	DeletedAt gorm.DeletedAt `json:"-" gorm:"index"`
 
 	// 關聯
-	User User `json:"user,omitempty" gorm:"foreignKey:UserID"`
+	User    User         `json:"user,omitempty" gorm:"foreignKey:UserID"`
+	Session *ChatSession `json:"session,omitempty" gorm:"foreignKey:SessionID"`
 }
 
-// TableName 指定資料表名稱
+// TableName 指定資料表名稱名稱
 func (ChatMessage) TableName() string {
 	return "chat_messages"
 }
 
-// BeforeCreate 在創建前設定 UUID 和時間戳
+// BeforeCreate 在創建前設定前設定 UUID 和時間戳
 func (cm *ChatMessage) BeforeCreate(tx *gorm.DB) error {
 	if cm.ID == uuid.Nil {
 		cm.ID = uuid.New()
@@ -49,3 +51,4 @@ func (cm *ChatMessage) IsUser() bool {
 func (cm *ChatMessage) IsBot() bool {
 	return cm.Role == "bot"
 }
+

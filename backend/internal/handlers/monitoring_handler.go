@@ -25,7 +25,7 @@ func NewMonitoringHandler() *MonitoringHandler {
 
 // HealthCheck 健康檢查
 func (h *MonitoringHandler) HealthCheck(c *gin.Context) {
-	// 檢查資料庫連線
+	// 檢查資料庫連線 (不影響整體健康狀態)
 	dbStatus := "healthy"
 	db := database.GetDB()
 	if db != nil {
@@ -34,15 +34,16 @@ func (h *MonitoringHandler) HealthCheck(c *gin.Context) {
 			dbStatus = "unhealthy"
 		}
 	} else {
-		dbStatus = "disconnected"
+		dbStatus = "connecting" // 改為 connecting 而不是 disconnected
 	}
 
 	// 系統資訊
 	var memStats runtime.MemStats
 	runtime.ReadMemStats(&memStats)
 
+	// 服務本身是健康的，即使資料庫還在連接中
 	health := gin.H{
-		"status":    "ok",
+		"status":    "ok", // 始終返回 ok，除非有嚴重錯誤
 		"service":   "mindhelp-backend",
 		"version":   "1.0.0",
 		"timestamp": time.Now().Format(time.RFC3339),
@@ -51,18 +52,21 @@ func (h *MonitoringHandler) HealthCheck(c *gin.Context) {
 			"database": dbStatus,
 		},
 		"system": gin.H{
-			"goroutines":     runtime.NumGoroutine(),
-			"memory_alloc":   memStats.Alloc / 1024 / 1024,     // MB
-			"memory_total":   memStats.TotalAlloc / 1024 / 1024, // MB
-			"memory_sys":     memStats.Sys / 1024 / 1024,       // MB
-			"gc_runs":        memStats.NumGC,
+			"goroutines":   runtime.NumGoroutine(),
+			"memory_alloc": memStats.Alloc / 1024 / 1024,      // MB
+			"memory_total": memStats.TotalAlloc / 1024 / 1024, // MB
+			"memory_sys":   memStats.Sys / 1024 / 1024,        // MB
+			"gc_runs":      memStats.NumGC,
 		},
 	}
 
 	statusCode := http.StatusOK
-	if dbStatus != "healthy" {
+	// 只有在資料庫完全無法連接時才返回 503，connecting 狀態仍返回 200
+	if dbStatus == "unhealthy" {
 		statusCode = http.StatusServiceUnavailable
 		health["status"] = "degraded"
+	} else if dbStatus == "connecting" {
+		health["status"] = "starting"
 	}
 
 	c.JSON(statusCode, health)
@@ -83,12 +87,12 @@ func (h *MonitoringHandler) DetailedHealthCheck(c *gin.Context) {
 			stats := sqlDB.Stats()
 			dbChecks["connection_pool"] = gin.H{
 				"open_connections": stats.OpenConnections,
-				"in_use":          stats.InUse,
-				"idle":            stats.Idle,
-				"wait_count":      stats.WaitCount,
-				"wait_duration":   stats.WaitDuration.String(),
+				"in_use":           stats.InUse,
+				"idle":             stats.Idle,
+				"wait_count":       stats.WaitCount,
+				"wait_duration":    stats.WaitDuration.String(),
 			}
-			
+
 			// 測試查詢
 			var result int
 			err = db.Raw("SELECT 1").Scan(&result).Error
@@ -106,19 +110,19 @@ func (h *MonitoringHandler) DetailedHealthCheck(c *gin.Context) {
 		"uptime":    time.Since(h.startTime).String(),
 		"database":  dbChecks,
 		"system": gin.H{
-			"cpu_count":      runtime.NumCPU(),
-			"goroutines":     runtime.NumGoroutine(),
+			"cpu_count":  runtime.NumCPU(),
+			"goroutines": runtime.NumGoroutine(),
 			"memory": gin.H{
-				"alloc":      memStats.Alloc,
+				"alloc":       memStats.Alloc,
 				"total_alloc": memStats.TotalAlloc,
-				"sys":        memStats.Sys,
-				"heap_alloc": memStats.HeapAlloc,
-				"heap_sys":   memStats.HeapSys,
+				"sys":         memStats.Sys,
+				"heap_alloc":  memStats.HeapAlloc,
+				"heap_sys":    memStats.HeapSys,
 			},
 			"gc": gin.H{
-				"num_gc":        memStats.NumGC,
-				"pause_total":   memStats.PauseTotalNs,
-				"last_gc":       time.Unix(0, int64(memStats.LastGC)).Format(time.RFC3339),
+				"num_gc":      memStats.NumGC,
+				"pause_total": memStats.PauseTotalNs,
+				"last_gc":     time.Unix(0, int64(memStats.LastGC)).Format(time.RFC3339),
 			},
 		},
 	}
@@ -129,15 +133,15 @@ func (h *MonitoringHandler) DetailedHealthCheck(c *gin.Context) {
 // Metrics 取得效能指標
 func (h *MonitoringHandler) Metrics(c *gin.Context) {
 	metrics := middleware.GetMetrics()
-	
+
 	// 添加系統指標
 	var memStats runtime.MemStats
 	runtime.ReadMemStats(&memStats)
-	
+
 	metrics["system"] = gin.H{
-		"goroutines":   runtime.NumGoroutine(),
-		"memory_mb":    memStats.Alloc / 1024 / 1024,
-		"uptime":       time.Since(h.startTime).String(),
+		"goroutines": runtime.NumGoroutine(),
+		"memory_mb":  memStats.Alloc / 1024 / 1024,
+		"uptime":     time.Since(h.startTime).String(),
 	}
 
 	c.JSON(http.StatusOK, metrics)

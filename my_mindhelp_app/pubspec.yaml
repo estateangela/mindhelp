@@ -31,6 +31,7 @@ dependencies:
   flutter:
     sdk: flutter
   google_maps_flutter: ^2.3.0
+  geocoding: ^2.2.1
   geolocator: ^12.0.0    # 用來取使用者當前經緯度
   http: ^1.4.0
   flutter_markdown: ^0.7.7+1
@@ -103,6 +104,9 @@ flutter:
     - assets/images/logo.png
     - assets/images/mindhelp.png
     - assets/mock_resources.json
+    - assets/images/1.jpg
+    - assets/images/3.jpg
+    - assets/images/4.jpg
 
   fonts:
     - family: Huninn
