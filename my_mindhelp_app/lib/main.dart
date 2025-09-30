@@ -9,6 +9,7 @@ import 'core/theme.dart';
 import 'config/secrets.dart';
 import 'pages/splash_page.dart';
 import 'pages/ArticleDetailPage.dart';
+import 'pages/quiz_detail_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();

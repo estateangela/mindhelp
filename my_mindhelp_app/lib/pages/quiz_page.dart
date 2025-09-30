@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../core/theme.dart';
 import '../widgets/custom_app_bar.dart';
+import '../models/quiz.dart'; // 導入 Quiz 模型
+import 'quiz_detail_page.dart'; // 導入測驗詳情頁面
 
 class QuizPage extends StatefulWidget {
   const QuizPage({super.key});
@@ -99,8 +101,25 @@ class _QuizPageState extends State<QuizPage> {
       ),
       child: InkWell(
         onTap: () {
-          // TODO: 點擊後導航到測驗題目頁面
-          print('點擊測驗：${quiz.title}');
+          // 點擊後彈出對話框顯示測驗詳情
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                // 移除 title，將標題整合到 content 內，增加彈性
+                contentPadding: const EdgeInsets.all(20),
+                content: QuizDetailPage(quiz: quiz),
+                actions: <Widget>[
+                  TextButton(
+                    child: const Text('取消'),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                ],
+              );
+            },
+          );
         },
         borderRadius: BorderRadius.circular(12),
         child: Column(
@@ -109,7 +128,8 @@ class _QuizPageState extends State<QuizPage> {
             ClipRRect(
               borderRadius:
                   const BorderRadius.vertical(top: Radius.circular(12)),
-              child: Image.network(
+              child: Image.asset(
+                // 使用 Image.asset 配合本地路徑
                 quiz.imageUrl,
                 height: 150,
                 fit: BoxFit.cover,
@@ -151,18 +171,4 @@ class _QuizPageState extends State<QuizPage> {
       ),
     );
   }
-}
-
-class Quiz {
-  final String id;
-  final String title;
-  final String summary;
-  final String imageUrl;
-
-  Quiz({
-    required this.id,
-    required this.title,
-    required this.summary,
-    required this.imageUrl,
-  });
 }
