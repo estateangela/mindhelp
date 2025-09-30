@@ -5,16 +5,10 @@ import 'pages/quiz_page.dart';
 import 'pages/maps_page.dart';
 import 'pages/chat_page.dart';
 import 'pages/notify_page.dart';
+import 'pages/splash_page.dart';
 import 'core/theme.dart';
 import 'config/secrets.dart';
-import 'pages/splash_page.dart';
-import 'pages/ArticleDetailPage.dart';
-import 'pages/quiz_detail_page.dart';
 
-Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  runApp(const MindHelpApp());
-}
 
 class MindHelpApp extends StatelessWidget {
   const MindHelpApp({super.key});
@@ -35,13 +29,14 @@ class MindHelpApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       initialRoute: '/splash',
       routes: {
+        '/splash': (context) => const SplashPage(),
         '/notify': (context) => NotifyPage(),
         '/home': (context) => HomePage(),
         '/chat': (context) => ChatPage(),
         '/maps': (context) => MapsPage(),
         '/articles': (context) => ArticlePage(),
         '/quiz': (context) => QuizPage(),
-        '/splash': (context) => SplashPage(),
+
       },
     );
   }

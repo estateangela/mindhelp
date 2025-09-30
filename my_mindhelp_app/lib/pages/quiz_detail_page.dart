@@ -81,9 +81,9 @@ class QuizDetailPage extends StatelessWidget {
           Text(
             quiz.title,
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textHigh,
-                ),
+              fontWeight: FontWeight.bold,
+              color: AppColors.textHigh,
+            ),
           ),
           const SizedBox(height: 8),
 
@@ -91,9 +91,9 @@ class QuizDetailPage extends StatelessWidget {
           Text(
             '測驗簡介:',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.accent,
-                ),
+              fontWeight: FontWeight.bold,
+              color: AppColors.accent,
+            ),
           ),
           const SizedBox(height: 4),
           Text(
@@ -107,10 +107,7 @@ class QuizDetailPage extends StatelessWidget {
             data: hardcodedContent,
             styleSheet: MarkdownStyleSheet(
               p: Theme.of(context).textTheme.bodyLarge,
-              strong: Theme.of(context)
-                  .textTheme
-                  .bodyLarge
-                  ?.copyWith(fontWeight: FontWeight.bold),
+              strong: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
               listBullet: Theme.of(context).textTheme.bodyLarge,
             ),
             shrinkWrap: true,
