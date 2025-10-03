@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![MindHelp Logo](assets/images/mindhelp.png)
+![MindHelp Logo](assets/images/logo.png)
 
 **心理健康支援移動應用程式** 📱🧠
 
@@ -89,12 +89,17 @@ lib/
 │   ├── chat_message.dart   # 聊天訊息模型
 │   ├── counseling_center.dart #心理資源模型
 │   ├── map_item.dart       # 地圖項目模型
+│   ├── quiz.dart           # 測驗模型
 │   └── resource.dart       # 資源模型
 ├── pages/                  # 應用程式頁面
 │   ├── splash_page.dart    # 跳轉頁面
 │   ├── home_page.dart      # 首頁
 │   ├── article_page.dart   # 文章頁面
+│   ├── ArticleDetailPage.dart # 文章內容頁面
 │   ├── quiz_page.dart      # 測驗頁面
+│   ├── quiz_landing_page.dart # 測驗跳轉頁面
+│   ├── quiz_questions_page.dart # 測驗問題頁面
+│   ├── quiz_result_page.dart # 測驗結果頁面
 │   ├── maps_page.dart      # 地圖頁面
 │   ├── chat_page.dart      # 聊天頁面
 │   └── notify_page.dart    # 通知頁面
@@ -131,11 +136,6 @@ dependencies:
   http: ^1.4.0
   path_provider: ^2.0.13
   path: ^1.8.3
-  
-  # Firebase 服務
-  firebase_core: ^4.0.0
-  firebase_auth: ^6.0.0
-  cloud_firestore: ^6.0.0
   
   # UI 組件
   flutter_markdown: ^0.7.7+1
