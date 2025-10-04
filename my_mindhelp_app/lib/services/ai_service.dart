@@ -12,7 +12,7 @@ class AiService {
     }
 
     const String apiUrl = 'https://openrouter.ai/api/v1/chat/completions';
-    const String model = 'openai/gpt-oss-120b:free';
+    const String model = 'google/gemini-2.5-flash-lite';
 
     final response = await http.post(
       Uri.parse(apiUrl),

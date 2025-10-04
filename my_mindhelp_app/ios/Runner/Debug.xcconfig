@@ -1,0 +1,10 @@
+//
+//  Debug.xcconfig
+//  
+//
+//  Created by 欣亞 Angela on 2025/9/23.
+//
+
+// Configuration settings file format documentation can be found at:
+// https://developer.apple.com/documentation/xcode/adding-a-build-configuration-file-to-your-project
+GOOGLE_MAPS_API_KEY = "AIzaSyBXHc-rjUBntG7oppaYSpY322EE3q-T4ng"

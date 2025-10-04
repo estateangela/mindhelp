@@ -17,14 +17,11 @@ import (
 
 // ReviewHandler 評論處理器
 type ReviewHandler struct {
-	db *gorm.DB
 }
 
 // NewReviewHandler 創建新的評論處理器
 func NewReviewHandler() *ReviewHandler {
-	return &ReviewHandler{
-		db: database.GetDB(),
-	}
+	return &ReviewHandler{}
 }
 
 // GetResourceReviews 獲取資源的所有評論
@@ -81,7 +78,7 @@ func (h *ReviewHandler) GetResourceReviews(c *gin.Context) {
 
 	// 獲取總數
 	var total int64
-	if err := h.db.Model(&models.Review{}).Where("resource_id = ?", parsedID).Count(&total).Error; err != nil {
+	if err := db.Model(&models.Review{}).Where("resource_id = ?", parsedID).Count(&total).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, vo.NewErrorResponse(
 			"internal_error",
 			"Failed to count reviews",
@@ -94,7 +91,7 @@ func (h *ReviewHandler) GetResourceReviews(c *gin.Context) {
 
 	// 獲取評論列表
 	var reviews []models.Review
-	if err := h.db.Preload("User").Where("resource_id = ?", parsedID).
+	if err := db.Preload("User").Where("resource_id = ?", parsedID).
 		Order("created_at DESC").
 		Offset(offset).Limit(limit).
 		Find(&reviews).Error; err != nil {
@@ -113,13 +110,13 @@ func (h *ReviewHandler) GetResourceReviews(c *gin.Context) {
 	var ratingDistribution = make(map[int]int64)
 	
 	// 計算平均評分
-	h.db.Model(&models.Review{}).Where("resource_id = ?", parsedID).
+	db.Model(&models.Review{}).Where("resource_id = ?", parsedID).
 		Select("AVG(rating)").Scan(&avgRating)
 	
 	// 計算評分分佈
 	for i := 1; i <= 5; i++ {
 		var count int64
-		h.db.Model(&models.Review{}).Where("resource_id = ? AND rating = ?", parsedID, i).
+		db.Model(&models.Review{}).Where("resource_id = ? AND rating = ?", parsedID, i).
 			Count(&count)
 		ratingDistribution[i] = count
 	}
@@ -238,7 +235,7 @@ func (h *ReviewHandler) CreateReview(c *gin.Context) {
 
 	// 檢查資源是否存在
 	var location models.Location
-	if err := h.db.Where("id = ? AND is_public = ?", parsedID, true).First(&location).Error; err != nil {
+	if err := db.Where("id = ? AND is_public = ?", parsedID, true).First(&location).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			c.JSON(http.StatusNotFound, vo.NewErrorResponse(
 				"not_found",
@@ -261,7 +258,7 @@ func (h *ReviewHandler) CreateReview(c *gin.Context) {
 
 	// 檢查使用者是否已評論過此資源
 	var existingReview models.Review
-	if err := h.db.Where("user_id = ? AND resource_id = ?", userID, parsedID).First(&existingReview).Error; err == nil {
+	if err := db.Where("user_id = ? AND resource_id = ?", userID, parsedID).First(&existingReview).Error; err == nil {
 		c.JSON(http.StatusConflict, vo.NewErrorResponse(
 			"conflict",
 			"User has already reviewed this resource",
@@ -280,7 +277,7 @@ func (h *ReviewHandler) CreateReview(c *gin.Context) {
 		Comment:    req.Comment,
 	}
 
-	if err := h.db.Create(&review).Error; err != nil {
+	if err := db.Create(&review).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, vo.NewErrorResponse(
 			"internal_error",
 			"Failed to create review",
@@ -292,7 +289,7 @@ func (h *ReviewHandler) CreateReview(c *gin.Context) {
 	}
 
 	// 預載入使用者資訊
-	if err := h.db.Preload("User").Where("id = ?", review.ID).First(&review).Error; err != nil {
+	if err := db.Preload("User").Where("id = ?", review.ID).First(&review).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, vo.NewErrorResponse(
 			"internal_error",
 			"Failed to get created review",
@@ -390,7 +387,7 @@ func (h *ReviewHandler) UpdateReview(c *gin.Context) {
 
 	// 查找評論
 	var review models.Review
-	if err := h.db.Where("id = ?", parsedID).First(&review).Error; err != nil {
+	if err := db.Where("id = ?", parsedID).First(&review).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			c.JSON(http.StatusNotFound, vo.NewErrorResponse(
 				"not_found",
@@ -434,7 +431,7 @@ func (h *ReviewHandler) UpdateReview(c *gin.Context) {
 
 	// 執行更新
 	if len(updates) > 0 {
-		if err := h.db.Model(&review).Updates(updates).Error; err != nil {
+		if err := db.Model(&review).Updates(updates).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, vo.NewErrorResponse(
 				"internal_error",
 				"Failed to update review",
@@ -447,7 +444,7 @@ func (h *ReviewHandler) UpdateReview(c *gin.Context) {
 	}
 
 	// 重新獲取更新後的評論（包含使用者資訊）
-	if err := h.db.Preload("User").Where("id = ?", parsedID).First(&review).Error; err != nil {
+	if err := db.Preload("User").Where("id = ?", parsedID).First(&review).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, vo.NewErrorResponse(
 			"internal_error",
 			"Failed to get updated review",
@@ -520,7 +517,7 @@ func (h *ReviewHandler) DeleteReview(c *gin.Context) {
 
 	// 查找評論
 	var review models.Review
-	if err := h.db.Where("id = ?", parsedID).First(&review).Error; err != nil {
+	if err := db.Where("id = ?", parsedID).First(&review).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			c.JSON(http.StatusNotFound, vo.NewErrorResponse(
 				"not_found",
@@ -554,7 +551,7 @@ func (h *ReviewHandler) DeleteReview(c *gin.Context) {
 	}
 
 	// 軟刪除評論
-	if err := h.db.Delete(&review).Error; err != nil {
+	if err := db.Delete(&review).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, vo.NewErrorResponse(
 			"internal_error",
 			"Failed to delete review",

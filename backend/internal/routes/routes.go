@@ -180,6 +180,12 @@ func SetupRoutes(cfg *config.Config) *gin.Engine {
 			// 管理員路由 (需要認證的)
 			admin := protected.Group("/admin")
 			{
+				adminHandler := handlers.NewAdminHandler()
+
+				// 資料庫管理
+				admin.POST("/seed-database", adminHandler.SeedDatabase)
+				admin.GET("/database-stats", adminHandler.GetDatabaseStats)
+
 				// 諮商師管理
 				admin.POST("/counselors", handlers.CreateCounselor)
 				admin.PUT("/counselors/:id", handlers.UpdateCounselor)
@@ -242,18 +248,27 @@ func SetupRoutes(cfg *config.Config) *gin.Engine {
 			// 地圖相關公開路由
 			mapsHandler := handlers.NewMapsHandler(cfg)
 			api.GET("/maps/addresses", mapsHandler.GetAllAddresses)
-			api.GET("/maps/google-addresses", mapsHandler.GetAddressesForGoogleMaps)
+			// 修正：移除不存在的 GetAddressesForGoogleMaps 方法
+			// api.GET("/maps/google-addresses", mapsHandler.GetAddressesForGoogleMaps)
 
 			// Google Maps API 路由
 			googleMapsHandler := handlers.NewGoogleMapsHandler(cfg)
 			googleMaps := api.Group("/google-maps")
 			{
+				// 基礎 API
 				googleMaps.POST("/geocode", googleMapsHandler.Geocode)
 				googleMaps.POST("/reverse-geocode", googleMapsHandler.ReverseGeocode)
 				googleMaps.POST("/search-places", googleMapsHandler.SearchPlaces)
 				googleMaps.POST("/directions", googleMapsHandler.GetDirections)
 				googleMaps.POST("/distance-matrix", googleMapsHandler.GetDistanceMatrix)
+
+				// 專業功能
 				googleMaps.GET("/nearby-mental-health", googleMapsHandler.GetNearbyMentalHealthServices)
+				googleMaps.POST("/batch-geocode", googleMapsHandler.BatchGeocode)
+
+				// 管理功能
+				googleMaps.GET("/usage-stats", googleMapsHandler.GetAPIUsageStats)
+				googleMaps.POST("/clear-cache", googleMapsHandler.ClearCache)
 			}
 		}
 	}

@@ -12,6 +12,7 @@ import (
 
 	"mindhelp-backend/internal/config"
 	"mindhelp-backend/internal/dto"
+	"mindhelp-backend/internal/services"
 	"mindhelp-backend/internal/vo"
 
 	"github.com/gin-gonic/gin"
@@ -19,17 +20,17 @@ import (
 
 // GoogleMapsHandler Google Maps API 處理器
 type GoogleMapsHandler struct {
-	config *config.Config
-	client *http.Client
+	config  *config.Config
+	client  *http.Client
+	service *services.GoogleMapsService
 }
 
 // NewGoogleMapsHandler 創建新的 Google Maps 處理器
 func NewGoogleMapsHandler(cfg *config.Config) *GoogleMapsHandler {
 	return &GoogleMapsHandler{
-		config: cfg,
-		client: &http.Client{
-			Timeout: 30 * time.Second,
-		},
+		config:  cfg,
+		client:  &http.Client{Timeout: 30 * time.Second},
+		service: services.NewGoogleMapsService(cfg),
 	}
 }
 
@@ -611,6 +612,7 @@ func (h *GoogleMapsHandler) GetDistanceMatrix(c *gin.Context) {
 // @Param longitude query number true "經度"
 // @Param radius query int false "搜尋半徑（公尺）" default(5000)
 // @Param type query string false "服務類型" Enums(hospital,health,establishment)
+// @Param keyword query string false "關鍵字" default("心理諮商")
 // @Success 200 {object} dto.PlacesSearchResponse
 // @Failure 400 {object} vo.ErrorResponse
 // @Failure 500 {object} vo.ErrorResponse
@@ -621,6 +623,7 @@ func (h *GoogleMapsHandler) GetNearbyMentalHealthServices(c *gin.Context) {
 	longitudeStr := c.Query("longitude")
 	radiusStr := c.DefaultQuery("radius", "5000")
 	serviceType := c.DefaultQuery("type", "health")
+	keyword := c.DefaultQuery("keyword", "心理諮商")
 
 	latitude, err := strconv.ParseFloat(latitudeStr, 64)
 	if err != nil {
@@ -647,26 +650,196 @@ func (h *GoogleMapsHandler) GetNearbyMentalHealthServices(c *gin.Context) {
 		radius = 5000
 	}
 
-	// 構建搜尋請求
-	searchReq := dto.PlacesSearchRequest{
-		Query:    "心理諮商 精神科 心理健康 諮商中心",
-		Location: fmt.Sprintf("%.8f,%.8f", latitude, longitude),
-		Radius:   radius,
-		Type:     serviceType,
-		Language: "zh-TW",
-		Region:   "tw",
+	// 檢查 API Key
+	if h.config.GoogleMaps.APIKey == "" {
+		c.JSON(http.StatusInternalServerError, vo.ErrorResponse{
+			Code:    "MISSING_API_KEY",
+			Message: "Google Maps API Key 未設定",
+		})
+		return
 	}
 
-	// 使用現有的搜尋地點方法
-	searchReqJSON, _ := json.Marshal(searchReq)
+	// 構建多個搜尋查詢以獲得更全面的結果
+	queries := []string{
+		fmt.Sprintf("%s 台灣", keyword),
+		"精神科診所 台灣",
+		"心理健康中心 台灣",
+		"諮商中心 台灣",
+	}
+
+	var allResults []dto.PlaceResult
+	location := fmt.Sprintf("%.8f,%.8f", latitude, longitude)
+
+	// 對每個查詢進行搜尋
+	for _, query := range queries {
+		// 構建請求 URL
+		baseURL := h.config.GoogleMaps.PlacesURL + "/textsearch/json"
+		params := url.Values{}
+		params.Add("query", query)
+		params.Add("location", location)
+		params.Add("radius", strconv.Itoa(radius))
+		params.Add("type", serviceType)
+		params.Add("language", "zh-TW")
+		params.Add("region", "tw")
+		params.Add("key", h.config.GoogleMaps.APIKey)
+
+		requestURL := fmt.Sprintf("%s?%s", baseURL, params.Encode())
+
+		// 發送請求
+		resp, err := h.client.Get(requestURL)
+		if err != nil {
+			continue // 如果單個查詢失敗，繼續其他查詢
+		}
+
+		// 讀取回應
+		body, err := io.ReadAll(resp.Body)
+		resp.Body.Close()
+		if err != nil {
+			continue
+		}
+
+		// 解析回應
+		var placesResp dto.PlacesSearchResponse
+		if err := json.Unmarshal(body, &placesResp); err != nil {
+			continue
+		}
+
+		// 如果查詢成功，添加結果
+		if placesResp.Status == "OK" {
+			allResults = append(allResults, placesResp.Results...)
+		}
+	}
+
+	// 去重複結果（根據 PlaceID）
+	uniqueResults := make(map[string]dto.PlaceResult)
+	for _, result := range allResults {
+		if _, exists := uniqueResults[result.PlaceID]; !exists {
+			uniqueResults[result.PlaceID] = result
+		}
+	}
+
+	// 轉換為切片
+	var finalResults []dto.PlaceResult
+	for _, result := range uniqueResults {
+		finalResults = append(finalResults, result)
+	}
+
+	// 限制結果數量
+	if len(finalResults) > 20 {
+		finalResults = finalResults[:20]
+	}
+
+	response := dto.PlacesSearchResponse{
+		Results: finalResults,
+		Status:  "OK",
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
+// BatchGeocode 批次地理編碼
+// @Summary 批次地理編碼
+// @Description 批次將多個地址轉換為經緯度座標
+// @Tags google-maps
+// @Accept json
+// @Produce json
+// @Param request body dto.BatchGeocodeRequest true "批次地理編碼請求"
+// @Success 200 {object} dto.BatchGeocodeResponse
+// @Failure 400 {object} vo.ErrorResponse
+// @Failure 500 {object} vo.ErrorResponse
+// @Router /google-maps/batch-geocode [post]
+func (h *GoogleMapsHandler) BatchGeocode(c *gin.Context) {
+	var req dto.BatchGeocodeRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, vo.ErrorResponse{
+			Code:    "INVALID_REQUEST",
+			Message: "無效的請求格式",
+			Error:   err.Error(),
+		})
+		return
+	}
+
+	// 驗證請求
+	if err := req.Validate(); err != nil {
+		c.JSON(http.StatusBadRequest, vo.ErrorResponse{
+			Code:    "VALIDATION_ERROR",
+			Message: "請求驗證失敗",
+			Error:   err.Error(),
+		})
+		return
+	}
+
+	// 使用服務層進行批次地理編碼
+	results, err := h.service.BatchGeocode(c.Request.Context(), req.Addresses)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, vo.ErrorResponse{
+			Code:    "BATCH_GEOCODE_ERROR",
+			Message: "批次地理編碼失敗",
+			Error:   err.Error(),
+		})
+		return
+	}
+
+	response := dto.BatchGeocodeResponse{
+		Results: results,
+		Total:   len(results),
+		Status:  "OK",
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
+// GetAPIUsageStats 獲取 API 使用統計
+// @Summary 獲取 API 使用統計
+// @Description 獲取 Google Maps API 使用統計資訊
+// @Tags google-maps
+// @Accept json
+// @Produce json
+// @Success 200 {object} map[string]interface{}
+// @Failure 500 {object} vo.ErrorResponse
+// @Router /google-maps/usage-stats [get]
+func (h *GoogleMapsHandler) GetAPIUsageStats(c *gin.Context) {
+	// 獲取快取統計
+	cacheStats := h.service.GetCacheStats()
 	
-	// 創建新的請求上下文來模擬內部調用
-	mockCtx := &gin.Context{}
-	mockCtx.Set("request_body", searchReqJSON)
-	
-	// 直接調用搜尋方法（這裡需要重構以支援內部調用）
+	// 構建回應
+	stats := map[string]interface{}{
+		"cache_stats": cacheStats,
+		"api_info": map[string]interface{}{
+			"base_url": h.config.GoogleMaps.BaseURL,
+			"api_key_configured": h.config.GoogleMaps.APIKey != "",
+		},
+		"endpoints": []string{
+			"/api/v1/google-maps/geocode",
+			"/api/v1/google-maps/reverse-geocode",
+			"/api/v1/google-maps/search-places",
+			"/api/v1/google-maps/directions",
+			"/api/v1/google-maps/distance-matrix",
+			"/api/v1/google-maps/nearby-mental-health",
+			"/api/v1/google-maps/batch-geocode",
+		},
+	}
+
 	c.JSON(http.StatusOK, gin.H{
-		"message": "此功能需要整合現有的搜尋地點方法",
-		"request": searchReq,
+		"success": true,
+		"data":    stats,
+		"message": "API 使用統計資訊",
+	})
+}
+
+// ClearCache 清除快取
+// @Summary 清除快取
+// @Description 清除 Google Maps API 快取
+// @Tags google-maps
+// @Accept json
+// @Produce json
+// @Success 200 {object} map[string]interface{}
+// @Router /google-maps/clear-cache [post]
+func (h *GoogleMapsHandler) ClearCache(c *gin.Context) {
+	h.service.ClearCache()
+	
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "快取已清除",
 	})
 }

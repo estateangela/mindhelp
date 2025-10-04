@@ -13,7 +13,6 @@ import (
 	"mindhelp-backend/internal/config"
 	"mindhelp-backend/internal/database"
 	"mindhelp-backend/internal/routes"
-	"mindhelp-backend/internal/scheduler"
 )
 
 // @title MindHelp Backend API
@@ -43,41 +42,52 @@ func main() {
 		log.Fatalf("Failed to load config: %v", err)
 	}
 
-	// 連接到資料庫
-	if err := database.Connect(cfg); err != nil {
-		log.Fatalf("Failed to connect to database: %v", err)
+	// 獲取端口 - Render 使用 PORT 環境變數
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = cfg.Server.Port
 	}
-	defer database.Close()
+	log.Printf("環境變數 PORT: %s", os.Getenv("PORT"))
+	log.Printf("配置檔案端口: %s", cfg.Server.Port)
+	log.Printf("最終使用端口: %s", port)
 
-	// 執行資料庫遷移
-	if err := database.Migrate(); err != nil {
-		log.Fatalf("Failed to migrate database: %v", err)
-	}
-
-	// 啟動定時任務調度器
-	notificationScheduler := scheduler.NewScheduler(cfg)
-	if err := notificationScheduler.Start(); err != nil {
-		log.Fatalf("Failed to start notification scheduler: %v", err)
-	}
-	defer notificationScheduler.Stop()
-
-	// 設定路由
+	// 設定路由 (不需要資料庫連接也能啟動基本路由)
 	router := routes.SetupRoutes(cfg)
 
 	// 創建 HTTP 伺服器
 	srv := &http.Server{
-		Addr:         ":" + cfg.Server.Port,
+		Addr:         "0.0.0.0:" + port, // 綁定到所有介面
 		Handler:      router,
 		ReadTimeout:  15 * time.Second,
 		WriteTimeout: 15 * time.Second,
 		IdleTimeout:  60 * time.Second,
 	}
 
-	// 在 goroutine 中啟動伺服器
+	// 先啟動伺服器讓 Render 偵測到端口
 	go func() {
-		log.Printf("Starting server on port %s", cfg.Server.Port)
+		log.Printf("Starting server on 0.0.0.0:%s", port)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("Failed to start server: %v", err)
+		}
+	}()
+
+	// 在背景連接資料庫
+	go func() {
+		log.Println("Connecting to database in background...")
+		if err := database.Connect(cfg); err != nil {
+			log.Printf("Failed to connect to database: %v", err)
+			log.Println(os.Getenv("DATABASE_URL"))
+			// 不要讓資料庫連接失敗導致整個服務崩潰
+			return
+		}
+		defer database.Close()
+
+		// 執行資料庫遷移
+		log.Println("Starting database migration...")
+		if err := database.Migrate(); err != nil {
+			log.Printf("Failed to migrate database: %v", err)
+		} else {
+			log.Println("Database migration completed successfully")
 		}
 	}()
 

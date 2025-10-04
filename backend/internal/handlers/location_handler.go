@@ -16,21 +16,34 @@ import (
 )
 
 // LocationHandler 位置處理器
-type LocationHandler struct {
-	db *gorm.DB
-}
+type LocationHandler struct{}
 
 // NewLocationHandler 創建新的位置處理器
 func NewLocationHandler() *LocationHandler {
-	return &LocationHandler{
-		db: database.GetDB(),
+	return &LocationHandler{}
+}
+
+// getDB 獲取資料庫連接，如果失敗會向客戶端返回錯誤
+func (h *LocationHandler) getDB(c *gin.Context) (*gorm.DB, bool) {
+	db, err := database.GetDBSafely()
+	if err != nil {
+		c.JSON(http.StatusServiceUnavailable, vo.NewErrorResponse(
+			"database_unavailable",
+			"資料庫暫時無法使用，請稍後再試",
+			"DATABASE_UNAVAILABLE",
+			nil,
+			c.Request.URL.Path,
+		))
+		return nil, false
 	}
+	return db, true
 }
 
 // CreateLocation 創建位置
 // @Summary 創建位置
 // @Description 創建新的心理健康資源位置
 // @Tags location
+
 // @Accept json
 // @Produce json
 // @Security BearerAuth
@@ -58,7 +71,7 @@ func (h *LocationHandler) CreateLocation(c *gin.Context) {
 			"bad_request",
 			"Invalid request data",
 			"VALIDATION_ERROR",
-			[]string{err.Error()},
+			nil,
 			c.Request.URL.Path,
 		))
 		return
@@ -70,7 +83,7 @@ func (h *LocationHandler) CreateLocation(c *gin.Context) {
 			"bad_request",
 			"Validation failed",
 			"VALIDATION_ERROR",
-			[]string{err.Error()},
+			nil,
 			c.Request.URL.Path,
 		))
 		return
@@ -91,7 +104,13 @@ func (h *LocationHandler) CreateLocation(c *gin.Context) {
 		IsPublic:    req.IsPublic,
 	}
 
-	if err := h.db.Create(&location).Error; err != nil {
+	// 獲取資料庫連接
+	db, ok := h.getDB(c)
+	if !ok {
+		return
+	}
+
+	if err := db.Create(&location).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, vo.NewErrorResponse(
 			"internal_error",
 			"Failed to create location",
@@ -163,8 +182,21 @@ func (h *LocationHandler) SearchLocations(c *gin.Context) {
 
 	offset := (page - 1) * pageSize
 
+	// 獲取資料庫連接
+	db, err := database.GetDBSafely()
+	if err != nil {
+		c.JSON(http.StatusServiceUnavailable, vo.NewErrorResponse(
+			"database_unavailable",
+			"資料庫暫時無法使用，請稍後再試",
+			"DATABASE_UNAVAILABLE",
+			nil,
+			c.Request.URL.Path,
+		))
+		return
+	}
+
 	// 構建查詢
-	dbQuery := h.db.Model(&models.Location{}).Where("is_public = ?", true)
+	dbQuery := db.Model(&models.Location{}).Where("is_public = ?", true)
 
 	// 添加關鍵字搜尋
 	if query != "" {
@@ -286,8 +318,21 @@ func (h *LocationHandler) GetLocation(c *gin.Context) {
 		return
 	}
 
+	// 獲取資料庫連接
+	db, err := database.GetDBSafely()
+	if err != nil {
+		c.JSON(http.StatusServiceUnavailable, vo.NewErrorResponse(
+			"database_unavailable",
+			"資料庫暫時無法使用，請稍後再試",
+			"DATABASE_UNAVAILABLE",
+			nil,
+			c.Request.URL.Path,
+		))
+		return
+	}
+
 	var location models.Location
-	if err := h.db.Where("id = ? AND is_public = ?", parsedID, true).First(&location).Error; err != nil {
+	if err := db.Where("id = ? AND is_public = ?", parsedID, true).First(&location).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			c.JSON(http.StatusNotFound, vo.NewErrorResponse(
 				"not_found",
@@ -388,7 +433,7 @@ func (h *LocationHandler) UpdateLocation(c *gin.Context) {
 			"bad_request",
 			"Invalid request data",
 			"VALIDATION_ERROR",
-			[]string{err.Error()},
+			nil,
 			c.Request.URL.Path,
 		))
 		return
@@ -400,7 +445,7 @@ func (h *LocationHandler) UpdateLocation(c *gin.Context) {
 			"bad_request",
 			"Validation failed",
 			"VALIDATION_ERROR",
-			[]string{err.Error()},
+			nil,
 			c.Request.URL.Path,
 		))
 		return
@@ -408,7 +453,13 @@ func (h *LocationHandler) UpdateLocation(c *gin.Context) {
 
 	// 查找位置
 	var location models.Location
-	if err := h.db.Where("id = ?", parsedID).First(&location).Error; err != nil {
+	// 獲取資料庫連接
+	db, ok := h.getDB(c)
+	if !ok {
+		return
+	}
+
+	if err := db.Where("id = ?", parsedID).First(&location).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			c.JSON(http.StatusNotFound, vo.NewErrorResponse(
 				"not_found",
@@ -475,7 +526,7 @@ func (h *LocationHandler) UpdateLocation(c *gin.Context) {
 	}
 
 	// 執行更新
-	if err := h.db.Model(&location).Updates(updates).Error; err != nil {
+	if err := db.Model(&location).Updates(updates).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, vo.NewErrorResponse(
 			"internal_error",
 			"Failed to update location",
@@ -487,7 +538,7 @@ func (h *LocationHandler) UpdateLocation(c *gin.Context) {
 	}
 
 	// 重新獲取更新後的位置（防止 SQL Injection，明確指定主鍵查詢）
-	if err := h.db.Where("id = ?", locationID).First(&location).Error; err != nil {
+	if err := db.Where("id = ?", locationID).First(&location).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, vo.NewErrorResponse(
 			"internal_error",
 			"Failed to get updated location",
@@ -573,7 +624,13 @@ func (h *LocationHandler) DeleteLocation(c *gin.Context) {
 
 	// 查找位置
 	var location models.Location
-	if err := h.db.Where("id = ?", parsedID).First(&location).Error; err != nil {
+	// 獲取資料庫連接
+	db, ok := h.getDB(c)
+	if !ok {
+		return
+	}
+
+	if err := db.Where("id = ?", parsedID).First(&location).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			c.JSON(http.StatusNotFound, vo.NewErrorResponse(
 				"not_found",
@@ -607,7 +664,7 @@ func (h *LocationHandler) DeleteLocation(c *gin.Context) {
 	}
 
 	// 軟刪除位置
-	if err := h.db.Delete(&location).Error; err != nil {
+	if err := db.Delete(&location).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, vo.NewErrorResponse(
 			"internal_error",
 			"Failed to delete location",

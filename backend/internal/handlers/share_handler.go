@@ -23,14 +23,28 @@ import (
 
 // ShareHandler 分享處理器
 type ShareHandler struct {
-	db  *gorm.DB
 	cfg *config.Config
+}
+
+// getDB 安全地獲取資料庫連接
+func (h *ShareHandler) getDB(c *gin.Context) (*gorm.DB, error) {
+	db, err := database.GetDBSafely()
+	if err != nil {
+		c.JSON(http.StatusServiceUnavailable, vo.NewErrorResponse(
+			"database_unavailable",
+			"Database service is currently unavailable",
+			"SERVICE_UNAVAILABLE",
+			[]string{err.Error()},
+			c.Request.URL.Path,
+		))
+		return nil, err
+	}
+	return db, nil
 }
 
 // NewShareHandler 創建新的分享處理器
 func NewShareHandler(cfg *config.Config) *ShareHandler {
 	return &ShareHandler{
-		db:  database.GetDB(),
 		cfg: cfg,
 	}
 }
@@ -535,7 +549,7 @@ func (h *ShareHandler) generateShortURL() string {
 }
 
 // generateQRCode 生成 QR Code (簡化實現)
-func (h *ShareHandler) generateQRCode(url string) string {
+func (h *ShareHandler) generateQRCode(_ string) string {
 	// 實際實現中應該使用 QR Code 生成庫
 	// 這裡返回一個佔位符 base64 字符串
 	return "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/59BPwAHogJ/jTeLNAAAAAElFTkSuQmCC"

@@ -104,6 +104,9 @@ flutter:
     - assets/images/logo.png
     - assets/images/mindhelp.png
     - assets/mock_resources.json
+    - assets/images/1.jpg
+    - assets/images/3.jpg
+    - assets/images/4.jpg
 
   fonts:
     - family: Huninn

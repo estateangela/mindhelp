@@ -20,14 +20,11 @@ import (
 
 // QuizHandler 測驗處理器
 type QuizHandler struct {
-	db *gorm.DB
 }
 
 // NewQuizHandler 創建新的測驗處理器
 func NewQuizHandler() *QuizHandler {
-	return &QuizHandler{
-		db: database.GetDB(),
-	}
+	return &QuizHandler{}
 }
 
 // GetQuizzes 獲取測驗列表
@@ -58,8 +55,21 @@ func (h *QuizHandler) GetQuizzes(c *gin.Context) {
 
 	offset := (page - 1) * limit
 
+	// 獲取資料庫連接
+	db, err := database.GetDBSafely()
+	if err != nil {
+		c.JSON(http.StatusServiceUnavailable, vo.NewErrorResponse(
+			"database_unavailable",
+			"Database service is currently unavailable",
+			"SERVICE_UNAVAILABLE",
+			nil,
+			c.Request.URL.Path,
+		))
+		return
+	}
+
 	// 構建查詢
-	dbQuery := h.db.Model(&models.Quiz{}).Where("is_active = ?", true)
+	dbQuery := db.Model(&models.Quiz{}).Where("is_active = ?", true)
 
 	// 添加類別篩選
 	if category != "" {
@@ -144,6 +154,19 @@ func (h *QuizHandler) GetQuiz(c *gin.Context) {
 		return
 	}
 
+	// 獲取資料庫連接
+	db, err := database.GetDBSafely()
+	if err != nil {
+		c.JSON(http.StatusServiceUnavailable, vo.NewErrorResponse(
+			"database_unavailable",
+			"Database service is currently unavailable",
+			"SERVICE_UNAVAILABLE",
+			nil,
+			c.Request.URL.Path,
+		))
+		return
+	}
+
 	// 驗證 UUID 格式
 	parsedID, err := uuid.Parse(quizID)
 	if err != nil {
@@ -159,7 +182,7 @@ func (h *QuizHandler) GetQuiz(c *gin.Context) {
 
 	// 查找測驗
 	var quiz models.Quiz
-	if err := h.db.Where("id = ? AND is_active = ?", parsedID, true).First(&quiz).Error; err != nil {
+	if err := db.Where("id = ? AND is_active = ?", parsedID, true).First(&quiz).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			c.JSON(http.StatusNotFound, vo.NewErrorResponse(
 				"not_found",
@@ -182,7 +205,7 @@ func (h *QuizHandler) GetQuiz(c *gin.Context) {
 
 	// 獲取測驗題目
 	var questions []models.QuizQuestion
-	if err := h.db.Where("quiz_id = ?", parsedID).Order("order_num ASC").Find(&questions).Error; err != nil {
+	if err := db.Where("quiz_id = ?", parsedID).Order("order_num ASC").Find(&questions).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, vo.NewErrorResponse(
 			"internal_error",
 			"Failed to get quiz questions",
@@ -252,6 +275,19 @@ func (h *QuizHandler) SubmitQuiz(c *gin.Context) {
 		return
 	}
 
+	// 獲取資料庫連接
+	db, err := database.GetDBSafely()
+	if err != nil {
+		c.JSON(http.StatusServiceUnavailable, vo.NewErrorResponse(
+			"database_unavailable",
+			"Database service is currently unavailable",
+			"SERVICE_UNAVAILABLE",
+			nil,
+			c.Request.URL.Path,
+		))
+		return
+	}
+
 	quizID := c.Param("id")
 	parsedID, err := uuid.Parse(quizID)
 	if err != nil {
@@ -291,7 +327,7 @@ func (h *QuizHandler) SubmitQuiz(c *gin.Context) {
 
 	// 檢查測驗是否存在且啟用
 	var quiz models.Quiz
-	if err := h.db.Where("id = ? AND is_active = ?", parsedID, true).First(&quiz).Error; err != nil {
+	if err := db.Where("id = ? AND is_active = ?", parsedID, true).First(&quiz).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			c.JSON(http.StatusNotFound, vo.NewErrorResponse(
 				"not_found",
@@ -329,7 +365,7 @@ func (h *QuizHandler) SubmitQuiz(c *gin.Context) {
 		CompletedAt: time.Now(),
 	}
 
-	if err := h.db.Create(&submission).Error; err != nil {
+	if err := db.Create(&submission).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, vo.NewErrorResponse(
 			"internal_error",
 			"Failed to save quiz submission",
@@ -378,6 +414,19 @@ func (h *QuizHandler) GetQuizHistory(c *gin.Context) {
 		return
 	}
 
+	// 獲取資料庫連接
+	db, err := database.GetDBSafely()
+	if err != nil {
+		c.JSON(http.StatusServiceUnavailable, vo.NewErrorResponse(
+			"database_unavailable",
+			"Database service is currently unavailable",
+			"SERVICE_UNAVAILABLE",
+			nil,
+			c.Request.URL.Path,
+		))
+		return
+	}
+
 	// 解析查詢參數
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
@@ -394,7 +443,7 @@ func (h *QuizHandler) GetQuizHistory(c *gin.Context) {
 
 	// 獲取總數
 	var total int64
-	if err := h.db.Model(&models.QuizSubmission{}).Where("user_id = ?", userID).Count(&total).Error; err != nil {
+	if err := db.Model(&models.QuizSubmission{}).Where("user_id = ?", userID).Count(&total).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, vo.NewErrorResponse(
 			"internal_error",
 			"Failed to count quiz submissions",
@@ -407,7 +456,7 @@ func (h *QuizHandler) GetQuizHistory(c *gin.Context) {
 
 	// 獲取提交記錄
 	var submissions []models.QuizSubmission
-	if err := h.db.Preload("Quiz").Where("user_id = ?", userID).
+	if err := db.Preload("Quiz").Where("user_id = ?", userID).
 		Order("completed_at DESC").
 		Offset(offset).Limit(limit).
 		Find(&submissions).Error; err != nil {
@@ -453,10 +502,11 @@ func (h *QuizHandler) GetQuizHistory(c *gin.Context) {
 func (h *QuizHandler) calculateScore(answers map[string]int, quizID uuid.UUID) int {
 	// 這是簡化版本的計分邏輯
 	// 實際應用中可能需要根據不同測驗類型實現不同的計分規則
-	
+
+	// 注意：這個函數需要資料庫連接，但為了簡化，實際實現時應傳入 db 參數
 	// 獲取題目數量
 	var questionCount int64
-	h.db.Model(&models.QuizQuestion{}).Where("quiz_id = ?", quizID).Count(&questionCount)
+	// db.Model(&models.QuizQuestion{}).Where("quiz_id = ?", quizID).Count(&questionCount)
 	
 	if questionCount == 0 {
 		return 0

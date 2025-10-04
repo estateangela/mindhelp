@@ -11,13 +11,13 @@ import (
 
 // Config 應用程式配置結構
 type Config struct {
-	Server   ServerConfig
-	Database DatabaseConfig
-	JWT      JWTConfig
+	Server     ServerConfig
+	Database   DatabaseConfig
+	JWT        JWTConfig
 	OpenRouter OpenRouterConfig
 	GoogleMaps GoogleMapsConfig
-	CORS     CORSConfig
-	Logging  LoggingConfig
+	CORS       CORSConfig
+	Logging    LoggingConfig
 }
 
 // ServerConfig 伺服器配置
@@ -39,8 +39,8 @@ type DatabaseConfig struct {
 
 // JWTConfig JWT 配置
 type JWTConfig struct {
-	Secret     string
-	Expiry     time.Duration
+	Secret        string
+	Expiry        time.Duration
 	RefreshExpiry time.Duration
 }
 
@@ -52,11 +52,11 @@ type OpenRouterConfig struct {
 
 // GoogleMapsConfig Google Maps API 配置
 type GoogleMapsConfig struct {
-	APIKey     string
-	BaseURL    string
-	GeocodingURL string
-	PlacesURL   string
-	DirectionsURL string
+	APIKey            string
+	BaseURL           string
+	GeocodingURL      string
+	PlacesURL         string
+	DirectionsURL     string
 	DistanceMatrixURL string
 }
 
@@ -104,25 +104,33 @@ func Load() (*Config, error) {
 		// 如果提供了完整的 DATABASE_URL，直接使用
 		config.Database.DSN = dsn
 	} else {
-		// 否則使用個別參數構建
-		config.Database.DSN = fmt.Sprintf(
-			"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
-			config.Database.Host,
-			config.Database.Port,
-			config.Database.User,
-			config.Database.Password,
-			config.Database.Name,
-			config.Database.SSLMode,
-		)
+		// 硬編碼正確的 Supabase Transaction Pooler 連接字串作為備用
+		hardcodedDSN := "postgresql://postgres.haunuvdhisdygfradaya:MIND_HELP_2025@aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres"
+
+		// 嘗試使用個別參數構建
+		if config.Database.Host != "" && config.Database.User != "" && config.Database.Password != "" {
+			config.Database.DSN = fmt.Sprintf(
+				"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s connect_timeout=30",
+				config.Database.Host,
+				config.Database.Port,
+				config.Database.User,
+				config.Database.Password,
+				config.Database.Name,
+				config.Database.SSLMode,
+			)
+		} else {
+			// 使用硬編碼連接字串
+			config.Database.DSN = hardcodedDSN
+		}
 	}
 
 	// 載入 JWT 配置
 	jwtExpiry, _ := time.ParseDuration(getEnv("JWT_EXPIRY", "24h"))
 	refreshExpiry, _ := time.ParseDuration(getEnv("JWT_REFRESH_EXPIRY", "168h")) // 7 days
-	
+
 	config.JWT = JWTConfig{
-		Secret:     getEnv("JWT_SECRET", "your-super-secret-jwt-key-here"),
-		Expiry:     jwtExpiry,
+		Secret:        getEnv("JWT_SECRET", "your-super-secret-jwt-key-here"),
+		Expiry:        jwtExpiry,
 		RefreshExpiry: refreshExpiry,
 	}
 
@@ -134,11 +142,11 @@ func Load() (*Config, error) {
 
 	// 載入 Google Maps 配置
 	config.GoogleMaps = GoogleMapsConfig{
-		APIKey:     getEnv("GOOGLE_MAPS_API_KEY", ""),
-		BaseURL:    getEnv("GOOGLE_MAPS_BASE_URL", "https://maps.googleapis.com/maps/api"),
-		GeocodingURL: getEnv("GOOGLE_MAPS_GEOCODING_URL", "https://maps.googleapis.com/maps/api/geocode/json"),
-		PlacesURL:   getEnv("GOOGLE_MAPS_PLACES_URL", "https://maps.googleapis.com/maps/api/place"),
-		DirectionsURL: getEnv("GOOGLE_MAPS_DIRECTIONS_URL", "https://maps.googleapis.com/maps/api/directions/json"),
+		APIKey:            getEnv("GOOGLE_MAPS_API_KEY", ""),
+		BaseURL:           getEnv("GOOGLE_MAPS_BASE_URL", "https://maps.googleapis.com/maps/api"),
+		GeocodingURL:      getEnv("GOOGLE_MAPS_GEOCODING_URL", "https://maps.googleapis.com/maps/api/geocode/json"),
+		PlacesURL:         getEnv("GOOGLE_MAPS_PLACES_URL", "https://maps.googleapis.com/maps/api/place"),
+		DirectionsURL:     getEnv("GOOGLE_MAPS_DIRECTIONS_URL", "https://maps.googleapis.com/maps/api/directions/json"),
 		DistanceMatrixURL: getEnv("GOOGLE_MAPS_DISTANCE_MATRIX_URL", "https://maps.googleapis.com/maps/api/distancematrix/json"),
 	}
 
