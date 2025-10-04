@@ -31,7 +31,7 @@ func (h *SchedulerTriggerHandler) TriggerHourlyNotification(c *gin.Context) {
 	c.JSON(http.StatusOK, vo.SuccessResponse(map[string]interface{}{
 		"triggered_at": time.Now().Format("2006-01-02T15:04:05Z07:00"),
 		"job_type":     "hourly_notification",
-		"message":      "Hourly notification triggered successfully (placeholder)",
+		"message":      []string{"今天心情還好嗎？來和AI 說說話吧 🌿", "有些困擾說出口會好一點。來讓 AI 小幫手聽你說說吧 👂"},
 	}, "Hourly notification triggered successfully"))
 }
 
@@ -49,7 +49,7 @@ func (h *SchedulerTriggerHandler) TriggerWeeklyNotification(c *gin.Context) {
 	c.JSON(http.StatusOK, vo.SuccessResponse(map[string]interface{}{
 		"triggered_at": time.Now().Format("2006-01-02T15:04:05Z07:00"),
 		"job_type":     "weekly_notification",
-		"message":      "Weekly notification triggered successfully (placeholder)",
+		"message":      []string{"今天心情還好嗎？來和AI 說說話吧 🌿", "有些困擾說出口會好一點。來讓 AI 小幫手聽你說說吧 👂"},
 	}, "Weekly notification triggered successfully"))
 }
 
@@ -80,4 +80,3 @@ func (h *SchedulerTriggerHandler) GetSchedulerStatus(c *gin.Context) {
 		},
 	}, "Scheduler status retrieved successfully"))
 }
-
