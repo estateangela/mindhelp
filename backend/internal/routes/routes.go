@@ -4,7 +4,9 @@ import (
 	"mindhelp-backend/internal/config"
 	"mindhelp-backend/internal/handlers"
 	"mindhelp-backend/internal/middleware"
+	"net/http"
 	"os"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	ginCors "github.com/rs/cors/wrapper/gin"
@@ -34,6 +36,20 @@ func SetupRoutes(cfg *config.Config) *gin.Engine {
 		AllowCredentials: true,
 	})
 	r.Use(corsConfig)
+
+	// 根路徑健康檢查
+	r.GET("/", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{
+			"status":    "ok",
+			"message":   "MindHelp API is running",
+			"timestamp": time.Now().Format("2006-01-02T15:04:05Z07:00"),
+			"version":   "1.0.0",
+		})
+	})
+
+	r.HEAD("/", func(c *gin.Context) {
+		c.Status(http.StatusOK)
+	})
 
 	// Swagger 文檔
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
