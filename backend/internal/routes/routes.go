@@ -206,17 +206,17 @@ func SetupRoutes(cfg *config.Config) *gin.Engine {
 				admin.POST("/recommended-doctors", handlers.CreateRecommendedDoctor)
 				admin.PUT("/recommended-doctors/:id", handlers.UpdateRecommendedDoctor)
 				admin.DELETE("/recommended-doctors/:id", handlers.DeleteRecommendedDoctor)
-
-				// 定時任務管理
-				schedulerHandler := handlers.NewSchedulerTriggerHandler()
-				admin.GET("/scheduler/status", schedulerHandler.GetSchedulerStatus)
-				admin.POST("/scheduler/trigger/hourly", schedulerHandler.TriggerHourlyNotification)
-				admin.POST("/scheduler/trigger/weekly", schedulerHandler.TriggerWeeklyNotification)
 			}
 		}
 
 		// 公開路由
 		{
+			// 定時任務管理 (公開端點，不需要認證)
+			schedulerHandler := handlers.NewSchedulerTriggerHandler()
+			api.GET("/scheduler/status", schedulerHandler.GetSchedulerStatus)
+			api.POST("/scheduler/trigger/hourly", schedulerHandler.TriggerHourlyNotification)
+			api.POST("/scheduler/trigger/weekly", schedulerHandler.TriggerWeeklyNotification)
+
 			// 位置相關公開路由
 			locationHandler := handlers.NewLocationHandler()
 			api.GET("/locations/search", locationHandler.SearchLocations)
