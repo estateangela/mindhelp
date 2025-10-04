@@ -56,14 +56,12 @@ func (h *SchedulerTriggerHandler) TriggerWeeklyNotification(c *gin.Context) {
 // GetSchedulerStatus 獲取定時任務狀態
 // @Summary 獲取定時任務狀態
 // @Description 獲取所有已排程的定時任務資訊
-// @Tags admin
+// @Tags scheduler
 // @Accept json
 // @Produce json
-// @Security BearerAuth
 // @Success 200 {object} vo.Response{data=map[string]interface{}}
-// @Failure 401 {object} vo.ErrorResponse
 // @Failure 500 {object} vo.ErrorResponse
-// @Router /admin/scheduler/status [get]
+// @Router /scheduler/status [get]
 func (h *SchedulerTriggerHandler) GetSchedulerStatus(c *gin.Context) {
 	c.JSON(http.StatusOK, vo.SuccessResponse(map[string]interface{}{
 		"status":    "running",
