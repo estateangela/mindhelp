@@ -1,5 +1,16 @@
 basePath: /api/v1
 definitions:
+  dto.AddressComponent:
+    properties:
+      long_name:
+        type: string
+      short_name:
+        type: string
+      types:
+        items:
+          type: string
+        type: array
+    type: object
   dto.AppConfigResponse:
     properties:
       api_endpoints:
@@ -60,16 +71,31 @@ definitions:
       view_count:
         type: integer
     type: object
-  dto.AuthResponse:
+  dto.BatchGeocodeRequest:
     properties:
-      access_token:
+      addresses:
+        items:
+          type: string
+        maxItems: 100
+        minItems: 1
+        type: array
+      language:
         type: string
-      expires_in:
+      region:
+        type: string
+    required:
+    - addresses
+    type: object
+  dto.BatchGeocodeResponse:
+    properties:
+      results:
+        items:
+          $ref: '#/definitions/dto.GeocodeResponse'
+        type: array
+      status:
+        type: string
+      total:
         type: integer
-      refresh_token:
-        type: string
-      user:
-        $ref: '#/definitions/dto.UserResponse'
     type: object
   dto.BookmarkListResponse:
     properties:
@@ -111,6 +137,13 @@ definitions:
         description: ArticleResponse 或 LocationResponse
       resource_type:
         type: string
+    type: object
+  dto.Bounds:
+    properties:
+      northeast:
+        $ref: '#/definitions/dto.LocationPoint'
+      southwest:
+        $ref: '#/definitions/dto.LocationPoint'
     type: object
   dto.ChangePasswordRequest:
     properties:
@@ -326,6 +359,15 @@ definitions:
       work_unit:
         type: string
     type: object
+  dto.DayTime:
+    properties:
+      day:
+        description: 0-6 (Sunday-Saturday)
+        type: integer
+      time:
+        description: HHMM format
+        type: string
+    type: object
   dto.DeleteAccountRequest:
     properties:
       password:
@@ -335,6 +377,129 @@ definitions:
         type: string
     required:
     - password
+    type: object
+  dto.DirectionsRequest:
+    properties:
+      alternatives:
+        description: 是否提供替代路線
+        type: boolean
+      avoid:
+        description: tolls, highways, ferries, indoor
+        type: string
+      destination:
+        maxLength: 500
+        minLength: 1
+        type: string
+      language:
+        type: string
+      mode:
+        description: driving, walking, bicycling, transit
+        type: string
+      origin:
+        maxLength: 500
+        minLength: 1
+        type: string
+      region:
+        type: string
+      units:
+        description: metric, imperial
+        type: string
+    required:
+    - destination
+    - origin
+    type: object
+  dto.DirectionsResponse:
+    properties:
+      routes:
+        items:
+          $ref: '#/definitions/dto.Route'
+        type: array
+      status:
+        type: string
+    type: object
+  dto.Distance:
+    properties:
+      text:
+        type: string
+      value:
+        description: 公尺
+        type: integer
+    type: object
+  dto.DistanceMatrixElement:
+    properties:
+      distance:
+        $ref: '#/definitions/dto.Distance'
+      duration:
+        $ref: '#/definitions/dto.Duration'
+      status:
+        type: string
+    type: object
+  dto.DistanceMatrixRequest:
+    properties:
+      arrival_time:
+        description: Unix timestamp
+        type: string
+      departure_time:
+        description: Unix timestamp
+        type: string
+      destinations:
+        items:
+          type: string
+        maxItems: 25
+        minItems: 1
+        type: array
+      language:
+        type: string
+      mode:
+        type: string
+      origins:
+        items:
+          type: string
+        maxItems: 25
+        minItems: 1
+        type: array
+      region:
+        type: string
+      traffic_model:
+        description: best_guess, pessimistic, optimistic
+        type: string
+      units:
+        type: string
+    required:
+    - destinations
+    - origins
+    type: object
+  dto.DistanceMatrixResponse:
+    properties:
+      destination_addresses:
+        items:
+          type: string
+        type: array
+      origin_addresses:
+        items:
+          type: string
+        type: array
+      rows:
+        items:
+          $ref: '#/definitions/dto.DistanceMatrixRow'
+        type: array
+      status:
+        type: string
+    type: object
+  dto.DistanceMatrixRow:
+    properties:
+      elements:
+        items:
+          $ref: '#/definitions/dto.DistanceMatrixElement'
+        type: array
+    type: object
+  dto.Duration:
+    properties:
+      text:
+        type: string
+      value:
+        description: 秒
+        type: integer
     type: object
   dto.FeatureConfig:
     properties:
@@ -372,6 +537,90 @@ definitions:
         type: string
       key:
         type: string
+    type: object
+  dto.GeocodeRequest:
+    properties:
+      address:
+        maxLength: 500
+        minLength: 1
+        type: string
+      language:
+        description: zh-TW, en
+        type: string
+      region:
+        description: tw, us
+        type: string
+    required:
+    - address
+    type: object
+  dto.GeocodeResponse:
+    properties:
+      results:
+        items:
+          $ref: '#/definitions/dto.GeocodeResult'
+        type: array
+      status:
+        type: string
+    type: object
+  dto.GeocodeResult:
+    properties:
+      address_components:
+        items:
+          $ref: '#/definitions/dto.AddressComponent'
+        type: array
+      formatted_address:
+        type: string
+      geometry:
+        $ref: '#/definitions/dto.Geometry'
+      place_id:
+        type: string
+      types:
+        items:
+          type: string
+        type: array
+    type: object
+  dto.Geometry:
+    properties:
+      bounds:
+        $ref: '#/definitions/dto.Bounds'
+      location:
+        $ref: '#/definitions/dto.LocationPoint'
+      location_type:
+        type: string
+      viewport:
+        $ref: '#/definitions/dto.Bounds'
+    type: object
+  dto.Leg:
+    properties:
+      distance:
+        $ref: '#/definitions/dto.Distance'
+      duration:
+        $ref: '#/definitions/dto.Duration'
+      duration_in_traffic:
+        $ref: '#/definitions/dto.Duration'
+      end_address:
+        type: string
+      end_location:
+        $ref: '#/definitions/dto.LocationPoint'
+      start_address:
+        type: string
+      start_location:
+        $ref: '#/definitions/dto.LocationPoint'
+      steps:
+        items:
+          $ref: '#/definitions/dto.Step'
+        type: array
+      traffic_speed_entry:
+        items:
+          $ref: '#/definitions/dto.TrafficSpeedEntry'
+        type: array
+    type: object
+  dto.LocationPoint:
+    properties:
+      lat:
+        type: number
+      lng:
+        type: number
     type: object
   dto.LocationRequest:
     properties:
@@ -491,23 +740,11 @@ definitions:
       website:
         type: string
     type: object
-  dto.LoginRequest:
-    properties:
-      email:
-        type: string
-      password:
-        minLength: 6
-        type: string
-    required:
-    - email
-    - password
-    type: object
   dto.MarkAsReadRequest:
     properties:
       notification_ids:
         items:
           type: string
-        minItems: 1
         type: array
     required:
     - notification_ids
@@ -533,7 +770,7 @@ definitions:
     type: object
   dto.NotificationResponse:
     properties:
-      body:
+      content:
         type: string
       created_at:
         type: string
@@ -567,12 +804,110 @@ definitions:
       notify_system_updates:
         type: boolean
     type: object
+  dto.OpeningHours:
+    properties:
+      open_now:
+        type: boolean
+      periods:
+        items:
+          $ref: '#/definitions/dto.Period'
+        type: array
+      weekday_text:
+        items:
+          type: string
+        type: array
+    type: object
+  dto.Period:
+    properties:
+      close:
+        $ref: '#/definitions/dto.DayTime'
+      open:
+        $ref: '#/definitions/dto.DayTime'
+    type: object
+  dto.PlacePhoto:
+    properties:
+      height:
+        type: integer
+      html_attributions:
+        items:
+          type: string
+        type: array
+      photo_reference:
+        type: string
+      width:
+        type: integer
+    type: object
+  dto.PlaceResult:
+    properties:
+      formatted_address:
+        type: string
+      geometry:
+        $ref: '#/definitions/dto.Geometry'
+      name:
+        type: string
+      opening_hours:
+        $ref: '#/definitions/dto.OpeningHours'
+      photos:
+        items:
+          $ref: '#/definitions/dto.PlacePhoto'
+        type: array
+      place_id:
+        type: string
+      price_level:
+        type: integer
+      rating:
+        type: number
+      types:
+        items:
+          type: string
+        type: array
+      vicinity:
+        type: string
+    type: object
+  dto.PlacesSearchRequest:
+    properties:
+      language:
+        type: string
+      location:
+        description: '"lat,lng"'
+        type: string
+      query:
+        maxLength: 500
+        minLength: 1
+        type: string
+      radius:
+        maximum: 50000
+        minimum: 1
+        type: integer
+      region:
+        type: string
+      type:
+        description: hospital, health, establishment
+        type: string
+    type: object
+  dto.PlacesSearchResponse:
+    properties:
+      next_page_token:
+        type: string
+      results:
+        items:
+          $ref: '#/definitions/dto.PlaceResult'
+        type: array
+      status:
+        type: string
+    type: object
+  dto.Polyline:
+    properties:
+      points:
+        type: string
+    type: object
   dto.PushTokenRequest:
     properties:
       platform:
         enum:
         - ios
         - android
+        - web
         type: string
       token:
         type: string
@@ -714,31 +1049,6 @@ definitions:
       updated_at:
         type: string
     type: object
-  dto.RegisterRequest:
-    properties:
-      avatar:
-        type: string
-      email:
-        type: string
-      full_name:
-        maxLength: 100
-        minLength: 2
-        type: string
-      password:
-        minLength: 6
-        type: string
-      phone:
-        type: string
-      username:
-        maxLength: 50
-        minLength: 3
-        type: string
-    required:
-    - email
-    - full_name
-    - password
-    - username
-    type: object
   dto.ReportRequest:
     properties:
       content_id:
@@ -762,6 +1072,29 @@ definitions:
     - content_id
     - content_type
     - reason
+    type: object
+  dto.ReverseGeocodeRequest:
+    properties:
+      language:
+        type: string
+      latitude:
+        maximum: 90
+        minimum: -90
+        type: number
+      location_type:
+        description: ROOFTOP, RANGE_INTERPOLATED, GEOMETRIC_CENTER, APPROXIMATE
+        type: string
+      longitude:
+        maximum: 180
+        minimum: -180
+        type: number
+      result_type:
+        description: street_address, route, intersection, political, country, administrative_area_level_1,
+          etc.
+        type: string
+    required:
+    - latitude
+    - longitude
     type: object
   dto.ReviewAuthor:
     properties:
@@ -847,6 +1180,29 @@ definitions:
         maximum: 5
         minimum: 1
         type: integer
+    type: object
+  dto.Route:
+    properties:
+      bounds:
+        $ref: '#/definitions/dto.Bounds'
+      copyrights:
+        type: string
+      legs:
+        items:
+          $ref: '#/definitions/dto.Leg'
+        type: array
+      overview_polyline:
+        $ref: '#/definitions/dto.Polyline'
+      summary:
+        type: string
+      warnings:
+        items:
+          type: string
+        type: array
+      waypoint_order:
+        items:
+          type: integer
+        type: array
     type: object
   dto.SessionMessagesResponse:
     properties:
@@ -980,6 +1336,25 @@ definitions:
       total_shares:
         type: integer
     type: object
+  dto.Step:
+    properties:
+      distance:
+        $ref: '#/definitions/dto.Distance'
+      duration:
+        $ref: '#/definitions/dto.Duration'
+      end_location:
+        $ref: '#/definitions/dto.LocationPoint'
+      html_instructions:
+        type: string
+      maneuver:
+        type: string
+      polyline:
+        $ref: '#/definitions/dto.Polyline'
+      start_location:
+        $ref: '#/definitions/dto.LocationPoint'
+      travel_mode:
+        type: string
+    type: object
   dto.SupportInfo:
     properties:
       email:
@@ -989,6 +1364,13 @@ definitions:
       website:
         type: string
       working_hours:
+        type: string
+    type: object
+  dto.TrafficSpeedEntry:
+    properties:
+      offset_meters:
+        type: integer
+      speed_category:
         type: string
     type: object
   dto.UpdateUserRequest:
@@ -1025,27 +1407,6 @@ definitions:
       phone:
         type: string
       updated_at:
-        type: string
-      username:
-        type: string
-    type: object
-  dto.UserResponse:
-    properties:
-      avatar:
-        type: string
-      created_at:
-        type: string
-      email:
-        type: string
-      full_name:
-        type: string
-      id:
-        type: string
-      is_active:
-        type: boolean
-      last_login:
-        type: string
-      phone:
         type: string
       username:
         type: string
@@ -1304,6 +1665,26 @@ paths:
       summary: 更新諮商師
       tags:
       - counselors
+  /admin/database-stats:
+    get:
+      consumes:
+      - application/json
+      description: 獲取資料庫中各表的記錄數量
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      summary: 獲取資料庫統計
+      tags:
+      - admin
   /admin/recommended-doctors:
     post:
       consumes:
@@ -1401,6 +1782,107 @@ paths:
       summary: 更新推薦醫師
       tags:
       - recommended-doctors
+  /admin/scheduler/jobs:
+    get:
+      consumes:
+      - application/json
+      description: 獲取所有已排程的定時任務資訊
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/vo.Response'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 獲取定時任務狀態
+      tags:
+      - admin
+  /admin/scheduler/trigger/hourly:
+    post:
+      consumes:
+      - application/json
+      description: 立即執行每小時通知任務，忽略時間和排程限制
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/vo.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 手動觸發每小時通知
+      tags:
+      - admin
+  /admin/scheduler/trigger/weekly:
+    post:
+      consumes:
+      - application/json
+      description: 立即執行每週通知任務，忽略時間和排程限制
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/vo.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 手動觸發每週通知
+      tags:
+      - admin
+  /admin/seed-database:
+    post:
+      consumes:
+      - application/json
+      description: 插入範例的諮商師、諮商所和推薦醫師資料
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      summary: 插入種子資料
+      tags:
+      - admin
   /articles:
     get:
       consumes:
@@ -1559,26 +2041,14 @@ paths:
     post:
       consumes:
       - application/json
-      description: 使用者登入並獲取 JWT token
-      parameters:
-      - description: 登入資訊
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/dto.LoginRequest'
+      description: 使用者登入驗證
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/vo.Response'
-            - properties:
-                data:
-                  $ref: '#/definitions/dto.AuthResponse'
-              type: object
+            $ref: '#/definitions/vo.Response'
         "400":
           description: Bad Request
           schema:
@@ -1595,25 +2065,13 @@ paths:
       consumes:
       - application/json
       description: 使用 refresh token 獲取新的 access token
-      parameters:
-      - description: Refresh token
-        in: body
-        name: refresh_token
-        required: true
-        schema:
-          type: string
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/vo.Response'
-            - properties:
-                data:
-                  $ref: '#/definitions/dto.AuthResponse'
-              type: object
+            $ref: '#/definitions/vo.Response'
         "400":
           description: Bad Request
           schema:
@@ -1622,7 +2080,7 @@ paths:
           description: Unauthorized
           schema:
             $ref: '#/definitions/vo.ErrorResponse'
-      summary: 刷新 JWT token
+      summary: 重新整理 Token
       tags:
       - auth
   /auth/register:
@@ -1630,25 +2088,13 @@ paths:
       consumes:
       - application/json
       description: 創建新的使用者帳戶
-      parameters:
-      - description: 註冊資訊
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/dto.RegisterRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            allOf:
-            - $ref: '#/definitions/vo.Response'
-            - properties:
-                data:
-                  $ref: '#/definitions/dto.AuthResponse'
-              type: object
+            $ref: '#/definitions/vo.Response'
         "400":
           description: Bad Request
           schema:
@@ -2151,11 +2597,278 @@ paths:
       summary: 獲取單個諮商師
       tags:
       - counselors
+  /google-maps/batch-geocode:
+    post:
+      consumes:
+      - application/json
+      description: 批次將多個地址轉換為經緯度座標
+      parameters:
+      - description: 批次地理編碼請求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.BatchGeocodeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.BatchGeocodeResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      summary: 批次地理編碼
+      tags:
+      - google-maps
+  /google-maps/clear-cache:
+    post:
+      consumes:
+      - application/json
+      description: 清除 Google Maps API 快取
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 清除快取
+      tags:
+      - google-maps
+  /google-maps/directions:
+    post:
+      consumes:
+      - application/json
+      description: 計算從起點到終點的最佳路線
+      parameters:
+      - description: 路線規劃請求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.DirectionsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.DirectionsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      summary: 路線規劃
+      tags:
+      - google-maps
+  /google-maps/distance-matrix:
+    post:
+      consumes:
+      - application/json
+      description: 計算多點間的距離和時間
+      parameters:
+      - description: 距離矩陣請求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.DistanceMatrixRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.DistanceMatrixResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      summary: 距離矩陣
+      tags:
+      - google-maps
+  /google-maps/geocode:
+    post:
+      consumes:
+      - application/json
+      description: 將地址轉換為經緯度座標
+      parameters:
+      - description: 地理編碼請求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.GeocodeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.GeocodeResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      summary: 地理編碼
+      tags:
+      - google-maps
+  /google-maps/nearby-mental-health:
+    get:
+      consumes:
+      - application/json
+      description: 搜尋附近的心靈健康相關服務，包括醫院、診所、諮商中心等
+      parameters:
+      - description: 緯度
+        in: query
+        name: latitude
+        required: true
+        type: number
+      - description: 經度
+        in: query
+        name: longitude
+        required: true
+        type: number
+      - default: 5000
+        description: 搜尋半徑（公尺）
+        in: query
+        name: radius
+        type: integer
+      - description: 服務類型
+        enum:
+        - hospital
+        - health
+        - establishment
+        in: query
+        name: type
+        type: string
+      - default: '"心理諮商"'
+        description: 關鍵字
+        in: query
+        name: keyword
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.PlacesSearchResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      summary: 搜尋附近心靈健康服務
+      tags:
+      - google-maps
+  /google-maps/reverse-geocode:
+    post:
+      consumes:
+      - application/json
+      description: 將經緯度座標轉換為地址
+      parameters:
+      - description: 反向地理編碼請求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ReverseGeocodeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.GeocodeResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      summary: 反向地理編碼
+      tags:
+      - google-maps
+  /google-maps/search-places:
+    post:
+      consumes:
+      - application/json
+      description: 搜尋附近的心靈健康相關地點
+      parameters:
+      - description: 地點搜尋請求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.PlacesSearchRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.PlacesSearchResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      summary: 搜尋地點
+      tags:
+      - google-maps
+  /google-maps/usage-stats:
+    get:
+      consumes:
+      - application/json
+      description: 獲取 Google Maps API 使用統計資訊
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      summary: 獲取 API 使用統計
+      tags:
+      - google-maps
   /locations:
     post:
       consumes:
       - application/json
-      description: 創建新的心理健康資源位置
       parameters:
       - description: 位置資訊
         in: body
@@ -2185,9 +2898,6 @@ paths:
             $ref: '#/definitions/vo.ErrorResponse'
       security:
       - BearerAuth: []
-      summary: 創建位置
-      tags:
-      - location
   /locations/{id}:
     delete:
       consumes:
@@ -2902,6 +3612,69 @@ paths:
       summary: 修改評論
       tags:
       - review
+  /scheduler/status:
+    get:
+      consumes:
+      - application/json
+      description: 獲取所有已排程的定時任務資訊
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/vo.Response'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      summary: 獲取定時任務狀態
+      tags:
+      - scheduler
+  /scheduler/trigger/hourly:
+    post:
+      consumes:
+      - application/json
+      description: 立即執行每小時通知任務，忽略時間和排程限制
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/vo.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      summary: 手動觸發每小時通知
+      tags:
+      - scheduler
+  /scheduler/trigger/weekly:
+    post:
+      consumes:
+      - application/json
+      description: 立即執行每週通知任務，忽略時間和排程限制
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/vo.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      summary: 手動觸發每週通知
+      tags:
+      - scheduler
   /shares:
     post:
       consumes:

@@ -227,7 +227,7 @@ func GetDB() *gorm.DB {
 	return DB
 }
 
-// GetDBSafely 安全地獲取資料庫實例，如果未初始化或連接關閉會返回錯誤
+// GetDBSafely 安全地獲取資料庫實例，如果未初始化或連接關閉會嘗試重連
 func GetDBSafely() (*gorm.DB, error) {
 	if DB == nil {
 		return nil, fmt.Errorf("database not initialized - server may still be starting up")
@@ -236,11 +236,24 @@ func GetDBSafely() (*gorm.DB, error) {
 	// 檢查連接是否有效
 	sqlDB, err := DB.DB()
 	if err != nil {
+		log.Printf("Warning: Failed to get database instance: %v", err)
 		return nil, fmt.Errorf("failed to get database instance: %w", err)
 	}
 
 	if err := sqlDB.Ping(); err != nil {
-		return nil, fmt.Errorf("database connection is closed: %w", err)
+		log.Printf("Warning: Database connection lost, attempting to reconnect: %v", err)
+		// 嘗試重新連接
+		cfg := &config.Config{
+			Database: config.DatabaseConfig{
+				DSN: getEnv("DATABASE_URL", "postgresql://postgres.haunuvdhisdygfradaya:MIND_HELP_2025@aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres"),
+			},
+		}
+		if reconnectErr := Reconnect(cfg); reconnectErr != nil {
+			log.Printf("Error: Failed to reconnect to database: %v", reconnectErr)
+			return nil, fmt.Errorf("database connection is closed and reconnection failed: %w", err)
+		}
+		log.Println("Successfully reconnected to database")
+		return DB, nil
 	}
 
 	return DB, nil
