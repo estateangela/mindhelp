@@ -206,6 +206,12 @@ func SetupRoutes(cfg *config.Config) *gin.Engine {
 				admin.POST("/recommended-doctors", handlers.CreateRecommendedDoctor)
 				admin.PUT("/recommended-doctors/:id", handlers.UpdateRecommendedDoctor)
 				admin.DELETE("/recommended-doctors/:id", handlers.DeleteRecommendedDoctor)
+
+				// 定時任務管理
+				schedulerHandler := handlers.NewSchedulerTriggerHandler()
+				admin.GET("/scheduler/status", schedulerHandler.GetSchedulerStatus)
+				admin.POST("/scheduler/trigger/hourly", schedulerHandler.TriggerHourlyNotification)
+				admin.POST("/scheduler/trigger/weekly", schedulerHandler.TriggerWeeklyNotification)
 			}
 		}
 

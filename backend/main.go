@@ -13,6 +13,7 @@ import (
 	"mindhelp-backend/internal/config"
 	"mindhelp-backend/internal/database"
 	"mindhelp-backend/internal/routes"
+	"mindhelp-backend/internal/scheduler"
 )
 
 // @title MindHelp Backend API
@@ -34,6 +35,14 @@ import (
 // @in header
 // @name Authorization
 // @description 請輸入 "Bearer " 加上 JWT token
+
+// 全域變數
+var globalScheduler *scheduler.Scheduler
+
+// GetScheduler 獲取全域 scheduler 實例
+func GetScheduler() *scheduler.Scheduler {
+	return globalScheduler
+}
 
 func main() {
 	// 載入配置
@@ -88,6 +97,15 @@ func main() {
 			log.Printf("Failed to migrate database: %v", err)
 		} else {
 			log.Println("Database migration completed successfully")
+		}
+
+		// 啟動定時任務調度器
+		log.Println("Starting notification scheduler...")
+		globalScheduler = scheduler.NewScheduler(cfg)
+		if err := globalScheduler.Start(); err != nil {
+			log.Printf("Failed to start notification scheduler: %v", err)
+		} else {
+			log.Println("Notification scheduler started successfully")
 		}
 	}()
 
