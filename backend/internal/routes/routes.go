@@ -159,15 +159,9 @@ func SetupRoutes(cfg *config.Config) *gin.Engine {
 			{
 				notificationHandler := handlers.NewNotificationHandler()
 				notifications.GET("", notificationHandler.GetNotifications)
-				notifications.POST("/mark-as-read", notificationHandler.MarkAsRead)
-			}
-
-			// 使用者通知設定
-			{
-				notificationHandler := handlers.NewNotificationHandler()
-				protected.GET("/users/me/notification-settings", notificationHandler.GetNotificationSettings)
-				protected.PUT("/users/me/notification-settings", notificationHandler.UpdateNotificationSettings)
-				protected.POST("/users/me/push-token", notificationHandler.UpdatePushToken)
+				notifications.PUT("/:id/read", notificationHandler.MarkNotificationRead)
+				notifications.PUT("/read-all", notificationHandler.MarkAllNotificationsRead)
+				notifications.DELETE("/:id", notificationHandler.DeleteNotification)
 			}
 
 			// 分享路由

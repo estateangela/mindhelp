@@ -1,68 +1,34 @@
 package dto
 
 import (
-	"github.com/go-playground/validator/v10"
+	"time"
 )
 
-// NotificationResponse 通知回應
+// NotificationResponse 通知回應結構
 type NotificationResponse struct {
-	ID        string                 `json:"id"`
-	Type      string                 `json:"type"`
-	Title     string                 `json:"title"`
-	Body      string                 `json:"body"`
-	IsRead    bool                   `json:"is_read"`
-	Payload   map[string]interface{} `json:"payload,omitempty"`
-	CreatedAt string                 `json:"created_at"`
+	ID        string    `json:"id"`
+	Title     string    `json:"title"`
+	Content   string    `json:"content"`
+	Type      string    `json:"type"`
+	IsRead    bool      `json:"is_read"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
-// NotificationListResponse 通知列表回應
+// NotificationListResponse 通知列表回應結構
 type NotificationListResponse struct {
 	Notifications []NotificationResponse `json:"notifications"`
 	Total         int64                  `json:"total"`
-	UnreadCount   int64                  `json:"unread_count"`
 	Page          int                    `json:"page"`
-	Limit         int                    `json:"limit"`
-	TotalPages    int                    `json:"total_pages"`
+	PageSize      int                    `json:"page_size"`
 	HasMore       bool                   `json:"has_more"`
 }
 
-// MarkAsReadRequest 標記已讀請求
-type MarkAsReadRequest struct {
-	NotificationIDs []string `json:"notification_ids" binding:"required,min=1" validate:"required,min=1"`
+// MarkNotificationReadRequest 標記通知為已讀請求
+type MarkNotificationReadRequest struct {
+	NotificationID string `json:"notification_id" binding:"required"`
 }
 
-// NotificationSettingsRequest 通知設定請求
-type NotificationSettingsRequest struct {
-	NotifyNewArticle    *bool `json:"notify_new_article" binding:"omitempty" validate:"omitempty"`
-	NotifyPromotions    *bool `json:"notify_promotions" binding:"omitempty" validate:"omitempty"`
-	NotifySystemUpdates *bool `json:"notify_system_updates" binding:"omitempty" validate:"omitempty"`
-}
-
-// NotificationSettingsResponse 通知設定回應
-type NotificationSettingsResponse struct {
-	NotifyNewArticle    bool `json:"notify_new_article"`
-	NotifyPromotions    bool `json:"notify_promotions"`
-	NotifySystemUpdates bool `json:"notify_system_updates"`
-}
-
-// PushTokenRequest 推播 Token 請求
-type PushTokenRequest struct {
-	Token    string `json:"token" binding:"required" validate:"required"`
-	Platform string `json:"platform" binding:"required,oneof=ios android" validate:"required,oneof=ios android"`
-}
-
-// Validate 驗證請求資料
-func (r *MarkAsReadRequest) Validate() error {
-	validate := validator.New()
-	return validate.Struct(r)
-}
-
-func (r *NotificationSettingsRequest) Validate() error {
-	validate := validator.New()
-	return validate.Struct(r)
-}
-
-func (r *PushTokenRequest) Validate() error {
-	validate := validator.New()
-	return validate.Struct(r)
+// MarkAllNotificationsReadRequest 標記所有通知為已讀請求
+type MarkAllNotificationsReadRequest struct {
+	Type string `json:"type,omitempty"` // 可選：指定通知類型
 }
