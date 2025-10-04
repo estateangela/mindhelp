@@ -171,3 +171,17 @@ func (s *Scheduler) GetScheduledJobs() []map[string]interface{} {
 
 	return jobs
 }
+
+// TriggerHourlyNotification 手動觸發每小時通知
+func (s *Scheduler) TriggerHourlyNotification() error {
+	log.Println("Manually triggering hourly notification...")
+	s.sendHourlyNotification()
+	return nil
+}
+
+// TriggerWeeklyNotification 手動觸發每週通知
+func (s *Scheduler) TriggerWeeklyNotification() error {
+	log.Println("Manually triggering weekly notification...")
+	s.sendWeeklyNotification()
+	return nil
+}
