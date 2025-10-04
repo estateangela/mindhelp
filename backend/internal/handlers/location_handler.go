@@ -195,8 +195,17 @@ func (h *LocationHandler) SearchLocations(c *gin.Context) {
 		return
 	}
 
-	// 構建查詢
-	dbQuery := db.Model(&models.Location{}).Where("is_public = ?", true)
+	// 構建查詢 - 如果沒有公開位置，則顯示所有位置（用於測試）
+	dbQuery := db.Model(&models.Location{})
+
+	// 檢查是否有公開位置
+	var publicCount int64
+	db.Model(&models.Location{}).Where("is_public = ?", true).Count(&publicCount)
+
+	// 如果有公開位置，只顯示公開的；否則顯示所有位置（用於測試）
+	if publicCount > 0 {
+		dbQuery = dbQuery.Where("is_public = ?", true)
+	}
 
 	// 添加關鍵字搜尋
 	if query != "" {

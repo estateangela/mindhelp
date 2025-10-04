@@ -222,6 +222,10 @@ func SetupRoutes(cfg *config.Config) *gin.Engine {
 				admin.POST("/recommended-doctors", handlers.CreateRecommendedDoctor)
 				admin.PUT("/recommended-doctors/:id", handlers.UpdateRecommendedDoctor)
 				admin.DELETE("/recommended-doctors/:id", handlers.DeleteRecommendedDoctor)
+
+				// 位置管理
+				locationAdminHandler := handlers.NewAdminLocationHandler()
+				admin.POST("/locations/seed", locationAdminHandler.SeedLocations)
 			}
 		}
 
