@@ -130,7 +130,7 @@ func (h *NotificationHandler) GetNotifications(c *gin.Context) {
 			ID:        notification.ID.String(),
 			Type:      notification.Type,
 			Title:     notification.Title,
-			Body:      notification.Body,
+			Content:   notification.Content,
 			IsRead:    notification.IsRead,
 			Payload:   payload,
 			CreatedAt: notification.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
@@ -538,8 +538,8 @@ func (h *NotificationHandler) UpdatePushToken(c *gin.Context) {
 			NotifyNewArticle:    true,
 			NotifyPromotions:    false,
 			NotifySystemUpdates: true,
-			PushToken:          req.Token,
-			Platform:           req.Platform,
+			PushToken:           req.Token,
+			Platform:            req.Platform,
 		}
 		if err := db.Create(&settings).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, vo.NewErrorResponse(
