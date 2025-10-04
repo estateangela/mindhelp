@@ -237,6 +237,10 @@ func SetupRoutes(cfg *config.Config) *gin.Engine {
 			api.POST("/scheduler/trigger/hourly", schedulerHandler.TriggerHourlyNotification)
 			api.POST("/scheduler/trigger/weekly", schedulerHandler.TriggerWeeklyNotification)
 
+			// 位置數據種子 (公開端點，不需要認證)
+			locationAdminHandler := handlers.NewAdminLocationHandler()
+			api.POST("/locations/seed", locationAdminHandler.SeedLocations)
+
 			// 位置相關公開路由
 			locationHandler := handlers.NewLocationHandler()
 			api.GET("/locations/search", locationHandler.SearchLocations)

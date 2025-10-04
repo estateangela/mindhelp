@@ -20,16 +20,15 @@ func NewAdminLocationHandler() *AdminLocationHandler {
 	return &AdminLocationHandler{}
 }
 
-// SeedLocations 添加測試位置數據
-// @Summary 添加測試位置數據
-// @Description 為測試目的添加一些示例位置數據
-// @Tags admin
+// SeedLocations 添加台北地區心理健康服務機構數據
+// @Summary 添加台北地區心理健康服務機構數據
+// @Description 為測試目的添加台北地區所有已知的心理健康服務機構數據
+// @Tags location
 // @Accept json
 // @Produce json
-// @Security BearerAuth
 // @Success 200 {object} vo.Response
 // @Failure 500 {object} vo.ErrorResponse
-// @Router /admin/locations/seed [post]
+// @Router /locations/seed [post]
 func (h *AdminLocationHandler) SeedLocations(c *gin.Context) {
 	db, err := database.GetDBSafely()
 	if err != nil {
@@ -46,7 +45,7 @@ func (h *AdminLocationHandler) SeedLocations(c *gin.Context) {
 	// 創建一個測試用戶 ID（如果不存在）
 	testUserID := uuid.New()
 
-	// 示例位置數據
+	// 台北地區心理健康服務機構數據
 	locations := []models.Location{
 		{
 			ID:          uuid.New(),
@@ -124,6 +123,166 @@ func (h *AdminLocationHandler) SeedLocations(c *gin.Context) {
 			Phone:       "02-2786-1288",
 			Website:     "https://tpech.gov.taipei/",
 			Rating:      4.2,
+			IsPublic:    true,
+			CreatedAt:   time.Now(),
+			UpdatedAt:   time.Now(),
+		},
+		{
+			ID:          uuid.New(),
+			UserID:      testUserID,
+			Name:        "台北榮總精神醫學部",
+			Description: "台北榮民總醫院精神醫學部，提供專業精神醫療服務",
+			Address:     "台北市北投區石牌路二段201號",
+			Latitude:    25.1189,
+			Longitude:   121.5184,
+			Category:    "醫療機構",
+			Phone:       "02-2871-2121",
+			Website:     "https://www.vghtpe.gov.tw/",
+			Rating:      4.6,
+			IsPublic:    true,
+			CreatedAt:   time.Now(),
+			UpdatedAt:   time.Now(),
+		},
+		{
+			ID:          uuid.New(),
+			UserID:      testUserID,
+			Name:        "三軍總醫院精神醫學部",
+			Description: "三軍總醫院精神醫學部，提供軍民精神醫療服務",
+			Address:     "台北市內湖區成功路二段325號",
+			Latitude:    25.0682,
+			Longitude:   121.5944,
+			Category:    "醫療機構",
+			Phone:       "02-8792-3311",
+			Website:     "https://www.tsgh.ndmctsgh.edu.tw/",
+			Rating:      4.4,
+			IsPublic:    true,
+			CreatedAt:   time.Now(),
+			UpdatedAt:   time.Now(),
+		},
+		{
+			ID:          uuid.New(),
+			UserID:      testUserID,
+			Name:        "馬偕紀念醫院精神醫學部",
+			Description: "馬偕紀念醫院精神醫學部，提供基督教精神醫療服務",
+			Address:     "台北市中山區中山北路二段92號",
+			Latitude:    25.0588,
+			Longitude:   121.5219,
+			Category:    "醫療機構",
+			Phone:       "02-2543-3535",
+			Website:     "https://www.mmh.org.tw/",
+			Rating:      4.3,
+			IsPublic:    true,
+			CreatedAt:   time.Now(),
+			UpdatedAt:   time.Now(),
+		},
+		{
+			ID:          uuid.New(),
+			UserID:      testUserID,
+			Name:        "新光醫院精神科",
+			Description: "新光醫院精神科，提供專業精神醫療服務",
+			Address:     "台北市士林區文昌路95號",
+			Latitude:    25.0969,
+			Longitude:   121.5225,
+			Category:    "醫療機構",
+			Phone:       "02-2833-2211",
+			Website:     "https://www.skh.org.tw/",
+			Rating:      4.1,
+			IsPublic:    true,
+			CreatedAt:   time.Now(),
+			UpdatedAt:   time.Now(),
+		},
+		{
+			ID:          uuid.New(),
+			UserID:      testUserID,
+			Name:        "台北市立萬芳醫院精神科",
+			Description: "台北市立萬芳醫院精神科，提供社區精神醫療服務",
+			Address:     "台北市文山區興隆路三段111號",
+			Latitude:    24.9894,
+			Longitude:   121.5675,
+			Category:    "醫療機構",
+			Phone:       "02-2930-7930",
+			Website:     "https://www.wanfang.gov.taipei/",
+			Rating:      4.2,
+			IsPublic:    true,
+			CreatedAt:   time.Now(),
+			UpdatedAt:   time.Now(),
+		},
+		{
+			ID:          uuid.New(),
+			UserID:      testUserID,
+			Name:        "台北市立關渡醫院精神科",
+			Description: "台北市立關渡醫院精神科，提供精神復健服務",
+			Address:     "台北市北投區知行路225巷12號",
+			Latitude:    25.1214,
+			Longitude:   121.4694,
+			Category:    "醫療機構",
+			Phone:       "02-2858-7000",
+			Website:     "https://www.gandau.gov.taipei/",
+			Rating:      4.0,
+			IsPublic:    true,
+			CreatedAt:   time.Now(),
+			UpdatedAt:   time.Now(),
+		},
+		{
+			ID:          uuid.New(),
+			UserID:      testUserID,
+			Name:        "台北市立療養院",
+			Description: "台北市立療養院，專業精神醫療機構",
+			Address:     "台北市松山區三民路5號",
+			Latitude:    25.0631,
+			Longitude:   121.5597,
+			Category:    "醫療機構",
+			Phone:       "02-2726-3141",
+			Website:     "https://www.tpech.gov.taipei/",
+			Rating:      4.3,
+			IsPublic:    true,
+			CreatedAt:   time.Now(),
+			UpdatedAt:   time.Now(),
+		},
+		{
+			ID:          uuid.New(),
+			UserID:      testUserID,
+			Name:        "台北市立聯合醫院陽明院區精神科",
+			Description: "台北市立聯合醫院陽明院區精神科，提供精神醫療服務",
+			Address:     "台北市士林區雨聲街105號",
+			Latitude:    25.1047,
+			Longitude:   121.5229,
+			Category:    "醫療機構",
+			Phone:       "02-2835-3456",
+			Website:     "https://tpech.gov.taipei/",
+			Rating:      4.1,
+			IsPublic:    true,
+			CreatedAt:   time.Now(),
+			UpdatedAt:   time.Now(),
+		},
+		{
+			ID:          uuid.New(),
+			UserID:      testUserID,
+			Name:        "台北市立聯合醫院和平婦幼院區精神科",
+			Description: "台北市立聯合醫院和平婦幼院區精神科，提供婦幼精神醫療服務",
+			Address:     "台北市中正區中華路二段33號",
+			Latitude:    25.0426,
+			Longitude:   121.5083,
+			Category:    "醫療機構",
+			Phone:       "02-2388-9595",
+			Website:     "https://tpech.gov.taipei/",
+			Rating:      4.2,
+			IsPublic:    true,
+			CreatedAt:   time.Now(),
+			UpdatedAt:   time.Now(),
+		},
+		{
+			ID:          uuid.New(),
+			UserID:      testUserID,
+			Name:        "台北市立聯合醫院林森中醫昆明院區精神科",
+			Description: "台北市立聯合醫院林森中醫昆明院區精神科，提供中西醫整合精神醫療",
+			Address:     "台北市萬華區昆明街100號",
+			Latitude:    25.0408,
+			Longitude:   121.5073,
+			Category:    "醫療機構",
+			Phone:       "02-2388-7088",
+			Website:     "https://tpech.gov.taipei/",
+			Rating:      4.0,
 			IsPublic:    true,
 			CreatedAt:   time.Now(),
 			UpdatedAt:   time.Now(),
