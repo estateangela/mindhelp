@@ -75,6 +75,19 @@ func (h *ShareHandler) CreateShare(c *gin.Context) {
 		return
 	}
 
+	// 獲取資料庫連接
+	db, err := database.GetDBSafely()
+	if err != nil {
+		c.JSON(http.StatusServiceUnavailable, vo.NewErrorResponse(
+			"database_unavailable",
+			"Database service is currently unavailable",
+			"SERVICE_UNAVAILABLE",
+			nil,
+			c.Request.URL.Path,
+		))
+		return
+	}
+
 	var req dto.ShareRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, vo.NewErrorResponse(
@@ -112,7 +125,7 @@ func (h *ShareHandler) CreateShare(c *gin.Context) {
 	}
 
 	// 驗證內容是否存在
-	contentExists, err := h.checkContentExists(req.ContentType, contentID)
+	contentExists, err := h.checkContentExists(db, req.ContentType, contentID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, vo.NewErrorResponse(
 			"internal_error",
@@ -151,7 +164,7 @@ func (h *ShareHandler) CreateShare(c *gin.Context) {
 		IsActive:    true,
 	}
 
-	if err := h.db.Create(&share).Error; err != nil {
+	if err := db.Create(&share).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, vo.NewErrorResponse(
 			"internal_error",
 			"Failed to create share",
@@ -204,6 +217,19 @@ func (h *ShareHandler) GetShare(c *gin.Context) {
 		return
 	}
 
+	// 獲取資料庫連接
+	db, err := database.GetDBSafely()
+	if err != nil {
+		c.JSON(http.StatusServiceUnavailable, vo.NewErrorResponse(
+			"database_unavailable",
+			"Database service is currently unavailable",
+			"SERVICE_UNAVAILABLE",
+			nil,
+			c.Request.URL.Path,
+		))
+		return
+	}
+
 	parsedShareID, err := uuid.Parse(shareID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, vo.NewErrorResponse(
@@ -218,7 +244,7 @@ func (h *ShareHandler) GetShare(c *gin.Context) {
 
 	// 查找分享記錄
 	var share models.Share
-	if err := h.db.Where("id = ? AND is_active = ?", parsedShareID, true).First(&share).Error; err != nil {
+	if err := db.Where("id = ? AND is_active = ?", parsedShareID, true).First(&share).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			c.JSON(http.StatusNotFound, vo.NewErrorResponse(
 				"not_found",
@@ -252,13 +278,13 @@ func (h *ShareHandler) GetShare(c *gin.Context) {
 	}
 
 	// 記錄點擊
-	h.recordClick(share.ID, c)
+	h.recordClick(db, share.ID, c)
 
 	// 增加觀看次數
-	share.IncrementViewCount(h.db)
+	share.IncrementViewCount(db)
 
 	// 獲取內容詳情
-	contentDetails, err := h.getContentDetails(share.ContentType, share.ContentID)
+	contentDetails, err := h.getContentDetails(db, share.ContentType, share.ContentID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, vo.NewErrorResponse(
 			"internal_error",
@@ -272,7 +298,7 @@ func (h *ShareHandler) GetShare(c *gin.Context) {
 
 	// 獲取分享統計
 	var shareCount int64
-	h.db.Model(&models.Share{}).Where("content_type = ? AND content_id = ?",
+	db.Model(&models.Share{}).Where("content_type = ? AND content_id = ?",
 		share.ContentType, share.ContentID).Count(&shareCount)
 
 	// 構建回應
@@ -320,6 +346,19 @@ func (h *ShareHandler) GetUserShares(c *gin.Context) {
 		return
 	}
 
+	// 獲取資料庫連接
+	db, err := database.GetDBSafely()
+	if err != nil {
+		c.JSON(http.StatusServiceUnavailable, vo.NewErrorResponse(
+			"database_unavailable",
+			"Database service is currently unavailable",
+			"SERVICE_UNAVAILABLE",
+			nil,
+			c.Request.URL.Path,
+		))
+		return
+	}
+
 	// 解析查詢參數
 	contentType := strings.TrimSpace(c.Query("content_type"))
 	platform := strings.TrimSpace(c.Query("platform"))
@@ -337,7 +376,7 @@ func (h *ShareHandler) GetUserShares(c *gin.Context) {
 	offset := (page - 1) * limit
 
 	// 構建查詢
-	dbQuery := h.db.Model(&models.Share{}).Where("user_id = ? AND is_active = ?", userID, true)
+	dbQuery := db.Model(&models.Share{}).Where("user_id = ? AND is_active = ?", userID, true)
 
 	// 添加篩選條件
 	if contentType != "" {
@@ -419,6 +458,19 @@ func (h *ShareHandler) GetUserShares(c *gin.Context) {
 // @Failure 400 {object} vo.ErrorResponse
 // @Router /shares/stats [get]
 func (h *ShareHandler) GetShareStats(c *gin.Context) {
+	// 獲取資料庫連接
+	db, err := database.GetDBSafely()
+	if err != nil {
+		c.JSON(http.StatusServiceUnavailable, vo.NewErrorResponse(
+			"database_unavailable",
+			"Database service is currently unavailable",
+			"SERVICE_UNAVAILABLE",
+			nil,
+			c.Request.URL.Path,
+		))
+		return
+	}
+
 	contentType := c.Query("content_type")
 	contentIDStr := c.Query("content_id")
 
@@ -447,7 +499,7 @@ func (h *ShareHandler) GetShareStats(c *gin.Context) {
 
 	// 獲取總分享數
 	var totalShares int64
-	h.db.Model(&models.Share{}).Where("content_type = ? AND content_id = ? AND is_active = ?",
+	db.Model(&models.Share{}).Where("content_type = ? AND content_id = ? AND is_active = ?",
 		contentType, contentID, true).Count(&totalShares)
 
 	// 獲取各平台分享統計
@@ -455,7 +507,7 @@ func (h *ShareHandler) GetShareStats(c *gin.Context) {
 		Platform string `json:"platform"`
 		Count    int64  `json:"count"`
 	}
-	h.db.Model(&models.Share{}).
+	db.Model(&models.Share{}).
 		Select("platform, COUNT(*) as count").
 		Where("content_type = ? AND content_id = ? AND is_active = ?", contentType, contentID, true).
 		Group("platform").
@@ -469,7 +521,7 @@ func (h *ShareHandler) GetShareStats(c *gin.Context) {
 
 	// 獲取最近的分享記錄
 	var recentShares []models.Share
-	h.db.Where("content_type = ? AND content_id = ? AND is_active = ?", contentType, contentID, true).
+	db.Where("content_type = ? AND content_id = ? AND is_active = ?", contentType, contentID, true).
 		Order("created_at DESC").Limit(5).Find(&recentShares)
 
 	var recentShareResponses []dto.ShareResponse
@@ -499,19 +551,19 @@ func (h *ShareHandler) GetShareStats(c *gin.Context) {
 // 輔助方法
 
 // checkContentExists 檢查內容是否存在
-func (h *ShareHandler) checkContentExists(contentType string, contentID uuid.UUID) (bool, error) {
+func (h *ShareHandler) checkContentExists(db *gorm.DB, contentType string, contentID uuid.UUID) (bool, error) {
 	switch contentType {
 	case "article":
 		var count int64
-		err := h.db.Model(&models.Article{}).Where("id = ? AND is_published = ?", contentID, true).Count(&count).Error
+		err := db.Model(&models.Article{}).Where("id = ? AND is_published = ?", contentID, true).Count(&count).Error
 		return count > 0, err
 	case "location":
 		var count int64
-		err := h.db.Model(&models.Location{}).Where("id = ? AND is_public = ?", contentID, true).Count(&count).Error
+		err := db.Model(&models.Location{}).Where("id = ? AND is_public = ?", contentID, true).Count(&count).Error
 		return count > 0, err
 	case "quiz":
 		var count int64
-		err := h.db.Model(&models.Quiz{}).Where("id = ? AND is_active = ?", contentID, true).Count(&count).Error
+		err := db.Model(&models.Quiz{}).Where("id = ? AND is_active = ?", contentID, true).Count(&count).Error
 		return count > 0, err
 	default:
 		return false, fmt.Errorf("unsupported content type: %s", contentType)
@@ -556,11 +608,11 @@ func (h *ShareHandler) generateQRCode(_ string) string {
 }
 
 // getContentDetails 獲取內容詳情
-func (h *ShareHandler) getContentDetails(contentType string, contentID uuid.UUID) (map[string]interface{}, error) {
+func (h *ShareHandler) getContentDetails(db *gorm.DB, contentType string, contentID uuid.UUID) (map[string]interface{}, error) {
 	switch contentType {
 	case "article":
 		var article models.Article
-		if err := h.db.Where("id = ?", contentID).First(&article).Error; err != nil {
+		if err := db.Where("id = ?", contentID).First(&article).Error; err != nil {
 			return nil, err
 		}
 		return map[string]interface{}{
@@ -572,7 +624,7 @@ func (h *ShareHandler) getContentDetails(contentType string, contentID uuid.UUID
 		}, nil
 	case "location":
 		var location models.Location
-		if err := h.db.Where("id = ?", contentID).First(&location).Error; err != nil {
+		if err := db.Where("id = ?", contentID).First(&location).Error; err != nil {
 			return nil, err
 		}
 		return map[string]interface{}{
@@ -584,7 +636,7 @@ func (h *ShareHandler) getContentDetails(contentType string, contentID uuid.UUID
 		}, nil
 	case "quiz":
 		var quiz models.Quiz
-		if err := h.db.Where("id = ?", contentID).First(&quiz).Error; err != nil {
+		if err := db.Where("id = ?", contentID).First(&quiz).Error; err != nil {
 			return nil, err
 		}
 		return map[string]interface{}{
@@ -600,7 +652,7 @@ func (h *ShareHandler) getContentDetails(contentType string, contentID uuid.UUID
 }
 
 // recordClick 記錄分享點擊
-func (h *ShareHandler) recordClick(shareID uuid.UUID, c *gin.Context) {
+func (h *ShareHandler) recordClick(db *gorm.DB, shareID uuid.UUID, c *gin.Context) {
 	click := models.ShareClick{
 		ShareID:   shareID,
 		IPAddress: c.ClientIP(),
@@ -610,7 +662,7 @@ func (h *ShareHandler) recordClick(shareID uuid.UUID, c *gin.Context) {
 
 	// 非阻塞記錄點擊
 	go func() {
-		h.db.Create(&click)
+		db.Create(&click)
 	}()
 }
 

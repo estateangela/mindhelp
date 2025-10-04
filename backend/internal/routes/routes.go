@@ -159,9 +159,15 @@ func SetupRoutes(cfg *config.Config) *gin.Engine {
 			{
 				notificationHandler := handlers.NewNotificationHandler()
 				notifications.GET("", notificationHandler.GetNotifications)
-				notifications.PUT("/:id/read", notificationHandler.MarkNotificationRead)
-				notifications.PUT("/read-all", notificationHandler.MarkAllNotificationsRead)
-				notifications.DELETE("/:id", notificationHandler.DeleteNotification)
+				notifications.POST("/mark-as-read", notificationHandler.MarkAsRead)
+			}
+
+			// 使用者通知設定
+			{
+				notificationHandler := handlers.NewNotificationHandler()
+				protected.GET("/users/me/notification-settings", notificationHandler.GetNotificationSettings)
+				protected.PUT("/users/me/notification-settings", notificationHandler.UpdateNotificationSettings)
+				protected.POST("/users/me/push-token", notificationHandler.UpdatePushToken)
 			}
 
 			// 分享路由
@@ -246,7 +252,7 @@ func SetupRoutes(cfg *config.Config) *gin.Engine {
 			api.GET("/recommended-doctors/:id", handlers.GetRecommendedDoctor)
 
 			// 地圖相關公開路由
-			mapsHandler := handlers.NewMapsHandler(cfg)
+			mapsHandler := handlers.NewMapsHandler()
 			api.GET("/maps/addresses", mapsHandler.GetAllAddresses)
 			// 修正：移除不存在的 GetAddressesForGoogleMaps 方法
 			// api.GET("/maps/google-addresses", mapsHandler.GetAddressesForGoogleMaps)

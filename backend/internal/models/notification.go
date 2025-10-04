@@ -15,6 +15,7 @@ type Notification struct {
 	Content   string         `json:"content" gorm:"type:text;not null"`
 	Type      string         `json:"type" gorm:"size:50;not null"` // hourly_reminder, weekly_bulletin, system, etc.
 	IsRead    bool           `json:"is_read" gorm:"default:false"`
+	Payload   string         `json:"payload" gorm:"type:text"` // JSON 格式的額外資料
 	CreatedAt time.Time      `json:"created_at"`
 	UpdatedAt time.Time      `json:"updated_at"`
 	DeletedAt gorm.DeletedAt `json:"-" gorm:"index"`

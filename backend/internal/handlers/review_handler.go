@@ -62,6 +62,19 @@ func (h *ReviewHandler) GetResourceReviews(c *gin.Context) {
 		return
 	}
 
+	// 獲取資料庫連接
+	db, err := database.GetDBSafely()
+	if err != nil {
+		c.JSON(http.StatusServiceUnavailable, vo.NewErrorResponse(
+			"database_unavailable",
+			"Database service is currently unavailable",
+			"SERVICE_UNAVAILABLE",
+			nil,
+			c.Request.URL.Path,
+		))
+		return
+	}
+
 	// 解析查詢參數
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
@@ -190,6 +203,19 @@ func (h *ReviewHandler) CreateReview(c *gin.Context) {
 			"unauthorized",
 			"User not authenticated",
 			"UNAUTHORIZED",
+			nil,
+			c.Request.URL.Path,
+		))
+		return
+	}
+
+	// 獲取資料庫連接
+	db, err := database.GetDBSafely()
+	if err != nil {
+		c.JSON(http.StatusServiceUnavailable, vo.NewErrorResponse(
+			"database_unavailable",
+			"Database service is currently unavailable",
+			"SERVICE_UNAVAILABLE",
 			nil,
 			c.Request.URL.Path,
 		))
@@ -348,6 +374,19 @@ func (h *ReviewHandler) UpdateReview(c *gin.Context) {
 		return
 	}
 
+	// 獲取資料庫連接
+	db, err := database.GetDBSafely()
+	if err != nil {
+		c.JSON(http.StatusServiceUnavailable, vo.NewErrorResponse(
+			"database_unavailable",
+			"Database service is currently unavailable",
+			"SERVICE_UNAVAILABLE",
+			nil,
+			c.Request.URL.Path,
+		))
+		return
+	}
+
 	reviewID := c.Param("reviewId")
 	parsedID, err := uuid.Parse(reviewID)
 	if err != nil {
@@ -496,6 +535,19 @@ func (h *ReviewHandler) DeleteReview(c *gin.Context) {
 			"unauthorized",
 			"User not authenticated",
 			"UNAUTHORIZED",
+			nil,
+			c.Request.URL.Path,
+		))
+		return
+	}
+
+	// 獲取資料庫連接
+	db, err := database.GetDBSafely()
+	if err != nil {
+		c.JSON(http.StatusServiceUnavailable, vo.NewErrorResponse(
+			"database_unavailable",
+			"Database service is currently unavailable",
+			"SERVICE_UNAVAILABLE",
 			nil,
 			c.Request.URL.Path,
 		))

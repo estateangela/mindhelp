@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
-	//"mindhelp-backend/internal/database"
+	"mindhelp-backend/internal/database"
 	"mindhelp-backend/internal/dto"
 	"mindhelp-backend/internal/middleware"
 	"mindhelp-backend/internal/models"
@@ -63,6 +63,19 @@ func (h *BookmarkHandler) GetArticleBookmarks(c *gin.Context) {
 	}
 
 	offset := (page - 1) * limit
+
+	// 獲取資料庫連接
+	db, err := database.GetDBSafely()
+	if err != nil {
+		c.JSON(http.StatusServiceUnavailable, vo.NewErrorResponse(
+			"database_unavailable",
+			"Database service is currently unavailable",
+			"SERVICE_UNAVAILABLE",
+			nil,
+			c.Request.URL.Path,
+		))
+		return
+	}
 
 	// 獲取總數
 	var total int64
@@ -182,6 +195,19 @@ func (h *BookmarkHandler) GetLocationBookmarks(c *gin.Context) {
 	}
 
 	offset := (page - 1) * limit
+
+	// 獲取資料庫連接
+	db, err := database.GetDBSafely()
+	if err != nil {
+		c.JSON(http.StatusServiceUnavailable, vo.NewErrorResponse(
+			"database_unavailable",
+			"Database service is currently unavailable",
+			"SERVICE_UNAVAILABLE",
+			nil,
+			c.Request.URL.Path,
+		))
+		return
+	}
 
 	// 獲取總數
 	var total int64
@@ -323,8 +349,21 @@ func (h *BookmarkHandler) BookmarkResource(c *gin.Context) {
 		return
 	}
 
+	// 獲取資料庫連接
+	db, err := database.GetDBSafely()
+	if err != nil {
+		c.JSON(http.StatusServiceUnavailable, vo.NewErrorResponse(
+			"database_unavailable",
+			"Database service is currently unavailable",
+			"SERVICE_UNAVAILABLE",
+			nil,
+			c.Request.URL.Path,
+		))
+		return
+	}
+
 	// 檢查資源是否存在
-	if err := h.checkResourceExists(req.ResourceType, resourceID); err != nil {
+	if err := h.checkResourceExists(db, req.ResourceType, resourceID); err != nil {
 		if err == gorm.ErrRecordNotFound {
 			c.JSON(http.StatusNotFound, vo.NewErrorResponse(
 				"not_found",
@@ -443,6 +482,19 @@ func (h *BookmarkHandler) UnbookmarkResource(c *gin.Context) {
 		return
 	}
 
+	// 獲取資料庫連接
+	db, err := database.GetDBSafely()
+	if err != nil {
+		c.JSON(http.StatusServiceUnavailable, vo.NewErrorResponse(
+			"database_unavailable",
+			"Database service is currently unavailable",
+			"SERVICE_UNAVAILABLE",
+			nil,
+			c.Request.URL.Path,
+		))
+		return
+	}
+
 	resourceID, err := uuid.Parse(resourceIDStr)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, vo.NewErrorResponse(
@@ -490,7 +542,7 @@ func (h *BookmarkHandler) UnbookmarkResource(c *gin.Context) {
 }
 
 // checkResourceExists 檢查資源是否存在
-func (h *BookmarkHandler) checkResourceExists(resourceType string, resourceID uuid.UUID) error {
+func (h *BookmarkHandler) checkResourceExists(db *gorm.DB, resourceType string, resourceID uuid.UUID) error {
 	switch resourceType {
 	case "article":
 		var article models.Article

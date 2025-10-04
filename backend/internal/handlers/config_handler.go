@@ -10,7 +10,6 @@ import (
 	"mindhelp-backend/internal/vo"
 
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 )
 
 // ConfigHandler 配置處理器
@@ -32,6 +31,19 @@ func NewConfigHandler() *ConfigHandler {
 // @Failure 500 {object} vo.ErrorResponse
 // @Router /config [get]
 func (h *ConfigHandler) GetConfig(c *gin.Context) {
+	// 獲取資料庫連接
+	db, err := database.GetDBSafely()
+	if err != nil {
+		c.JSON(http.StatusServiceUnavailable, vo.NewErrorResponse(
+			"database_unavailable",
+			"Database service is currently unavailable",
+			"SERVICE_UNAVAILABLE",
+			nil,
+			c.Request.URL.Path,
+		))
+		return
+	}
+
 	// 獲取所有啟用的配置
 	var configs []models.AppConfig
 	if err := db.Where("is_active = ?", true).Find(&configs).Error; err != nil {
@@ -48,11 +60,11 @@ func (h *ConfigHandler) GetConfig(c *gin.Context) {
 	// 解析配置
 	response := dto.AppConfigResponse{
 		Features: dto.FeatureConfig{
-			EnableReviews:           true,  // 預設值
+			EnableReviews:           true, // 預設值
 			EnableTherapistProfiles: false,
 			EnableGroupChat:         false,
 			EnableVideoConsult:      false,
-			EnableSharing:          true,
+			EnableSharing:           true,
 		},
 		Filters: dto.FilterConfig{
 			ResourceTypes:  []dto.FilterOption{},
@@ -75,34 +87,34 @@ func (h *ConfigHandler) GetConfig(c *gin.Context) {
 			if err := json.Unmarshal([]byte(config.Value), &features); err == nil {
 				response.Features = features
 			}
-		
+
 		case "resource_types":
 			var resourceTypes []dto.FilterOption
 			if err := json.Unmarshal([]byte(config.Value), &resourceTypes); err == nil {
 				response.Filters.ResourceTypes = resourceTypes
 			}
-		
+
 		case "specialties":
 			var specialties []dto.FilterOption
 			if err := json.Unmarshal([]byte(config.Value), &specialties); err == nil {
 				response.Filters.Specialties = specialties
 			}
-		
+
 		case "quiz_categories":
 			var quizCategories []dto.FilterOption
 			if err := json.Unmarshal([]byte(config.Value), &quizCategories); err == nil {
 				response.Filters.QuizCategories = quizCategories
 			}
-		
+
 		case "support_email":
 			response.SupportInfo.Email = config.Value
-		
+
 		case "support_phone":
 			response.SupportInfo.Phone = config.Value
-		
+
 		case "support_website":
 			response.SupportInfo.Website = config.Value
-		
+
 		case "working_hours":
 			response.SupportInfo.WorkingHours = config.Value
 		}
@@ -112,7 +124,7 @@ func (h *ConfigHandler) GetConfig(c *gin.Context) {
 	if len(response.Filters.QuizCategories) == 0 {
 		var categories []string
 		db.Model(&models.Quiz{}).Where("is_active = ?", true).Distinct("category").Pluck("category", &categories)
-		
+
 		for _, category := range categories {
 			displayName := h.getCategoryDisplayName(category)
 			response.Filters.QuizCategories = append(response.Filters.QuizCategories, dto.FilterOption{
@@ -137,7 +149,7 @@ func (h *ConfigHandler) getCategoryDisplayName(category string) string {
 		"eating":     "飲食失調",
 		"addiction":  "成癮問題",
 	}
-	
+
 	if displayName, exists := categoryMap[category]; exists {
 		return displayName
 	}
