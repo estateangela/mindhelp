@@ -1685,27 +1685,6 @@ paths:
       summary: 獲取資料庫統計
       tags:
       - admin
-  /admin/locations/seed:
-    post:
-      consumes:
-      - application/json
-      description: 為測試目的添加一些示例位置數據
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/vo.Response'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/vo.ErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: 添加測試位置數據
-      tags:
-      - admin
   /admin/recommended-doctors:
     post:
       consumes:
@@ -3097,6 +3076,25 @@ paths:
           schema:
             $ref: '#/definitions/vo.ErrorResponse'
       summary: 搜尋位置
+      tags:
+      - location
+  /locations/seed:
+    post:
+      consumes:
+      - application/json
+      description: 為測試目的添加台北地區所有已知的心理健康服務機構數據
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/vo.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/vo.ErrorResponse'
+      summary: 添加台北地區心理健康服務機構數據
       tags:
       - location
   /maps/addresses:
