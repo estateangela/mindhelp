@@ -190,6 +190,19 @@ func (h *NotificationHandler) MarkAsRead(c *gin.Context) {
 		return
 	}
 
+	// 獲取資料庫連接
+	db, err := database.GetDBSafely()
+	if err != nil {
+		c.JSON(http.StatusServiceUnavailable, vo.NewErrorResponse(
+			"database_unavailable",
+			"Database service is currently unavailable",
+			"SERVICE_UNAVAILABLE",
+			nil,
+			c.Request.URL.Path,
+		))
+		return
+	}
+
 	// 驗證請求資料
 	if err := req.Validate(); err != nil {
 		c.JSON(http.StatusBadRequest, vo.NewErrorResponse(
@@ -265,9 +278,22 @@ func (h *NotificationHandler) GetNotificationSettings(c *gin.Context) {
 		return
 	}
 
+	// 獲取資料庫連接
+	db, err := database.GetDBSafely()
+	if err != nil {
+		c.JSON(http.StatusServiceUnavailable, vo.NewErrorResponse(
+			"database_unavailable",
+			"Database service is currently unavailable",
+			"SERVICE_UNAVAILABLE",
+			nil,
+			c.Request.URL.Path,
+		))
+		return
+	}
+
 	// 查找使用者設定
 	var settings models.UserSetting
-	if err := db.Where("user_id = ?", userID).First(&settings).Error; err != nil {
+	if err = db.Where("user_id = ?", userID).First(&settings).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			// 如果沒有設定，返回預設值
 			response := dto.NotificationSettingsResponse{
@@ -323,6 +349,19 @@ func (h *NotificationHandler) UpdateNotificationSettings(c *gin.Context) {
 		return
 	}
 
+	// 獲取資料庫連接
+	db, err := database.GetDBSafely()
+	if err != nil {
+		c.JSON(http.StatusServiceUnavailable, vo.NewErrorResponse(
+			"database_unavailable",
+			"Database service is currently unavailable",
+			"SERVICE_UNAVAILABLE",
+			nil,
+			c.Request.URL.Path,
+		))
+		return
+	}
+
 	var req dto.NotificationSettingsRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, vo.NewErrorResponse(
@@ -349,7 +388,7 @@ func (h *NotificationHandler) UpdateNotificationSettings(c *gin.Context) {
 
 	// 查找或創建使用者設定
 	var settings models.UserSetting
-	err := db.Where("user_id = ?", userID).First(&settings).Error
+	err = db.Where("user_id = ?", userID).First(&settings).Error
 	if err == gorm.ErrRecordNotFound {
 		// 創建新設定
 		settings = models.UserSetting{
@@ -406,7 +445,7 @@ func (h *NotificationHandler) UpdateNotificationSettings(c *gin.Context) {
 	}
 
 	// 重新獲取更新後的設定
-	if err := db.Where("user_id = ?", userID).First(&settings).Error; err != nil {
+	if err = db.Where("user_id = ?", userID).First(&settings).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, vo.NewErrorResponse(
 			"internal_error",
 			"Failed to get updated notification settings",
@@ -452,6 +491,19 @@ func (h *NotificationHandler) UpdatePushToken(c *gin.Context) {
 		return
 	}
 
+	// 獲取資料庫連接
+	db, err := database.GetDBSafely()
+	if err != nil {
+		c.JSON(http.StatusServiceUnavailable, vo.NewErrorResponse(
+			"database_unavailable",
+			"Database service is currently unavailable",
+			"SERVICE_UNAVAILABLE",
+			nil,
+			c.Request.URL.Path,
+		))
+		return
+	}
+
 	var req dto.PushTokenRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, vo.NewErrorResponse(
@@ -478,7 +530,7 @@ func (h *NotificationHandler) UpdatePushToken(c *gin.Context) {
 
 	// 查找或創建使用者設定
 	var settings models.UserSetting
-	err := db.Where("user_id = ?", userID).First(&settings).Error
+	err = db.Where("user_id = ?", userID).First(&settings).Error
 	if err == gorm.ErrRecordNotFound {
 		// 創建新設定
 		settings = models.UserSetting{

@@ -252,7 +252,7 @@ func SetupRoutes(cfg *config.Config) *gin.Engine {
 			api.GET("/recommended-doctors/:id", handlers.GetRecommendedDoctor)
 
 			// 地圖相關公開路由
-			mapsHandler := handlers.NewMapsHandler(cfg)
+			mapsHandler := handlers.NewMapsHandler()
 			api.GET("/maps/addresses", mapsHandler.GetAllAddresses)
 			// 修正：移除不存在的 GetAddressesForGoogleMaps 方法
 			// api.GET("/maps/google-addresses", mapsHandler.GetAddressesForGoogleMaps)

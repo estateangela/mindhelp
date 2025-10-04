@@ -208,6 +208,19 @@ func (h *ArticleHandler) GetArticle(c *gin.Context) {
 		return
 	}
 
+	// 獲取資料庫連接
+	db, err := database.GetDBSafely()
+	if err != nil {
+		c.JSON(http.StatusServiceUnavailable, vo.NewErrorResponse(
+			"database_unavailable",
+			"Database service is currently unavailable",
+			"SERVICE_UNAVAILABLE",
+			nil,
+			c.Request.URL.Path,
+		))
+		return
+	}
+
 	var article models.Article
 	if err := db.Where("id = ? AND is_published = ?", parsedID, true).First(&article).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -290,6 +303,19 @@ func (h *ArticleHandler) BookmarkArticle(c *gin.Context) {
 			"unauthorized",
 			"User not authenticated",
 			"UNAUTHORIZED",
+			nil,
+			c.Request.URL.Path,
+		))
+		return
+	}
+
+	// 獲取資料庫連接
+	db, err := database.GetDBSafely()
+	if err != nil {
+		c.JSON(http.StatusServiceUnavailable, vo.NewErrorResponse(
+			"database_unavailable",
+			"Database service is currently unavailable",
+			"SERVICE_UNAVAILABLE",
 			nil,
 			c.Request.URL.Path,
 		))
@@ -387,6 +413,19 @@ func (h *ArticleHandler) UnbookmarkArticle(c *gin.Context) {
 			"unauthorized",
 			"User not authenticated",
 			"UNAUTHORIZED",
+			nil,
+			c.Request.URL.Path,
+		))
+		return
+	}
+
+	// 獲取資料庫連接
+	db, err := database.GetDBSafely()
+	if err != nil {
+		c.JSON(http.StatusServiceUnavailable, vo.NewErrorResponse(
+			"database_unavailable",
+			"Database service is currently unavailable",
+			"SERVICE_UNAVAILABLE",
 			nil,
 			c.Request.URL.Path,
 		))

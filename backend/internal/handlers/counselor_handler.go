@@ -146,6 +146,19 @@ func GetCounselor(c *gin.Context) {
 		return
 	}
 
+	// 獲取資料庫連接
+	db, err := database.GetDBSafely()
+	if err != nil {
+		c.JSON(http.StatusServiceUnavailable, vo.NewErrorResponse(
+			"database_unavailable",
+			"Database service is currently unavailable",
+			"SERVICE_UNAVAILABLE",
+			nil,
+			c.Request.URL.Path,
+		))
+		return
+	}
+
 	var counselor models.Counselor
 	if err := db.First(&counselor, "id = ?", counselorID).Error; err != nil {
 		c.JSON(http.StatusNotFound, vo.ErrorResponse{
@@ -192,6 +205,19 @@ func CreateCounselor(c *gin.Context) {
 			Message: "Invalid request data",
 			Error:   err.Error(),
 		})
+		return
+	}
+
+	// 獲取資料庫連接
+	db, err := database.GetDBSafely()
+	if err != nil {
+		c.JSON(http.StatusServiceUnavailable, vo.NewErrorResponse(
+			"database_unavailable",
+			"Database service is currently unavailable",
+			"SERVICE_UNAVAILABLE",
+			nil,
+			c.Request.URL.Path,
+		))
 		return
 	}
 
@@ -256,6 +282,19 @@ func UpdateCounselor(c *gin.Context) {
 			Message: "Invalid counselor ID",
 			Error:   err.Error(),
 		})
+		return
+	}
+
+	// 獲取資料庫連接
+	db, err := database.GetDBSafely()
+	if err != nil {
+		c.JSON(http.StatusServiceUnavailable, vo.NewErrorResponse(
+			"database_unavailable",
+			"Database service is currently unavailable",
+			"SERVICE_UNAVAILABLE",
+			nil,
+			c.Request.URL.Path,
+		))
 		return
 	}
 
@@ -337,6 +376,19 @@ func DeleteCounselor(c *gin.Context) {
 			Message: "Invalid counselor ID",
 			Error:   err.Error(),
 		})
+		return
+	}
+
+	// 獲取資料庫連接
+	db, err := database.GetDBSafely()
+	if err != nil {
+		c.JSON(http.StatusServiceUnavailable, vo.NewErrorResponse(
+			"database_unavailable",
+			"Database service is currently unavailable",
+			"SERVICE_UNAVAILABLE",
+			nil,
+			c.Request.URL.Path,
+		))
 		return
 	}
 

@@ -294,8 +294,8 @@ func (h *AdminHandler) GetDatabaseStats(c *gin.Context) {
 	var centerWithAddressCount int64
 	var doctorWithDescriptionCount int64
 
-	// 使用 h.DB（注意大小寫，確保正確存取 DB 實例）並加上錯誤處理，避免未定義變數與潛在 SQL 錯誤
-	if err := h.DB.Model(&models.Counselor{}).
+	// 使用 db（注意大小寫，確保正確存取 DB 實例）並加上錯誤處理，避免未定義變數與潛在 SQL 錯誤
+	if err := db.Model(&models.Counselor{}).
 		Where("work_location IS NOT NULL AND work_location != ''").
 		Count(&counselorWithLocationCount).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, vo.ErrorResponse{
