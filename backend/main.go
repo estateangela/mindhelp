@@ -13,6 +13,7 @@ import (
 	"mindhelp-backend/internal/config"
 	"mindhelp-backend/internal/database"
 	"mindhelp-backend/internal/routes"
+	"mindhelp-backend/internal/scheduler"
 )
 
 // @title MindHelp Backend API
@@ -52,6 +53,14 @@ func main() {
 	if err := database.Migrate(); err != nil {
 		log.Fatalf("Failed to migrate database: %v", err)
 	}
+
+	// 啟動定時任務調度器
+	notificationScheduler := scheduler.NewScheduler(cfg)
+	if err := notificationScheduler.Start(); err != nil {
+		log.Fatalf("Failed to start notification scheduler: %v", err)
+	}
+	defer notificationScheduler.Stop()
+
 	// 設定路由
 	router := routes.SetupRoutes(cfg)
 
