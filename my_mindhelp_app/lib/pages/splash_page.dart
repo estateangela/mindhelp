@@ -21,20 +21,9 @@ class _SplashPageState extends State<SplashPage> {
     // 模擬載入時間，確保使用者能看到 Logo
     await Future.delayed(const Duration(seconds: 3));
 
-    try {
-      // 在跳轉前，先呼叫地圖的資料
-      await LocationService().getCounselingCenters();
-
-      // 在所有資料載入完成後，跳轉到主頁
-      if (mounted) {
-        Navigator.pushReplacementNamed(context, '/home');
-      }
-    } catch (e) {
-      // 處理 API 錯誤，例如顯示錯誤訊息並仍然跳轉
-      print('初始化失敗：$e');
-      if (mounted) {
-        Navigator.pushReplacementNamed(context, '/home');
-      }
+    // 移除載入 API 的邏輯，直接跳轉
+    if (mounted) {
+      Navigator.pushReplacementNamed(context, '/home');
     }
   }
 

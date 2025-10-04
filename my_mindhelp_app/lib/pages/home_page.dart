@@ -55,7 +55,7 @@ class _HomePageState extends State<HomePage> {
                       Navigator.pushNamed(context, '/chat');
                     }),
                     _buildTile(context, Icons.favorite_border, '心理測驗', () {
-                      Navigator.pushNamed(context, '/quiz');
+                      Navigator.pushNamed(context, '/quiz_landing');
                     }),
                   ],
                 ),

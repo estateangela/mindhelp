@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import '../core/theme.dart';
-import '../models/article.dart';
+import '../models/article.dart'; // 確保這裡導入的是唯一的 Article 類別
 import '../widgets/custom_app_bar.dart';
-//import 'article_detail_page.dart';
+import 'ArticleDetailPage.dart'; // 導入詳情頁面
 
 class ArticlePage extends StatelessWidget {
   ArticlePage({super.key});
@@ -21,14 +21,14 @@ class ArticlePage extends StatelessWidget {
       title: '走出情緒低谷的七個步驟',
       author: '李心理師',
       summary: '情緒低落是正常的，但當它持續影響生活時，不妨嘗試這七個實用步驟，幫助你重新找回內心的平靜與力量。',
-      imageUrl: 'assets/images/3.jpg',
+      imageUrl: 'assets/images/4.jpg',
     ),
     Article(
       id: '3',
       title: '親密關係中的有效溝通',
       author: '王心理師',
       summary: '溝通是維繫關係的橋樑。本專欄將探討如何在與伴侶、家人或朋友的互動中，建立健康且有建設性的溝通模式。',
-      imageUrl: 'assets/images/4.jpg',
+      imageUrl: 'assets/images/3.jpg',
     ),
   ];
 
@@ -98,14 +98,26 @@ class ArticlePage extends StatelessWidget {
         ],
       ),
       child: InkWell(
-        // onTap: () {
-        // Navigator.push(
-        // context,
-        //MaterialPageRoute(
-        //builder: (context) => ArticleDetailPage(article: article),
-        //),
-        //);
-        //},
+        onTap: () {
+          // 點擊時彈出對話框
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                title: Text(article.title),
+                content: ArticleDetailPage(article: article),
+                actions: <Widget>[
+                  TextButton(
+                    child: const Text('關閉'),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                ],
+              );
+            },
+          );
+        },
         borderRadius: BorderRadius.circular(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -115,7 +127,6 @@ class ArticlePage extends StatelessWidget {
               child: ClipRRect(
                 borderRadius:
                     const BorderRadius.vertical(top: Radius.circular(12)),
-                // 將 Image.network 替換為 Image.asset
                 child: Image.asset(
                   article.imageUrl,
                   fit: BoxFit.cover,
@@ -158,20 +169,4 @@ class ArticlePage extends StatelessWidget {
       ),
     );
   }
-}
-
-class Article {
-  final String id;
-  final String title;
-  final String author;
-  final String summary;
-  final String imageUrl;
-
-  Article({
-    required this.id,
-    required this.title,
-    required this.author,
-    required this.summary,
-    required this.imageUrl,
-  });
 }
