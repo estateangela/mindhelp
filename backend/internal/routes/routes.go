@@ -4,7 +4,9 @@ import (
 	"mindhelp-backend/internal/config"
 	"mindhelp-backend/internal/handlers"
 	"mindhelp-backend/internal/middleware"
+	"net/http"
 	"os"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	ginCors "github.com/rs/cors/wrapper/gin"
@@ -34,6 +36,20 @@ func SetupRoutes(cfg *config.Config) *gin.Engine {
 		AllowCredentials: true,
 	})
 	r.Use(corsConfig)
+
+	// 根路徑健康檢查
+	r.GET("/", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{
+			"status":    "ok",
+			"message":   "MindHelp API is running",
+			"timestamp": time.Now().Format("2006-01-02T15:04:05Z07:00"),
+			"version":   "1.0.0",
+		})
+	})
+
+	r.HEAD("/", func(c *gin.Context) {
+		c.Status(http.StatusOK)
+	})
 
 	// Swagger 文檔
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
@@ -206,17 +222,17 @@ func SetupRoutes(cfg *config.Config) *gin.Engine {
 				admin.POST("/recommended-doctors", handlers.CreateRecommendedDoctor)
 				admin.PUT("/recommended-doctors/:id", handlers.UpdateRecommendedDoctor)
 				admin.DELETE("/recommended-doctors/:id", handlers.DeleteRecommendedDoctor)
-
-				// 定時任務管理
-				schedulerHandler := handlers.NewSchedulerTriggerHandler()
-				admin.GET("/scheduler/status", schedulerHandler.GetSchedulerStatus)
-				admin.POST("/scheduler/trigger/hourly", schedulerHandler.TriggerHourlyNotification)
-				admin.POST("/scheduler/trigger/weekly", schedulerHandler.TriggerWeeklyNotification)
 			}
 		}
 
 		// 公開路由
 		{
+			// 定時任務管理 (公開端點，不需要認證)
+			schedulerHandler := handlers.NewSchedulerTriggerHandler()
+			api.GET("/scheduler/status", schedulerHandler.GetSchedulerStatus)
+			api.POST("/scheduler/trigger/hourly", schedulerHandler.TriggerHourlyNotification)
+			api.POST("/scheduler/trigger/weekly", schedulerHandler.TriggerWeeklyNotification)
+
 			// 位置相關公開路由
 			locationHandler := handlers.NewLocationHandler()
 			api.GET("/locations/search", locationHandler.SearchLocations)

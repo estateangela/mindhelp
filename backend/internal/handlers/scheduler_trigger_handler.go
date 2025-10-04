@@ -20,14 +20,12 @@ func NewSchedulerTriggerHandler() *SchedulerTriggerHandler {
 // TriggerHourlyNotification 手動觸發每小時通知
 // @Summary 手動觸發每小時通知
 // @Description 立即執行每小時通知任務，忽略時間和排程限制
-// @Tags admin
+// @Tags scheduler
 // @Accept json
 // @Produce json
-// @Security BearerAuth
 // @Success 200 {object} vo.Response
-// @Failure 401 {object} vo.ErrorResponse
 // @Failure 500 {object} vo.ErrorResponse
-// @Router /admin/scheduler/trigger/hourly [post]
+// @Router /scheduler/trigger/hourly [post]
 func (h *SchedulerTriggerHandler) TriggerHourlyNotification(c *gin.Context) {
 	// 這裡暫時返回成功，實際的觸發邏輯會在後續實現
 	c.JSON(http.StatusOK, vo.SuccessResponse(map[string]interface{}{
@@ -40,14 +38,12 @@ func (h *SchedulerTriggerHandler) TriggerHourlyNotification(c *gin.Context) {
 // TriggerWeeklyNotification 手動觸發每週通知
 // @Summary 手動觸發每週通知
 // @Description 立即執行每週通知任務，忽略時間和排程限制
-// @Tags admin
+// @Tags scheduler
 // @Accept json
 // @Produce json
-// @Security BearerAuth
 // @Success 200 {object} vo.Response
-// @Failure 401 {object} vo.ErrorResponse
 // @Failure 500 {object} vo.ErrorResponse
-// @Router /admin/scheduler/trigger/weekly [post]
+// @Router /scheduler/trigger/weekly [post]
 func (h *SchedulerTriggerHandler) TriggerWeeklyNotification(c *gin.Context) {
 	// 這裡暫時返回成功，實際的觸發邏輯會在後續實現
 	c.JSON(http.StatusOK, vo.SuccessResponse(map[string]interface{}{
@@ -60,14 +56,12 @@ func (h *SchedulerTriggerHandler) TriggerWeeklyNotification(c *gin.Context) {
 // GetSchedulerStatus 獲取定時任務狀態
 // @Summary 獲取定時任務狀態
 // @Description 獲取所有已排程的定時任務資訊
-// @Tags admin
+// @Tags scheduler
 // @Accept json
 // @Produce json
-// @Security BearerAuth
 // @Success 200 {object} vo.Response{data=map[string]interface{}}
-// @Failure 401 {object} vo.ErrorResponse
 // @Failure 500 {object} vo.ErrorResponse
-// @Router /admin/scheduler/status [get]
+// @Router /scheduler/status [get]
 func (h *SchedulerTriggerHandler) GetSchedulerStatus(c *gin.Context) {
 	c.JSON(http.StatusOK, vo.SuccessResponse(map[string]interface{}{
 		"status":    "running",
@@ -86,3 +80,4 @@ func (h *SchedulerTriggerHandler) GetSchedulerStatus(c *gin.Context) {
 		},
 	}, "Scheduler status retrieved successfully"))
 }
+
