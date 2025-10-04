@@ -42,8 +42,33 @@ func (h *AdminLocationHandler) SeedLocations(c *gin.Context) {
 		return
 	}
 
-	// 創建一個測試用戶 ID（如果不存在）
-	testUserID := uuid.New()
+	// 查找或創建一個系統用戶 ID
+	var systemUser models.User
+	err = db.Where("email = ?", "system@mindhelp.com").First(&systemUser).Error
+	if err != nil {
+		// 如果系統用戶不存在，創建一個
+		systemUser = models.User{
+			ID:        uuid.New(),
+			Email:     "system@mindhelp.com",
+			Username:  "system",
+			FullName:  "系統用戶",
+			Password:  "system_password_hash", // 這只是一個佔位符
+			IsActive:  true,
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
+		}
+		if err := db.Create(&systemUser).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, vo.NewErrorResponse(
+				"internal_error",
+				"Failed to create system user",
+				"INTERNAL_ERROR",
+				nil,
+				c.Request.URL.Path,
+			))
+			return
+		}
+	}
+	testUserID := systemUser.ID
 
 	// 台北地區心理健康服務機構數據
 	locations := []models.Location{
