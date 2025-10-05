@@ -31,7 +31,15 @@ func (h *SchedulerTriggerHandler) TriggerHourlyNotification(c *gin.Context) {
 	c.JSON(http.StatusOK, vo.SuccessResponse(map[string]interface{}{
 		"triggered_at": time.Now().Format("2006-01-02T15:04:05Z07:00"),
 		"job_type":     "hourly_notification",
-		"message":      []string{"今天心情還好嗎？來和AI 說說話吧 🌿", "有些困擾說出口會好一點。來讓 AI 小幫手聽你說說吧 👂"},
+		"message": []string{"今天心情還好嗎？來和AI 說說話吧 🌿", "有些困擾說出口會好一點。來讓 AI 小幫手聽你說說吧 👂",
+			"今天心情還好嗎？來和心情 AI 說說話吧 🌿",
+			"有些困擾說出口會好一點。來讓 AI 小幫手聽你說說吧 👂",
+			"5 分鐘心理健康知識：什麼是情緒調節？（點我閱讀）",
+			"今天的自我關懷小任務：寫下一件讓你感激的事 🍀",
+			"明天容易緊張嗎？來和 AI 說說話吧 🌿",
+			"有甚麼難以啟齒的事情嗎？來和 AI 說說話吧 🌿",
+			"今天容易焦慮嗎？來和 AI 說說話吧 🌿",
+			"今天容易焦慮嗎？來和 AI 說說話吧 🌿"},
 	}, "Hourly notification triggered successfully"))
 }
 
