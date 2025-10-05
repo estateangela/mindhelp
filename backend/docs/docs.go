@@ -318,36 +318,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/admin/database-stats": {
-            "get": {
-                "description": "獲取資料庫中各表的記錄數量",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "admin"
-                ],
-                "summary": "獲取資料庫統計",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/vo.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/admin/recommended-doctors": {
             "post": {
                 "description": "創建新的推薦醫師記錄",
@@ -484,169 +454,6 @@ const docTemplate = `{
                         "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/vo.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/vo.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/admin/scheduler/jobs": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "獲取所有已排程的定時任務資訊",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "admin"
-                ],
-                "summary": "獲取定時任務狀態",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/vo.Response"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object",
-                                            "additionalProperties": true
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/vo.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/vo.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/admin/scheduler/trigger/hourly": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "立即執行每小時通知任務，忽略時間和排程限制",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "admin"
-                ],
-                "summary": "手動觸發每小時通知",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/vo.Response"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/vo.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/vo.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/admin/scheduler/trigger/weekly": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "立即執行每週通知任務，忽略時間和排程限制",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "admin"
-                ],
-                "summary": "手動觸發每週通知",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/vo.Response"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/vo.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/vo.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/admin/seed-database": {
-            "post": {
-                "description": "插入範例的諮商師、諮商所和推薦醫師資料",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "admin"
-                ],
-                "summary": "插入種子資料",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
                         }
                     },
                     "500": {
@@ -904,7 +711,7 @@ const docTemplate = `{
         },
         "/auth/login": {
             "post": {
-                "description": "使用者登入驗證",
+                "description": "使用者登入並獲取 JWT token",
                 "consumes": [
                     "application/json"
                 ],
@@ -915,11 +722,34 @@ const docTemplate = `{
                     "auth"
                 ],
                 "summary": "使用者登入",
+                "parameters": [
+                    {
+                        "description": "登入資訊",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.LoginRequest"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/vo.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/vo.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.AuthResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -949,12 +779,35 @@ const docTemplate = `{
                 "tags": [
                     "auth"
                 ],
-                "summary": "重新整理 Token",
+                "summary": "刷新 JWT token",
+                "parameters": [
+                    {
+                        "description": "Refresh token",
+                        "name": "refresh_token",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/vo.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/vo.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.AuthResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -985,11 +838,34 @@ const docTemplate = `{
                     "auth"
                 ],
                 "summary": "使用者註冊",
+                "parameters": [
+                    {
+                        "description": "註冊資訊",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.RegisterRequest"
+                        }
+                    }
+                ],
                 "responses": {
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/vo.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/vo.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.AuthResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -1793,412 +1669,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/google-maps/batch-geocode": {
-            "post": {
-                "description": "批次將多個地址轉換為經緯度座標",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "google-maps"
-                ],
-                "summary": "批次地理編碼",
-                "parameters": [
-                    {
-                        "description": "批次地理編碼請求",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.BatchGeocodeRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dto.BatchGeocodeResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/vo.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/vo.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/google-maps/clear-cache": {
-            "post": {
-                "description": "清除 Google Maps API 快取",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "google-maps"
-                ],
-                "summary": "清除快取",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    }
-                }
-            }
-        },
-        "/google-maps/directions": {
-            "post": {
-                "description": "計算從起點到終點的最佳路線",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "google-maps"
-                ],
-                "summary": "路線規劃",
-                "parameters": [
-                    {
-                        "description": "路線規劃請求",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.DirectionsRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dto.DirectionsResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/vo.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/vo.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/google-maps/distance-matrix": {
-            "post": {
-                "description": "計算多點間的距離和時間",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "google-maps"
-                ],
-                "summary": "距離矩陣",
-                "parameters": [
-                    {
-                        "description": "距離矩陣請求",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.DistanceMatrixRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dto.DistanceMatrixResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/vo.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/vo.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/google-maps/geocode": {
-            "post": {
-                "description": "將地址轉換為經緯度座標",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "google-maps"
-                ],
-                "summary": "地理編碼",
-                "parameters": [
-                    {
-                        "description": "地理編碼請求",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.GeocodeRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dto.GeocodeResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/vo.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/vo.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/google-maps/nearby-mental-health": {
-            "get": {
-                "description": "搜尋附近的心靈健康相關服務，包括醫院、診所、諮商中心等",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "google-maps"
-                ],
-                "summary": "搜尋附近心靈健康服務",
-                "parameters": [
-                    {
-                        "type": "number",
-                        "description": "緯度",
-                        "name": "latitude",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "number",
-                        "description": "經度",
-                        "name": "longitude",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "default": 5000,
-                        "description": "搜尋半徑（公尺）",
-                        "name": "radius",
-                        "in": "query"
-                    },
-                    {
-                        "enum": [
-                            "hospital",
-                            "health",
-                            "establishment"
-                        ],
-                        "type": "string",
-                        "description": "服務類型",
-                        "name": "type",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "default": "\"心理諮商\"",
-                        "description": "關鍵字",
-                        "name": "keyword",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dto.PlacesSearchResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/vo.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/vo.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/google-maps/reverse-geocode": {
-            "post": {
-                "description": "將經緯度座標轉換為地址",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "google-maps"
-                ],
-                "summary": "反向地理編碼",
-                "parameters": [
-                    {
-                        "description": "反向地理編碼請求",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.ReverseGeocodeRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dto.GeocodeResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/vo.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/vo.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/google-maps/search-places": {
-            "post": {
-                "description": "搜尋附近的心靈健康相關地點",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "google-maps"
-                ],
-                "summary": "搜尋地點",
-                "parameters": [
-                    {
-                        "description": "地點搜尋請求",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.PlacesSearchRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dto.PlacesSearchResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/vo.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/vo.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/google-maps/usage-stats": {
-            "get": {
-                "description": "獲取 Google Maps API 使用統計資訊",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "google-maps"
-                ],
-                "summary": "獲取 API 使用統計",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/vo.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/locations": {
             "post": {
                 "security": [
@@ -2206,12 +1676,17 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
+                "description": "創建新的心理健康資源位置",
                 "consumes": [
                     "application/json"
                 ],
                 "produces": [
                     "application/json"
                 ],
+                "tags": [
+                    "location"
+                ],
+                "summary": "創建位置",
                 "parameters": [
                     {
                         "description": "位置資訊",
@@ -2341,35 +1816,6 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/vo.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/locations/seed": {
-            "post": {
-                "description": "為測試目的添加台北地區所有已知的心理健康服務機構數據",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "location"
-                ],
-                "summary": "添加台北地區心理健康服務機構數據",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/vo.Response"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/vo.ErrorResponse"
                         }
@@ -3419,106 +2865,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/scheduler/status": {
-            "get": {
-                "description": "獲取所有已排程的定時任務資訊",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "scheduler"
-                ],
-                "summary": "獲取定時任務狀態",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/vo.Response"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object",
-                                            "additionalProperties": true
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/vo.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/scheduler/trigger/hourly": {
-            "post": {
-                "description": "立即執行每小時通知任務，忽略時間和排程限制",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "scheduler"
-                ],
-                "summary": "手動觸發每小時通知",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/vo.Response"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/vo.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/scheduler/trigger/weekly": {
-            "post": {
-                "description": "立即執行每週通知任務，忽略時間和排程限制",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "scheduler"
-                ],
-                "summary": "手動觸發每週通知",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/vo.Response"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/vo.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/shares": {
             "post": {
                 "security": [
@@ -4383,23 +3729,6 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "dto.AddressComponent": {
-            "type": "object",
-            "properties": {
-                "long_name": {
-                    "type": "string"
-                },
-                "short_name": {
-                    "type": "string"
-                },
-                "types": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
         "dto.AppConfigResponse": {
             "type": "object",
             "properties": {
@@ -4491,42 +3820,20 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.BatchGeocodeRequest": {
-            "type": "object",
-            "required": [
-                "addresses"
-            ],
-            "properties": {
-                "addresses": {
-                    "type": "array",
-                    "maxItems": 100,
-                    "minItems": 1,
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "language": {
-                    "type": "string"
-                },
-                "region": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.BatchGeocodeResponse": {
+        "dto.AuthResponse": {
             "type": "object",
             "properties": {
-                "results": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/dto.GeocodeResponse"
-                    }
-                },
-                "status": {
+                "access_token": {
                     "type": "string"
                 },
-                "total": {
+                "expires_in": {
                     "type": "integer"
+                },
+                "refresh_token": {
+                    "type": "string"
+                },
+                "user": {
+                    "$ref": "#/definitions/dto.UserResponse"
                 }
             }
         },
@@ -4589,17 +3896,6 @@ const docTemplate = `{
                 },
                 "resource_type": {
                     "type": "string"
-                }
-            }
-        },
-        "dto.Bounds": {
-            "type": "object",
-            "properties": {
-                "northeast": {
-                    "$ref": "#/definitions/dto.LocationPoint"
-                },
-                "southwest": {
-                    "$ref": "#/definitions/dto.LocationPoint"
                 }
             }
         },
@@ -4927,19 +4223,6 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.DayTime": {
-            "type": "object",
-            "properties": {
-                "day": {
-                    "description": "0-6 (Sunday-Saturday)",
-                    "type": "integer"
-                },
-                "time": {
-                    "description": "HHMM format",
-                    "type": "string"
-                }
-            }
-        },
         "dto.DeleteAccountRequest": {
             "type": "object",
             "required": [
@@ -4952,185 +4235,6 @@ const docTemplate = `{
                 "reason": {
                     "type": "string",
                     "maxLength": 500
-                }
-            }
-        },
-        "dto.DirectionsRequest": {
-            "type": "object",
-            "required": [
-                "destination",
-                "origin"
-            ],
-            "properties": {
-                "alternatives": {
-                    "description": "是否提供替代路線",
-                    "type": "boolean"
-                },
-                "avoid": {
-                    "description": "tolls, highways, ferries, indoor",
-                    "type": "string"
-                },
-                "destination": {
-                    "type": "string",
-                    "maxLength": 500,
-                    "minLength": 1
-                },
-                "language": {
-                    "type": "string"
-                },
-                "mode": {
-                    "description": "driving, walking, bicycling, transit",
-                    "type": "string"
-                },
-                "origin": {
-                    "type": "string",
-                    "maxLength": 500,
-                    "minLength": 1
-                },
-                "region": {
-                    "type": "string"
-                },
-                "units": {
-                    "description": "metric, imperial",
-                    "type": "string"
-                }
-            }
-        },
-        "dto.DirectionsResponse": {
-            "type": "object",
-            "properties": {
-                "routes": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/dto.Route"
-                    }
-                },
-                "status": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.Distance": {
-            "type": "object",
-            "properties": {
-                "text": {
-                    "type": "string"
-                },
-                "value": {
-                    "description": "公尺",
-                    "type": "integer"
-                }
-            }
-        },
-        "dto.DistanceMatrixElement": {
-            "type": "object",
-            "properties": {
-                "distance": {
-                    "$ref": "#/definitions/dto.Distance"
-                },
-                "duration": {
-                    "$ref": "#/definitions/dto.Duration"
-                },
-                "status": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.DistanceMatrixRequest": {
-            "type": "object",
-            "required": [
-                "destinations",
-                "origins"
-            ],
-            "properties": {
-                "arrival_time": {
-                    "description": "Unix timestamp",
-                    "type": "string"
-                },
-                "departure_time": {
-                    "description": "Unix timestamp",
-                    "type": "string"
-                },
-                "destinations": {
-                    "type": "array",
-                    "maxItems": 25,
-                    "minItems": 1,
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "language": {
-                    "type": "string"
-                },
-                "mode": {
-                    "type": "string"
-                },
-                "origins": {
-                    "type": "array",
-                    "maxItems": 25,
-                    "minItems": 1,
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "region": {
-                    "type": "string"
-                },
-                "traffic_model": {
-                    "description": "best_guess, pessimistic, optimistic",
-                    "type": "string"
-                },
-                "units": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.DistanceMatrixResponse": {
-            "type": "object",
-            "properties": {
-                "destination_addresses": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "origin_addresses": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "rows": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/dto.DistanceMatrixRow"
-                    }
-                },
-                "status": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.DistanceMatrixRow": {
-            "type": "object",
-            "properties": {
-                "elements": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/dto.DistanceMatrixElement"
-                    }
-                }
-            }
-        },
-        "dto.Duration": {
-            "type": "object",
-            "properties": {
-                "text": {
-                    "type": "string"
-                },
-                "value": {
-                    "description": "秒",
-                    "type": "integer"
                 }
             }
         },
@@ -5188,133 +4292,6 @@ const docTemplate = `{
                 },
                 "key": {
                     "type": "string"
-                }
-            }
-        },
-        "dto.GeocodeRequest": {
-            "type": "object",
-            "required": [
-                "address"
-            ],
-            "properties": {
-                "address": {
-                    "type": "string",
-                    "maxLength": 500,
-                    "minLength": 1
-                },
-                "language": {
-                    "description": "zh-TW, en",
-                    "type": "string"
-                },
-                "region": {
-                    "description": "tw, us",
-                    "type": "string"
-                }
-            }
-        },
-        "dto.GeocodeResponse": {
-            "type": "object",
-            "properties": {
-                "results": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/dto.GeocodeResult"
-                    }
-                },
-                "status": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.GeocodeResult": {
-            "type": "object",
-            "properties": {
-                "address_components": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/dto.AddressComponent"
-                    }
-                },
-                "formatted_address": {
-                    "type": "string"
-                },
-                "geometry": {
-                    "$ref": "#/definitions/dto.Geometry"
-                },
-                "place_id": {
-                    "type": "string"
-                },
-                "types": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
-        "dto.Geometry": {
-            "type": "object",
-            "properties": {
-                "bounds": {
-                    "$ref": "#/definitions/dto.Bounds"
-                },
-                "location": {
-                    "$ref": "#/definitions/dto.LocationPoint"
-                },
-                "location_type": {
-                    "type": "string"
-                },
-                "viewport": {
-                    "$ref": "#/definitions/dto.Bounds"
-                }
-            }
-        },
-        "dto.Leg": {
-            "type": "object",
-            "properties": {
-                "distance": {
-                    "$ref": "#/definitions/dto.Distance"
-                },
-                "duration": {
-                    "$ref": "#/definitions/dto.Duration"
-                },
-                "duration_in_traffic": {
-                    "$ref": "#/definitions/dto.Duration"
-                },
-                "end_address": {
-                    "type": "string"
-                },
-                "end_location": {
-                    "$ref": "#/definitions/dto.LocationPoint"
-                },
-                "start_address": {
-                    "type": "string"
-                },
-                "start_location": {
-                    "$ref": "#/definitions/dto.LocationPoint"
-                },
-                "steps": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/dto.Step"
-                    }
-                },
-                "traffic_speed_entry": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/dto.TrafficSpeedEntry"
-                    }
-                }
-            }
-        },
-        "dto.LocationPoint": {
-            "type": "object",
-            "properties": {
-                "lat": {
-                    "type": "number"
-                },
-                "lng": {
-                    "type": "number"
                 }
             }
         },
@@ -5485,6 +4462,22 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.LoginRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string",
+                    "minLength": 6
+                }
+            }
+        },
         "dto.MarkAsReadRequest": {
             "type": "object",
             "required": [
@@ -5493,6 +4486,7 @@ const docTemplate = `{
             "properties": {
                 "notification_ids": {
                     "type": "array",
+                    "minItems": 1,
                     "items": {
                         "type": "string"
                     }
@@ -5531,7 +4525,7 @@ const docTemplate = `{
         "dto.NotificationResponse": {
             "type": "object",
             "properties": {
-                "content": {
+                "body": {
                     "type": "string"
                 },
                 "created_at": {
@@ -5583,152 +4577,6 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.OpeningHours": {
-            "type": "object",
-            "properties": {
-                "open_now": {
-                    "type": "boolean"
-                },
-                "periods": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/dto.Period"
-                    }
-                },
-                "weekday_text": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
-        "dto.Period": {
-            "type": "object",
-            "properties": {
-                "close": {
-                    "$ref": "#/definitions/dto.DayTime"
-                },
-                "open": {
-                    "$ref": "#/definitions/dto.DayTime"
-                }
-            }
-        },
-        "dto.PlacePhoto": {
-            "type": "object",
-            "properties": {
-                "height": {
-                    "type": "integer"
-                },
-                "html_attributions": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "photo_reference": {
-                    "type": "string"
-                },
-                "width": {
-                    "type": "integer"
-                }
-            }
-        },
-        "dto.PlaceResult": {
-            "type": "object",
-            "properties": {
-                "formatted_address": {
-                    "type": "string"
-                },
-                "geometry": {
-                    "$ref": "#/definitions/dto.Geometry"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "opening_hours": {
-                    "$ref": "#/definitions/dto.OpeningHours"
-                },
-                "photos": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/dto.PlacePhoto"
-                    }
-                },
-                "place_id": {
-                    "type": "string"
-                },
-                "price_level": {
-                    "type": "integer"
-                },
-                "rating": {
-                    "type": "number"
-                },
-                "types": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "vicinity": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.PlacesSearchRequest": {
-            "type": "object",
-            "properties": {
-                "language": {
-                    "type": "string"
-                },
-                "location": {
-                    "description": "\"lat,lng\"",
-                    "type": "string"
-                },
-                "query": {
-                    "type": "string",
-                    "maxLength": 500,
-                    "minLength": 1
-                },
-                "radius": {
-                    "type": "integer",
-                    "maximum": 50000,
-                    "minimum": 1
-                },
-                "region": {
-                    "type": "string"
-                },
-                "type": {
-                    "description": "hospital, health, establishment",
-                    "type": "string"
-                }
-            }
-        },
-        "dto.PlacesSearchResponse": {
-            "type": "object",
-            "properties": {
-                "next_page_token": {
-                    "type": "string"
-                },
-                "results": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/dto.PlaceResult"
-                    }
-                },
-                "status": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.Polyline": {
-            "type": "object",
-            "properties": {
-                "points": {
-                    "type": "string"
-                }
-            }
-        },
         "dto.PushTokenRequest": {
             "type": "object",
             "required": [
@@ -5740,8 +4588,7 @@ const docTemplate = `{
                     "type": "string",
                     "enum": [
                         "ios",
-                        "android",
-                        "web"
+                        "android"
                     ]
                 },
                 "token": {
@@ -5953,6 +4800,40 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.RegisterRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "full_name",
+                "password",
+                "username"
+            ],
+            "properties": {
+                "avatar": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "full_name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 2
+                },
+                "password": {
+                    "type": "string",
+                    "minLength": 6
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string",
+                    "maxLength": 50,
+                    "minLength": 3
+                }
+            }
+        },
         "dto.ReportRequest": {
             "type": "object",
             "required": [
@@ -5983,36 +4864,6 @@ const docTemplate = `{
                         "inappropriate",
                         "incorrect_info"
                     ]
-                }
-            }
-        },
-        "dto.ReverseGeocodeRequest": {
-            "type": "object",
-            "required": [
-                "latitude",
-                "longitude"
-            ],
-            "properties": {
-                "language": {
-                    "type": "string"
-                },
-                "latitude": {
-                    "type": "number",
-                    "maximum": 90,
-                    "minimum": -90
-                },
-                "location_type": {
-                    "description": "ROOFTOP, RANGE_INTERPOLATED, GEOMETRIC_CENTER, APPROXIMATE",
-                    "type": "string"
-                },
-                "longitude": {
-                    "type": "number",
-                    "maximum": 180,
-                    "minimum": -180
-                },
-                "result_type": {
-                    "description": "street_address, route, intersection, political, country, administrative_area_level_1, etc.",
-                    "type": "string"
                 }
             }
         },
@@ -6139,41 +4990,6 @@ const docTemplate = `{
                     "type": "integer",
                     "maximum": 5,
                     "minimum": 1
-                }
-            }
-        },
-        "dto.Route": {
-            "type": "object",
-            "properties": {
-                "bounds": {
-                    "$ref": "#/definitions/dto.Bounds"
-                },
-                "copyrights": {
-                    "type": "string"
-                },
-                "legs": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/dto.Leg"
-                    }
-                },
-                "overview_polyline": {
-                    "$ref": "#/definitions/dto.Polyline"
-                },
-                "summary": {
-                    "type": "string"
-                },
-                "warnings": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "waypoint_order": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
                 }
             }
         },
@@ -6371,35 +5187,6 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.Step": {
-            "type": "object",
-            "properties": {
-                "distance": {
-                    "$ref": "#/definitions/dto.Distance"
-                },
-                "duration": {
-                    "$ref": "#/definitions/dto.Duration"
-                },
-                "end_location": {
-                    "$ref": "#/definitions/dto.LocationPoint"
-                },
-                "html_instructions": {
-                    "type": "string"
-                },
-                "maneuver": {
-                    "type": "string"
-                },
-                "polyline": {
-                    "$ref": "#/definitions/dto.Polyline"
-                },
-                "start_location": {
-                    "$ref": "#/definitions/dto.LocationPoint"
-                },
-                "travel_mode": {
-                    "type": "string"
-                }
-            }
-        },
         "dto.SupportInfo": {
             "type": "object",
             "properties": {
@@ -6413,17 +5200,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "working_hours": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.TrafficSpeedEntry": {
-            "type": "object",
-            "properties": {
-                "offset_meters": {
-                    "type": "integer"
-                },
-                "speed_category": {
                     "type": "string"
                 }
             }
@@ -6477,6 +5253,38 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "updated_at": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.UserResponse": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "full_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "last_login": {
+                    "type": "string"
+                },
+                "phone": {
                     "type": "string"
                 },
                 "username": {
@@ -6568,7 +5376,7 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "mindhelp.onrender.com",
+	Host:             "mindhelp.onrenderr.com",
 	BasePath:         "/api/v1",
 	Schemes:          []string{},
 	Title:            "MindHelp Backend API",

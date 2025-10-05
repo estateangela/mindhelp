@@ -31,14 +31,14 @@ func seedData() {
 	log.Println("開始插入資料...")
 
 	// 插入諮商師資料
-	if err := insertCounselors(); err != nil {
-		log.Fatalf("Failed to insert counselors: %v", err)
-	}
+	//if err := insertCounselors(); err != nil {
+	//	log.Fatalf("Failed to insert counselors: %v", err)
+	//}
 
 	// 插入諮商所資料
-	if err := insertCounselingCenters(); err != nil {
-		log.Fatalf("Failed to insert counseling centers: %v", err)
-	}
+	//if err := insertCounselingCenters(); err != nil {
+	//	log.Fatalf("Failed to insert counseling centers: %v", err)
+	//}
 
 	// 插入推薦醫師資料
 	if err := insertRecommendedDoctors(); err != nil {
