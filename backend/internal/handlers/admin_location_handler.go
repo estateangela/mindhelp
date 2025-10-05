@@ -22,7 +22,7 @@ func NewAdminLocationHandler() *AdminLocationHandler {
 
 // SeedLocations 添加台北地區心理健康服務機構數據
 // @Summary 添加台北地區心理健康服務機構數據
-// @Description 為測試目的添加台北地區所有已知的心理健康服務機構數據
+// @Description 為測試目的添加台北地區所有已知的心理健康服務機構資料
 // @Tags location
 // @Accept json
 // @Produce json
