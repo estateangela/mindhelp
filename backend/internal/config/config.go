@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/joho/godotenv"
@@ -151,9 +152,27 @@ func Load() (*Config, error) {
 	}
 
 	// 載入 CORS 配置
-	allowedOrigins := getEnv("ALLOWED_ORIGINS", "http://localhost:3000")
+	corsOriginsEnv := getEnv("CORS_ALLOWED_ORIGINS", "http://localhost:3000")
+	allowedOrigins := []string{}
+	
+	// 支援多個來源，以逗號分隔
+	if corsOriginsEnv != "" {
+		// 分割字串並去除空白
+		for _, origin := range strings.Split(corsOriginsEnv, ",") {
+			trimmed := strings.TrimSpace(origin)
+			if trimmed != "" {
+				allowedOrigins = append(allowedOrigins, trimmed)
+			}
+		}
+	}
+	
+	// 生產環境自動添加正確的 Swagger UI 來源
+	if getEnv("GIN_MODE", "release") == "release" {
+		allowedOrigins = append(allowedOrigins, "https://mindhelp.onrender.com")
+	}
+	
 	config.CORS = CORSConfig{
-		AllowedOrigins: []string{allowedOrigins},
+		AllowedOrigins: allowedOrigins,
 	}
 
 	// 載入日誌配置
