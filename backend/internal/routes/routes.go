@@ -31,9 +31,11 @@ func SetupRoutes(cfg *config.Config) *gin.Engine {
 	// CORS 中間件
 	corsConfig := ginCors.New(ginCors.Options{
 		AllowedOrigins:   cfg.CORS.AllowedOrigins,
-		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"Origin", "Content-Type", "Accept", "Authorization"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"},
+		AllowedHeaders:   []string{"Origin", "Content-Type", "Accept", "Authorization", "X-Requested-With", "X-CSRF-Token"},
 		AllowCredentials: true,
+		ExposedHeaders:   []string{"X-Total-Count", "X-Page", "X-Page-Size"},
+		MaxAge:           86400, // 24 小時預快取
 	})
 	r.Use(corsConfig)
 
