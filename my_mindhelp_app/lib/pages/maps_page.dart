@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:geocoding/geocoding.dart';
+// import 'package:geocoding/geocoding.dart';
+import '../services/osm_geocoding_service.dart';
 import '../services/location_service.dart';
 import '../core/theme.dart';
 import '../widgets/custom_app_bar.dart';
@@ -71,7 +72,7 @@ class _MapsPageState extends State<MapsPage> {
     }
   }
 
-  // 測試 Geocoding 功能
+  // 測試 Geocoding 功能（OSM Nominatim）
   Future<void> _testGeocoding() async {
     try {
       print('開始測試 Geocoding 功能...');
@@ -87,17 +88,12 @@ class _MapsPageState extends State<MapsPage> {
         try {
           print('測試地址: $address');
 
-          // 添加超時設置
-          final location = await locationFromAddress(address)
-              .timeout(const Duration(seconds: 10));
+          final result = await OSMGeocodingService()
+              .geocodeAddress(address, timeout: const Duration(seconds: 10));
 
-          print('Geocoding 返回結果: $location');
-          print('結果類型: ${location.runtimeType}');
-          print('結果長度: ${location.length}');
-
-          if (location.isNotEmpty) {
-            final lat = location.first.latitude;
-            final lng = location.first.longitude;
+          if (result != null) {
+            final lat = result.latitude;
+            final lng = result.longitude;
             print('✓ 成功解析: $address -> $lat, $lng');
           } else {
             print('✗ 解析失敗: $address (空結果)');
@@ -262,18 +258,17 @@ class _MapsPageState extends State<MapsPage> {
         return;
       }
 
-      // 處理每個諮商所，將地址轉換為經緯度
+      // 處理每個諮商所，將地址轉換為經緯度（使用 OSM Nominatim）
       int successCount = 0;
       for (var center in counselingCenters) {
         try {
           print('正在處理諮商所：${center.name} - ${center.address}');
 
-          // 使用 Geocoding 將地址轉換為經緯度
-          final location = await locationFromAddress(center.address);
+          final result =
+              await OSMGeocodingService().geocodeAddress(center.address);
 
-          if (location.isNotEmpty) {
-            final LatLng position =
-                LatLng(location.first.latitude, location.first.longitude);
+          if (result != null) {
+            final LatLng position = LatLng(result.latitude, result.longitude);
 
             print(
                 '成功解析地址：${center.address} -> ${position.latitude}, ${position.longitude}');

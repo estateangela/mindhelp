@@ -1,7 +1,7 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:geolocator/geolocator.dart';
-import 'package:geocoding/geocoding.dart';
+import 'osm_geocoding_service.dart';
 import '../models/counseling_center.dart';
 
 class LocationService {
@@ -62,7 +62,8 @@ class LocationService {
       print('API 調用錯誤: $e');
       // 如果是網絡錯誤，嘗試使用本地備用數據
       if (e.toString().contains('Failed to fetch') ||
-          e.toString().contains('ClientException')) {
+          e.toString().contains('ClientException') ||
+          e.toString().contains('TimeoutException')) {
         print('網絡連接失敗，嘗試使用備用數據...');
         final fallbackData = _getFallbackData();
 
@@ -175,12 +176,12 @@ class LocationService {
 
     for (var center in centers) {
       try {
-        // 將地址轉換為經緯度
-        final location = await locationFromAddress(center.address);
+        // 將地址轉換為經緯度（OSM Nominatim）
+        final geo = await OSMGeocodingService().geocodeAddress(center.address);
 
-        if (location.isNotEmpty) {
-          final centerLat = location.first.latitude;
-          final centerLng = location.first.longitude;
+        if (geo != null) {
+          final centerLat = geo.latitude;
+          final centerLng = geo.longitude;
 
           // 計算距離（米）
           final distanceInMeters = Geolocator.distanceBetween(
