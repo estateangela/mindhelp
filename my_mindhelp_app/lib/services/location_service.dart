@@ -20,8 +20,8 @@ class LocationService {
       final queryParams = {
         'page': page.toString(),
         'page_size': pageSize.toString(),
+        'search': '中正區', // 固定搜索中正區
       };
-      if (search != null) queryParams['search'] = search;
       if (onlineOnly != null)
         queryParams['online_only'] = onlineOnly.toString();
 

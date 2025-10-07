@@ -21,6 +21,7 @@ class _MapsPageState extends State<MapsPage> {
   bool _isLoading = true;
   final Set<Marker> _markers = {};
   String _mapStatus = '正在載入地圖...';
+  BitmapDescriptor? _userLocationIcon;
 
   @override
   void initState() {
@@ -29,6 +30,8 @@ class _MapsPageState extends State<MapsPage> {
     _addTestMarkers();
     // 測試 Geocoding 功能
     _testGeocoding();
+    // 創建自定義標記圖標
+    _createCustomMarkerIcons();
   }
 
   void _addTestMarkers() {
@@ -54,6 +57,18 @@ class _MapsPageState extends State<MapsPage> {
       ),
     ]);
     print('已添加 ${_markers.length} 個測試標記');
+  }
+
+  // 創建自定義標記圖標
+  Future<void> _createCustomMarkerIcons() async {
+    try {
+      // 為使用者位置創建特殊的標記圖標 - 使用橙色表示使用者位置
+      _userLocationIcon =
+          BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange);
+      print('自定義標記圖標創建完成 - 使用者位置使用橙色標記');
+    } catch (e) {
+      print('創建自定義標記圖標失敗: $e');
+    }
   }
 
   // 測試 Geocoding 功能
@@ -220,9 +235,13 @@ class _MapsPageState extends State<MapsPage> {
           Marker(
             markerId: const MarkerId('current_location'),
             position: _currentLocation,
-            infoWindow: const InfoWindow(title: '我的位置'),
-            icon:
-                BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
+            infoWindow: const InfoWindow(
+              title: '我的位置',
+              snippet: '台北商業大學',
+            ),
+            icon: _userLocationIcon ??
+                BitmapDescriptor.defaultMarkerWithHue(
+                    BitmapDescriptor.hueOrange), // 使用橙色標記
           ),
         );
       }
