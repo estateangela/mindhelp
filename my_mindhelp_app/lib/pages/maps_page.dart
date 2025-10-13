@@ -28,8 +28,6 @@ class _MapsPageState extends State<MapsPage> {
     super.initState();
     // 添加一些測試標記來驗證地圖功能
     _addTestMarkers();
-    // 測試 Geocoding 功能
-    _testGeocoding();
     // 創建自定義標記圖標
     _createCustomMarkerIcons();
   }
@@ -55,6 +53,24 @@ class _MapsPageState extends State<MapsPage> {
         infoWindow: const InfoWindow(title: '測試標記 3', snippet: '中正紀念堂'),
         icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
       ),
+      Marker(
+        markerId: const MarkerId('test4'),
+        position: const LatLng(25.0480, 121.5170), // 北商附近
+        infoWindow: const InfoWindow(title: '測試標記 4', snippet: '台北商業大學'),
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
+      ),
+      Marker(
+        markerId: const MarkerId('test5'),
+        position: const LatLng(25.0400, 121.5400), // 仁愛院區附近
+        infoWindow: const InfoWindow(title: '測試標記 5', snippet: '仁愛院區'),
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueViolet),
+      ),
+      Marker(
+        markerId: const MarkerId('test6'),
+        position: const LatLng(25.0600, 121.5100), // 中興院區附近
+        infoWindow: const InfoWindow(title: '測試標記 6', snippet: '中興院區'),
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueYellow),
+      ),
     ]);
     print('已添加 ${_markers.length} 個測試標記');
   }
@@ -71,48 +87,7 @@ class _MapsPageState extends State<MapsPage> {
     }
   }
 
-  // 測試 Geocoding 功能
-  Future<void> _testGeocoding() async {
-    try {
-      print('開始測試 Geocoding 功能...');
-
-      // 測試簡單的地址
-      final testAddresses = [
-        '台北市信義區信義路五段7號', // 台北101
-        '台北市大安區忠孝東路3段54號',
-        '台北市中正區重慶南路一段122號', // 總統府
-      ];
-
-      for (String address in testAddresses) {
-        try {
-          print('測試地址: $address');
-
-          // 添加超時設置
-          final location = await locationFromAddress(address)
-              .timeout(const Duration(seconds: 10));
-
-          print('Geocoding 返回結果: $location');
-          print('結果類型: ${location.runtimeType}');
-          print('結果長度: ${location.length}');
-
-          if (location.isNotEmpty) {
-            final lat = location.first.latitude;
-            final lng = location.first.longitude;
-            print('✓ 成功解析: $address -> $lat, $lng');
-          } else {
-            print('✗ 解析失敗: $address (空結果)');
-          }
-        } catch (e) {
-          print('✗ 解析錯誤: $address - $e');
-          print('錯誤類型: ${e.runtimeType}');
-        }
-      }
-
-      print('Geocoding 測試完成');
-    } catch (e) {
-      print('Geocoding 測試失敗: $e');
-    }
-  }
+  // 已移除 Geocoding 測試以避免依賴問題
 
   // 獲取備用座標（對應真實醫療機構位置）
   Map<String, double> _getFallbackCoordinates(String centerId) {
@@ -166,6 +141,70 @@ class _MapsPageState extends State<MapsPage> {
     } catch (e) {
       print('添加備用標記失敗：$e');
     }
+  }
+
+  // 將多個諮商所轉為地圖標記（先 geocoding，失敗回退備用座標）
+  Future<int> _addCenterMarkers(List<CounselingCenter> centers) async {
+    int successCount = 0;
+    for (var center in centers) {
+      try {
+        print('正在處理諮商所：${center.name} - ${center.address}');
+
+        LatLng position;
+        bool usedFallback = false;
+        try {
+          final locations = await locationFromAddress(center.address)
+              .timeout(const Duration(seconds: 10));
+          if (locations.isNotEmpty) {
+            position =
+                LatLng(locations.first.latitude, locations.first.longitude);
+            print(
+                '地址解析成功：${center.address} -> ${position.latitude}, ${position.longitude}');
+          } else {
+            final fallback = _getFallbackCoordinates(center.id);
+            position = LatLng(fallback['lat']!, fallback['lng']!);
+            usedFallback = true;
+            print('地址解析為空，使用備用座標 ${position.latitude}, ${position.longitude}');
+          }
+        } catch (e) {
+          final fallback = _getFallbackCoordinates(center.id);
+          position = LatLng(fallback['lat']!, fallback['lng']!);
+          usedFallback = true;
+          print('地址解析失敗，使用備用座標：$e');
+        }
+
+        final double distanceInMeters = Geolocator.distanceBetween(
+          _currentLocation.latitude,
+          _currentLocation.longitude,
+          position.latitude,
+          position.longitude,
+        );
+        final double distanceInKm = distanceInMeters / 1000;
+
+        _markers.add(
+          Marker(
+            markerId: MarkerId(center.id),
+            position: position,
+            infoWindow: InfoWindow(
+              title: center.name,
+              snippet: usedFallback
+                  ? '${center.phone}\n地址：${center.address}\n距離：${distanceInKm.toStringAsFixed(2)} 公里（備用座標）'
+                  : '${center.phone}\n地址：${center.address}\n距離：${distanceInKm.toStringAsFixed(2)} 公里',
+            ),
+            icon: BitmapDescriptor.defaultMarkerWithHue(
+              center.onlineCounseling
+                  ? BitmapDescriptor.hueGreen
+                  : BitmapDescriptor.hueRed,
+            ),
+          ),
+        );
+        successCount++;
+      } catch (e) {
+        print('添加標記時發生錯誤：${e.toString()}');
+        _addFallbackMarker(center);
+      }
+    }
+    return successCount;
   }
 
   Future<void> _loadAllData() async {
@@ -257,72 +296,18 @@ class _MapsPageState extends State<MapsPage> {
       print('API 調用完成，獲取到 ${counselingCenters.length} 個諮商所');
 
       if (counselingCenters.isEmpty) {
-        print('沒有獲取到諮商所數據，只顯示測試標記');
-        _mapStatus = '顯示測試標記（API 連接失敗）';
+        print('沒有獲取到諮商所數據，改用備用清單');
+        final fallbackCenters = _locationService.getFallbackCenters();
+        final count = await _addCenterMarkers(fallbackCenters);
+        if (mounted) {
+          setState(() {
+            _mapStatus = '顯示 $count 間備用諮商所標記（API 無資料）';
+          });
+        }
         return;
       }
 
-      // 處理每個諮商所，將地址轉換為經緯度
-      int successCount = 0;
-      for (var center in counselingCenters) {
-        try {
-          print('正在處理諮商所：${center.name} - ${center.address}');
-
-          // 使用 Geocoding 將地址轉換為經緯度
-          final location = await locationFromAddress(center.address);
-
-          if (location.isNotEmpty) {
-            final LatLng position =
-                LatLng(location.first.latitude, location.first.longitude);
-
-            print(
-                '成功解析地址：${center.address} -> ${position.latitude}, ${position.longitude}');
-
-            // 計算距離
-            final double distanceInMeters = Geolocator.distanceBetween(
-              _currentLocation.latitude,
-              _currentLocation.longitude,
-              position.latitude,
-              position.longitude,
-            );
-
-            print('距離：${distanceInMeters} 米');
-
-            // 由於已經在 LocationService 中過濾了距離，這裡直接添加標記
-            final double distanceInKm = distanceInMeters / 1000;
-
-            _markers.add(
-              Marker(
-                markerId: MarkerId(center.id),
-                position: position,
-                infoWindow: InfoWindow(
-                  title: center.name,
-                  snippet:
-                      '${center.phone}\n地址：${center.address}\n距離：${distanceInKm.toStringAsFixed(2)} 公里',
-                ),
-                icon: BitmapDescriptor.defaultMarkerWithHue(
-                  center.onlineCounseling
-                      ? BitmapDescriptor.hueGreen
-                      : BitmapDescriptor.hueRed,
-                ),
-              ),
-            );
-            successCount++;
-            print(
-                '已添加標記：${center.name} (${distanceInKm.toStringAsFixed(2)} 公里)');
-          } else {
-            print('無法解析地址：${center.address}');
-            // 使用備用座標
-            _addFallbackMarker(center);
-            successCount++;
-          }
-        } catch (e) {
-          print('Geocoding 發生錯誤：${e.toString()}');
-          // 使用備用座標
-          _addFallbackMarker(center);
-          successCount++;
-        }
-      }
+      final successCount = await _addCenterMarkers(counselingCenters);
 
       if (mounted) {
         setState(() {

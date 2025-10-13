@@ -148,6 +148,11 @@ class LocationService {
     ];
   }
 
+  // 對外提供備用諮商所清單（API 無資料或測試情境下使用）
+  List<CounselingCenter> getFallbackCenters() {
+    return _getFallbackData();
+  }
+
   // 獲取備用座標（對應真實醫療機構位置）
   Map<String, double> _getFallbackCoordinates(String centerId) {
     // 台北商業大學方圓五公里內的真實醫療機構座標
@@ -175,40 +180,53 @@ class LocationService {
 
     for (var center in centers) {
       try {
-        // 將地址轉換為經緯度
-        final location = await locationFromAddress(center.address);
-
-        if (location.isNotEmpty) {
-          final centerLat = location.first.latitude;
-          final centerLng = location.first.longitude;
-
-          // 計算距離（米）
-          final distanceInMeters = Geolocator.distanceBetween(
-            userLatitude,
-            userLongitude,
-            centerLat,
-            centerLng,
-          );
-
-          // 轉換為公里
-          final distanceInKm = distanceInMeters / 1000;
-
-          print('諮商所 ${center.name}: 距離 ${distanceInKm.toStringAsFixed(2)} 公里');
-
-          // 如果在指定半徑內，則添加到結果列表
-          if (distanceInKm <= radiusKm) {
-            nearbyCenters.add(center);
-            print(
-                '✓ 添加諮商所: ${center.name} (${distanceInKm.toStringAsFixed(2)} 公里)');
+        double centerLat;
+        double centerLng;
+        bool usedFallback = false;
+        try {
+          final locations = await locationFromAddress(center.address)
+              .timeout(const Duration(seconds: 10));
+          if (locations.isNotEmpty) {
+            centerLat = locations.first.latitude;
+            centerLng = locations.first.longitude;
+            print('距離過濾地址解析成功：${center.address} -> $centerLat, $centerLng');
           } else {
-            print(
-                '✗ 跳過諮商所: ${center.name} (${distanceInKm.toStringAsFixed(2)} 公里 > $radiusKm 公里)');
+            final fallback = _getFallbackCoordinates(center.id);
+            centerLat = fallback['lat']!;
+            centerLng = fallback['lng']!;
+            usedFallback = true;
+            print('距離過濾地址解析為空，使用備用座標 $centerLat, $centerLng');
           }
+        } catch (e) {
+          final fallback = _getFallbackCoordinates(center.id);
+          centerLat = fallback['lat']!;
+          centerLng = fallback['lng']!;
+          usedFallback = true;
+          print('距離過濾地址解析失敗，使用備用座標：$e');
+        }
+
+        // 計算距離（米）
+        final distanceInMeters = Geolocator.distanceBetween(
+          userLatitude,
+          userLongitude,
+          centerLat,
+          centerLng,
+        );
+
+        // 轉換為公里
+        final distanceInKm = distanceInMeters / 1000;
+
+        print(
+            '諮商所 ${center.name}: 距離 ${distanceInKm.toStringAsFixed(2)} 公里${usedFallback ? "（備用座標）" : ""}');
+
+        // 如果在指定半徑內，則添加到結果列表
+        if (distanceInKm <= radiusKm) {
+          nearbyCenters.add(center);
+          print(
+              '✓ 添加諮商所: ${center.name} (${distanceInKm.toStringAsFixed(2)} 公里)');
         } else {
-          print('無法解析地址: ${center.address}');
-          // 使用備用座標（台北市中心附近）
-          _addFallbackCenter(
-              center, userLatitude, userLongitude, radiusKm, nearbyCenters);
+          print(
+              '✗ 跳過諮商所: ${center.name} (${distanceInKm.toStringAsFixed(2)} 公里 > $radiusKm 公里)');
         }
       } catch (e) {
         print('處理諮商所 ${center.name} 時發生錯誤: $e');
