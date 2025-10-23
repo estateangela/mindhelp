@@ -17,6 +17,8 @@ type CounselingCenterResponse struct {
 	Address         string    `json:"address"`
 	Phone           string    `json:"phone"`
 	OnlineCounseling bool     `json:"online_counseling"`
+    Latitude        *float64  `json:"latitude,omitempty"`
+    Longitude       *float64  `json:"longitude,omitempty"`
 	CreatedAt       time.Time `json:"created_at"`
 	UpdatedAt       time.Time `json:"updated_at"`
 }

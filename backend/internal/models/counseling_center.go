@@ -14,6 +14,8 @@ type CounselingCenter struct {
 	Address         string         `json:"address" gorm:"size:500"`              // 地址
 	Phone           string         `json:"phone" gorm:"size:50"`                 // 電話
 	OnlineCounseling bool          `json:"online_counseling" gorm:"default:false"` // 通訊心理諮商
+    Latitude        *float64       `json:"latitude" gorm:"type:double precision"`  // 緯度（可為 NULL）
+    Longitude       *float64       `json:"longitude" gorm:"type:double precision"` // 經度（可為 NULL）
 	CreatedAt       time.Time      `json:"created_at"`
 	UpdatedAt       time.Time      `json:"updated_at"`
 	DeletedAt       gorm.DeletedAt `json:"-" gorm:"index"`

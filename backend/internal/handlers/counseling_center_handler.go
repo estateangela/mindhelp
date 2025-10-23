@@ -82,7 +82,7 @@ func GetCounselingCenters(c *gin.Context) {
 
 	// 獲取諮商所列表 - 限制欄位減少傳輸量
 	var centers []models.CounselingCenter
-	if err := query.Select("id, name, address, phone, online_counseling, created_at, updated_at").
+    if err := query.Select("id, name, address, phone, online_counseling, latitude, longitude, created_at, updated_at").
 		Offset(offset).Limit(pageSize).Find(&centers).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, vo.ErrorResponse{
 			Code:    "INTERNAL_SERVER_ERROR",
@@ -95,12 +95,14 @@ func GetCounselingCenters(c *gin.Context) {
 	// 轉換為回應格式
 	var centerResponses []dto.CounselingCenterResponse
 	for _, center := range centers {
-		centerResponses = append(centerResponses, dto.CounselingCenterResponse{
+        centerResponses = append(centerResponses, dto.CounselingCenterResponse{
 			ID:               center.ID.String(),
 			Name:             center.Name,
 			Address:          center.Address,
 			Phone:            center.Phone,
 			OnlineCounseling: center.OnlineCounseling,
+            Latitude:         center.Latitude,
+            Longitude:        center.Longitude,
 			CreatedAt:        center.CreatedAt,
 			UpdatedAt:        center.UpdatedAt,
 		})
@@ -153,6 +155,8 @@ func GetCounselingCenter(c *gin.Context) {
 		Address:          center.Address,
 		Phone:            center.Phone,
 		OnlineCounseling: center.OnlineCounseling,
+    Latitude:         center.Latitude,
+    Longitude:        center.Longitude,
 		CreatedAt:        center.CreatedAt,
 		UpdatedAt:        center.UpdatedAt,
 	})
