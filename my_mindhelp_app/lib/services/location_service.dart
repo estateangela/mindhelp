@@ -1,11 +1,30 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:geolocator/geolocator.dart';
-import 'package:geocoding/geocoding.dart';
 import '../models/counseling_center.dart';
 
 class LocationService {
   final String _baseUrl = 'https://mindhelp.onrender.com/api/v1';
+
+  Future<http.Response> _getWithRetry(Uri uri, {int maxRetries = 3}) async {
+    for (int attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        final resp = await http.get(
+          uri,
+          headers: const {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+        ).timeout(const Duration(seconds: 20));
+        return resp;
+      } catch (e) {
+        final delayMs = 400 * (1 << attempt);
+        print('HTTP 重試第 ${attempt + 1} 次失敗：$e，${delayMs}ms 後重試');
+        await Future.delayed(Duration(milliseconds: delayMs));
+      }
+    }
+    throw Exception('HTTP 重試失敗：$uri');
+  }
 
   Future<List<CounselingCenter>> getCounselingCenters({
     int page = 1,
@@ -20,8 +39,10 @@ class LocationService {
       final queryParams = {
         'page': page.toString(),
         'page_size': pageSize.toString(),
-        'search': '中正區', // 固定搜索中正區
       };
+      if (search != null && search.isNotEmpty) {
+        queryParams['search'] = search;
+      }
       if (onlineOnly != null)
         queryParams['online_only'] = onlineOnly.toString();
 
@@ -30,13 +51,7 @@ class LocationService {
 
       print('正在請求 URL: $uri');
 
-      final response = await http.get(
-        uri,
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-      ).timeout(const Duration(seconds: 10));
+      final response = await _getWithRetry(uri, maxRetries: 3);
 
       print('API Response Status: ${response.statusCode}');
       print('API Response Body: ${response.body}');
@@ -183,26 +198,15 @@ class LocationService {
         double centerLat;
         double centerLng;
         bool usedFallback = false;
-        try {
-          final locations = await locationFromAddress(center.address)
-              .timeout(const Duration(seconds: 10));
-          if (locations.isNotEmpty) {
-            centerLat = locations.first.latitude;
-            centerLng = locations.first.longitude;
-            print('距離過濾地址解析成功：${center.address} -> $centerLat, $centerLng');
-          } else {
-            final fallback = _getFallbackCoordinates(center.id);
-            centerLat = fallback['lat']!;
-            centerLng = fallback['lng']!;
-            usedFallback = true;
-            print('距離過濾地址解析為空，使用備用座標 $centerLat, $centerLng');
-          }
-        } catch (e) {
+        if (center.latitude != null && center.longitude != null) {
+          centerLat = center.latitude!;
+          centerLng = center.longitude!;
+        } else {
           final fallback = _getFallbackCoordinates(center.id);
           centerLat = fallback['lat']!;
           centerLng = fallback['lng']!;
           usedFallback = true;
-          print('距離過濾地址解析失敗，使用備用座標：$e');
+          print('距離過濾缺少座標，使用備用座標 $centerLat, $centerLng');
         }
 
         // 計算距離（米）

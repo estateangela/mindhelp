@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:geocoding/geocoding.dart';
 import '../services/location_service.dart';
 import '../core/theme.dart';
 import '../widgets/custom_app_bar.dart';
@@ -87,8 +86,6 @@ class _MapsPageState extends State<MapsPage> {
     }
   }
 
-  // 已移除 Geocoding 測試以避免依賴問題
-
   // 獲取備用座標（對應真實醫療機構位置）
   Map<String, double> _getFallbackCoordinates(String centerId) {
     // 台北商業大學方圓五公里內的真實醫療機構座標
@@ -143,7 +140,7 @@ class _MapsPageState extends State<MapsPage> {
     }
   }
 
-  // 將多個諮商所轉為地圖標記（先 geocoding，失敗回退備用座標）
+  // 將多個諮商所轉為地圖標記（優先使用座標，缺失則回退備用座標）
   Future<int> _addCenterMarkers(List<CounselingCenter> centers) async {
     int successCount = 0;
     for (var center in centers) {
@@ -152,25 +149,14 @@ class _MapsPageState extends State<MapsPage> {
 
         LatLng position;
         bool usedFallback = false;
-        try {
-          final locations = await locationFromAddress(center.address)
-              .timeout(const Duration(seconds: 10));
-          if (locations.isNotEmpty) {
-            position =
-                LatLng(locations.first.latitude, locations.first.longitude);
-            print(
-                '地址解析成功：${center.address} -> ${position.latitude}, ${position.longitude}');
-          } else {
-            final fallback = _getFallbackCoordinates(center.id);
-            position = LatLng(fallback['lat']!, fallback['lng']!);
-            usedFallback = true;
-            print('地址解析為空，使用備用座標 ${position.latitude}, ${position.longitude}');
-          }
-        } catch (e) {
+        if (center.latitude != null && center.longitude != null) {
+          position = LatLng(center.latitude!, center.longitude!);
+          print('使用座標：${position.latitude}, ${position.longitude}');
+        } else {
           final fallback = _getFallbackCoordinates(center.id);
           position = LatLng(fallback['lat']!, fallback['lng']!);
           usedFallback = true;
-          print('地址解析失敗，使用備用座標：$e');
+          print('缺少座標，使用備用座標 ${position.latitude}, ${position.longitude}');
         }
 
         final double distanceInMeters = Geolocator.distanceBetween(
