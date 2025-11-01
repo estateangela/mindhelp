@@ -15,7 +15,7 @@ class LocationService {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
           },
-        ).timeout(const Duration(seconds: 20));
+        ).timeout(const Duration(seconds: 60));
         return resp;
       } catch (e) {
         final delayMs = 400 * (1 << attempt);
@@ -24,6 +24,43 @@ class LocationService {
       }
     }
     throw Exception('HTTP 重試失敗：$uri');
+  }
+
+  // 在首次資料請求前，嘗試預熱後端以降低冷啟逾時機率
+  Future<void> _warmUpBackend() async {
+    try {
+      // 優先嘗試 /api/v1/health（若後端有提供），失敗則退而求其次到根路徑與 /health
+      final List<Uri> warmupUris = [];
+
+      // 1) 直接嘗試 baseUrl + /health（可能是 404，無妨）
+      warmupUris.add(Uri.parse('$_baseUrl/health'));
+
+      // 2) 推導根域名，對 /health 與 / 預熱
+      final String apiSuffix = '/api/v1';
+      if (_baseUrl.endsWith(apiSuffix)) {
+        final String rootBase = _baseUrl.substring(0, _baseUrl.length - apiSuffix.length);
+        warmupUris.add(Uri.parse('$rootBase/health'));
+        warmupUris.add(Uri.parse('$rootBase/'));
+      }
+
+      for (final uri in warmupUris) {
+        try {
+          final resp = await http
+              .get(uri, headers: const {'Accept': 'application/json'})
+              .timeout(const Duration(seconds: 10));
+          print('預熱完成：${uri.toString()} 狀態碼=${resp.statusCode}');
+          // 任一成功回應（含 200/204/302 等）即可視為後端已喚醒
+          if (resp.statusCode >= 200 && resp.statusCode < 500) {
+            break;
+          }
+        } catch (e) {
+          print('預熱嘗試失敗：${uri.toString()} 錯誤=$e');
+        }
+      }
+    } catch (e) {
+      // 預熱失敗不應影響主要流程
+      print('預熱流程發生例外但已忽略：$e');
+    }
   }
 
   Future<List<CounselingCenter>> getCounselingCenters({
@@ -36,6 +73,9 @@ class LocationService {
     double radiusKm = 5.0,
   }) async {
     try {
+      // 先預熱後端，降低冷啟導致的逾時/502 機率
+      await _warmUpBackend();
+
       final queryParams = {
         'page': page.toString(),
         'page_size': pageSize.toString(),

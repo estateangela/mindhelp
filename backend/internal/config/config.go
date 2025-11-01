@@ -151,8 +151,9 @@ func Load() (*Config, error) {
 		DistanceMatrixURL: getEnv("GOOGLE_MAPS_DISTANCE_MATRIX_URL", "https://maps.googleapis.com/maps/api/distancematrix/json"),
 	}
 
-	// 載入 CORS 配置
-	corsOriginsEnv := getEnv("CORS_ALLOWED_ORIGINS", "http://localhost:3000")
+    // 載入 CORS 配置
+    // 預設同時允許常見的 Flutter Web 開發端口
+    corsOriginsEnv := getEnv("CORS_ALLOWED_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000")
 	allowedOrigins := []string{}
 	
 	// 支援多個來源，以逗號分隔
