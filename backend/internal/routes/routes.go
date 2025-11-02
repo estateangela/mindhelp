@@ -28,7 +28,7 @@ func SetupRoutes(cfg *config.Config) *gin.Engine {
 	r.Use(middleware.MetricsMiddleware())
 	r.Use(gin.Recovery())
 
-	// CORS 中間件
+	// CORS 中間件（使用明確白名單；已在 config.go 預設加入 5173/3000）
 	corsConfig := ginCors.New(ginCors.Options{
 		AllowedOrigins:   cfg.CORS.AllowedOrigins,
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"},

@@ -89,7 +89,6 @@ func main() {
 			// 不要讓資料庫連接失敗導致整個服務崩潰
 			return
 		}
-		defer database.Close()
 
 		// 執行資料庫遷移
 		log.Println("Starting database migration...")
@@ -122,6 +121,15 @@ func main() {
 
 	if err := srv.Shutdown(ctx); err != nil {
 		log.Fatal("Server forced to shutdown:", err)
+	}
+
+	// 停止排程器後再關閉資料庫，避免排程器在 DB 關閉後仍嘗試存取
+	if globalScheduler != nil {
+		globalScheduler.Stop()
+	}
+
+	if err := database.Close(); err != nil {
+		log.Printf("Error closing database: %v", err)
 	}
 
 	log.Println("Server exited")

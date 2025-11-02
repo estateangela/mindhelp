@@ -2,9 +2,11 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:geolocator/geolocator.dart';
 import '../models/counseling_center.dart';
+import '../config/api_config.dart';
+import 'local_centers_loader.dart';
 
 class LocationService {
-  final String _baseUrl = 'https://mindhelp.onrender.com/api/v1';
+  final String _baseUrl = ApiConfig.baseUrl;
 
   Future<http.Response> _getWithRetry(Uri uri, {int maxRetries = 3}) async {
     for (int attempt = 0; attempt < maxRetries; attempt++) {
@@ -63,6 +65,11 @@ class LocationService {
     }
   }
 
+  // 對外公開的預熱方法：啟動時可主動喚醒後端
+  Future<void> warmUpBackend() async {
+    await _warmUpBackend();
+  }
+
   Future<List<CounselingCenter>> getCounselingCenters({
     int page = 1,
     int pageSize = 100,
@@ -119,6 +126,20 @@ class LocationService {
       if (e.toString().contains('Failed to fetch') ||
           e.toString().contains('ClientException')) {
         print('網絡連接失敗，嘗試使用備用數據...');
+        // 1) 先嘗試從 CSV 資產載入完整清單
+        try {
+          final csvCenters = await LocalCentersLoader.loadFromCsv();
+          if (csvCenters.isNotEmpty) {
+            if (userLatitude != null && userLongitude != null) {
+              return _filterCentersByDistance(
+                  csvCenters, userLatitude, userLongitude, radiusKm);
+            }
+            return csvCenters;
+          }
+        } catch (e2) {
+          print('讀取 CSV 備援失敗：$e2，改用內建極小備援清單');
+        }
+        // 2) CSV 也失敗時，改用內建少量備援
         final fallbackData = _getFallbackData();
 
         // 如果提供了用戶位置，則過濾方圓五公里內的諮商所

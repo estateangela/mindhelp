@@ -41,6 +41,7 @@ dependencies:
   firebase_core: ^4.0.0
   firebase_auth: ^6.0.0
   cloud_firestore: ^6.0.0
+  csv: ^5.0.2
 
 
   # The following adds the Cupertino Icons font to your application.
@@ -107,6 +108,8 @@ flutter:
     - assets/images/1.jpg
     - assets/images/3.jpg
     - assets/images/4.jpg
+    - assets/data/geocoded_centers_google.csv
+    - assets/data/centers_name_mapping.csv
 
   fonts:
     - family: Huninn

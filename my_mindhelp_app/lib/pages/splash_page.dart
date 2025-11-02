@@ -14,6 +14,8 @@ class _SplashPageState extends State<SplashPage> {
   @override
   void initState() {
     super.initState();
+    // 啟動即觸發後端預熱（不等待），降低首次進入功能頁時的冷啟延遲
+    LocationService().warmUpBackend();
     _initializeApp();
   }
 

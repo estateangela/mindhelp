@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import '../services/location_service.dart';
+import '../services/local_centers_loader.dart';
 import '../core/theme.dart';
 import '../widgets/custom_app_bar.dart';
 import '../models/counseling_center.dart';
@@ -274,6 +275,7 @@ class _MapsPageState extends State<MapsPage> {
       print('開始調用 API...');
       final List<CounselingCenter> counselingCenters =
           await _locationService.getCounselingCenters(
+        pageSize: 50,
         userLatitude: _currentLocation.latitude,
         userLongitude: _currentLocation.longitude,
         radiusKm: 5.0, // 方圓五公里
@@ -282,12 +284,28 @@ class _MapsPageState extends State<MapsPage> {
       print('API 調用完成，獲取到 ${counselingCenters.length} 個諮商所');
 
       if (counselingCenters.isEmpty) {
-        print('沒有獲取到諮商所數據，改用備用清單');
+        print('沒有獲取到諮商所數據，嘗試載入 CSV 備援');
+        try {
+          final csvCenters = await LocalCentersLoader.loadFromCsv();
+          if (csvCenters.isNotEmpty) {
+            final csvCount = await _addCenterMarkers(csvCenters);
+            if (mounted) {
+              setState(() {
+                _mapStatus = '顯示 $csvCount 間諮商所（CSV 備援）';
+              });
+            }
+            return;
+          }
+        } catch (e) {
+          print('載入 CSV 備援失敗：$e');
+        }
+
+        print('CSV 也無資料，改用內建少量備用清單');
         final fallbackCenters = _locationService.getFallbackCenters();
         final count = await _addCenterMarkers(fallbackCenters);
         if (mounted) {
           setState(() {
-            _mapStatus = '顯示 $count 間備用諮商所標記（API 無資料）';
+            _mapStatus = '顯示 $count 間備用諮商所標記（內建備援）';
           });
         }
         return;
