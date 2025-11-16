@@ -73,6 +73,13 @@ class QuizLandingPage extends StatelessWidget {
                         .bodyMedium
                         ?.copyWith(fontStyle: FontStyle.italic),
                   ),
+                  const SizedBox(height: 12),
+                  Text(
+                    '來源：Spitzer RL, Kroenke K, Williams JBW, Löwe B. A brief measure for assessing generalized anxiety disorder: the GAD-7. Archives of Internal Medicine. 2006;166(10):1092–1097.（PubMed: https://pubmed.ncbi.nlm.nih.gov/16717171/）',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColors.textBody,
+                        ),
+                  ),
                 ],
               ),
             ),
