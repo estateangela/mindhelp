@@ -9,7 +9,8 @@ class AiService {
     const String openRouterApiKey =
         String.fromEnvironment('OPENROUTER_API_KEY', defaultValue: '');
     if (openRouterApiKey.isEmpty) {
-      throw Exception('OpenRouter API Key is not set in secrets.dart.');
+      throw Exception(
+          'OpenRouter API Key is missing. Please set OPENROUTER_API_KEY via --dart-define or GitHub Actions secret.');
     }
 
     const String apiUrl = 'https://openrouter.ai/api/v1/chat/completions';

@@ -29,12 +29,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Pages
-        if: always()
-        continue-on-error: true
-        uses: actions/configure-pages@v5
-        # 注意：不再自動啟用 Pages，請到 repo Settings → Pages → Source 選 GitHub Actions
-
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
