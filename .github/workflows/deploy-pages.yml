@@ -1,0 +1,68 @@
+name: Deploy Flutter Web to GitHub Pages
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: my_mindhelp_app
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      # 若使用者/組織首頁（username.github.io），可將此值改為 "/"。
+      BASE_HREF: "/${{ github.event.repository.name }}/"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Enable Web
+        run: flutter config --enable-web
+
+      - name: Flutter pub get
+        run: flutter pub get
+
+      - name: Build web
+        run: flutter build web --release --web-renderer canvaskit --base-href "${{ env.BASE_HREF }}"
+
+      - name: SPA 404 fallback
+        run: cp build/web/index.html build/web/404.html
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: my_mindhelp_app/build/web
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+
