@@ -1,13 +1,14 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import '../config/secrets.dart';
 
 class AiService {
   Future<String> getOpenRouterCompletion({
     required String userMessage,
     required String systemPrompt,
   }) async {
-    if (Secrets.openRouterApiKey.isEmpty) {
+    const String openRouterApiKey =
+        String.fromEnvironment('OPENROUTER_API_KEY', defaultValue: '');
+    if (openRouterApiKey.isEmpty) {
       throw Exception('OpenRouter API Key is not set in secrets.dart.');
     }
 
@@ -17,7 +18,7 @@ class AiService {
     final response = await http.post(
       Uri.parse(apiUrl),
       headers: {
-        'Authorization': 'Bearer ${Secrets.openRouterApiKey}',
+        'Authorization': 'Bearer $openRouterApiKey',
         'Content-Type': 'application/json',
       },
       body: jsonEncode({
