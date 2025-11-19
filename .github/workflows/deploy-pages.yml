@@ -30,8 +30,7 @@ jobs:
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
-        with:
-          enablement: true
+        # 注意：不再自動啟用 Pages，請到 repo Settings → Pages → Source 選 GitHub Actions
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
