@@ -1,0 +1,195 @@
+workflows:
+  build-android-and-upload-browserstack:
+    name: Build Android (APK + AAB) and upload to BrowserStack App Automate
+    max_build_duration: 120
+    triggers:
+      - push
+      - pull_request
+      - manual
+    branches:
+      only:
+        - main
+        - develop
+
+    environment:
+      flutter: "${FLUTTER_VERSION}"
+      vars:
+        ANDROID_KEYSTORE_BASE64: ""
+        KEYSTORE_PASSWORD: ""
+        KEY_ALIAS: ""
+        KEY_PASSWORD: ""
+        BROWSERSTACK_USERNAME: ""
+        BROWSERSTACK_ACCESS_KEY: ""
+        FLUTTER_VERSION: "stable"
+
+    scripts:
+      - name: Checkout repository (默认)
+        script: |
+          #!/usr/bin/env bash
+          set -eo pipefail
+          echo "Working directory: $(pwd)"
+
+      - name: Enter Flutter app folder
+        script: |
+          #!/usr/bin/env bash
+          set -eo pipefail
+          cd my_mindhelp_app
+          echo "CD into $(pwd)"
+
+      - name: Decode Android keystore and create key.properties
+        script: |
+          #!/usr/bin/env bash
+          set -eo pipefail
+          cd my_mindhelp_app
+          echo "Decoding keystore to android/app/keystore.jks"
+          if [ -z "${ANDROID_KEYSTORE_BASE64}" ]; then
+            echo "ERROR: ANDROID_KEYSTORE_BASE64 is empty"
+            exit 2
+          fi
+          mkdir -p android/app
+          echo "${ANDROID_KEYSTORE_BASE64}" | base64 -d > android/app/keystore.jks
+          chmod 600 android/app/keystore.jks
+          cat > android/key.properties <<EOF
+storePassword=${KEYSTORE_PASSWORD}
+keyPassword=${KEY_PASSWORD}
+keyAlias=${KEY_ALIAS}
+storeFile=app/keystore.jks
+EOF
+          echo "Created android/key.properties (storeFile -> app/keystore.jks)"
+
+      - name: Flutter pub get
+        script: |
+          #!/usr/bin/env bash
+          set -eo pipefail
+          cd my_mindhelp_app
+          flutter pub get --no-precompile
+
+      - name: Flutter analyze
+        script: |
+          #!/usr/bin/env bash
+          set -eo pipefail
+          cd my_mindhelp_app
+          flutter analyze
+
+      - name: Flutter test
+        script: |
+          #!/usr/bin/env bash
+          set -eo pipefail
+          cd my_mindhelp_app
+          flutter test --no-pub
+
+      - name: Build APK (release)
+        script: |
+          #!/usr/bin/env bash
+          set -eo pipefail
+          cd my_mindhelp_app
+          echo "Building release APK..."
+          flutter build apk --release
+          ls -l build/app/outputs/flutter-apk || true
+
+      - name: Build AAB (release)
+        script: |
+          #!/usr/bin/env bash
+          set -eo pipefail
+          cd my_mindhelp_app
+          echo "Building release AAB (appbundle)..."
+          flutter build appbundle --release
+          ls -l build/app/outputs/bundle/release || true
+
+      - name: Collect artifacts and upload to BrowserStack App Automate
+        script: |
+          #!/usr/bin/env bash
+          set -eo pipefail
+          cd my_mindhelp_app
+
+          APK_PATH="build/app/outputs/flutter-apk/app-release.apk"
+          if [ ! -f "${APK_PATH}" ]; then
+            APK_PATH="$(ls build/app/outputs/flutter-apk/*.apk 2>/dev/null | head -n 1 || true)"
+          fi
+
+          AAB_PATH="build/app/outputs/bundle/release/app-release.aab"
+          if [ ! -f "${AAB_PATH}" ]; then
+            AAB_PATH="$(ls build/app/outputs/bundle/release/*.aab 2>/dev/null | head -n 1 || true)"
+          fi
+
+          if [ -z "${APK_PATH}" ] || [ ! -f "${APK_PATH}" ]; then
+            echo "ERROR: APK not found at expected location. Tried: ${APK_PATH}"
+            exit 3
+          fi
+
+          echo "Found APK: ${APK_PATH}"
+          [ -n "${AAB_PATH}" ] && echo "Found AAB: ${AAB_PATH}" || echo "AAB not found (optional)"
+
+          if [ -z "${BROWSERSTACK_USERNAME}" ] || [ -z "${BROWSERSTACK_ACCESS_KEY}" ]; then
+            echo "ERROR: BrowserStack credentials missing (BROWSERSTACK_USERNAME / BROWSERSTACK_ACCESS_KEY)"
+            exit 4
+          fi
+
+          echo "Uploading APK to BrowserStack App Automate..."
+          UPLOAD_RESPONSE=$(curl -s -u "${BROWSERSTACK_USERNAME}:${BROWSERSTACK_ACCESS_KEY}" \
+            -X POST "https://api-cloud.browserstack.com/app-automate/upload" \
+            -F "file=@${APK_PATH}")
+
+          echo "Upload response:"
+          echo "${UPLOAD_RESPONSE}"
+
+          APP_URL=$(echo "${UPLOAD_RESPONSE}" | python3 -c "import sys, json; print(json.load(sys.stdin).get('app_url',''))" || true)
+          if [ -z "${APP_URL}" ]; then
+            echo "ERROR: Failed to extract app_url from BrowserStack response"
+            exit 5
+          fi
+          echo "BrowserStack app_url: ${APP_URL}"
+
+          if [ -n "${AAB_PATH}" ] && [ -f "${AAB_PATH}" ]; then
+            echo "Uploading AAB to BrowserStack (optional)..."
+            AAB_RESPONSE=$(curl -s -u "${BROWSERSTACK_USERNAME}:${BROWSERSTACK_ACCESS_KEY}" \
+              -X POST "https://api-cloud.browserstack.com/app-automate/upload" \
+              -F "file=@${AAB_PATH}")
+            echo "AAB upload response:"
+            echo "${AAB_RESPONSE}"
+          fi
+
+    artifacts:
+      - my_mindhelp_app/build/app/outputs/flutter-apk/*.apk
+      - my_mindhelp_app/build/app/outputs/bundle/release/*.aab
+      - my_mindhelp_app/build/app/outputs/**
+
+    publishing:
+      email:
+        recipients:
+          - your-team@example.com
+        on_success: change
+        on_failure: always
+
+# iOS 构建的条件作业（注：仅作为未来扩展示例，已注释）
+# 说明：如果需要为 iOS 添加 workflow，请复制上方 Android workflow，设置 macOS 运行器并添加证书配置与 App Store / TestFlight 上传步骤。
+#
+#  build-ios:
+#    name: Build iOS
+#    triggers:
+#      - push
+#      - pull_request
+#      - manual
+#    branches:
+#      only:
+#        - main
+#        - develop
+#    environment:
+#      flutter: "stable"
+#      vars:
+#        FLUTTER_VERSION: "stable"
+#    scripts:
+#      - name: Checkout
+#        script: |
+#          set -eo pipefail
+#      - name: Enter project folder
+#        script: |
+#          cd my_mindhelp_app
+#      - name: flutter pub get
+#        script: |
+#          flutter pub get
+#      - name: Build iOS archive
+#        script: |
+#          flutter build ipa --release --no-codesign
+#    artifacts:
+#      - my_mindhelp_app/build/ios/ipa/**/*.ipa
