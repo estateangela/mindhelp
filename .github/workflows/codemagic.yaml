@@ -21,8 +21,10 @@ jobs:
       KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
       KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
       KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-      BROWSERSTACK_USERNAME: ${{ secrets.BROWSERSTACK_USERNAME }}
-      BROWSERSTACK_ACCESS_KEY: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
+      #之後你要改成${{ secrets.BROWSERSTACK_USERNAME }}
+      BROWSERSTACK_USERNAME: peichenlee_0zP9MX  
+      #之後你要改成$${{ secrets.BROWSERSTACK_ACCESS_KEY }}
+      BROWSERSTACK_ACCESS_KEY: mxMRzp4bkAHqQyyFP8ce
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
