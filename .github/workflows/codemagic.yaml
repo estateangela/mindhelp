@@ -33,10 +33,23 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '11'
+
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: ${{ env.FLUTTER_VERSION }}
+          flutter-version: '3.24.0'
+          channel: 'stable'
+
+      - name: Verify Flutter installation
+        run: |
+          flutter --version
+          flutter doctor -v || true
+
 
       - name: Decode Android keystore and create key.properties
         run: |
