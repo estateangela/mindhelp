@@ -1,0 +1,110 @@
+name: Build Android and upload to BrowserStack
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+  workflow_dispatch: {}
+
+jobs:
+  build-android-and-upload-browserstack:
+    name: Build Android (APK + AAB) and upload to BrowserStack
+    runs-on: ubuntu-latest
+    env:
+      FLUTTER_VERSION: "stable"
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+
+      - name: Decode Android keystore and create key.properties
+        run: |
+          set -eo pipefail
+          mkdir -p my_mindhelp_app/android/app
+          if [ -z "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" ]; then
+            echo "ERROR: ANDROID_KEYSTORE_BASE64 is empty"
+            exit 2
+          fi
+          echo "Decoding keystore..."
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > my_mindhelp_app/android/app/keystore.jks
+          chmod 600 my_mindhelp_app/android/app/keystore.jks
+          printf "storePassword=%s\nkeyPassword=%s\nkeyAlias=%s\nstoreFile=app/keystore.jks\n" "${{ secrets.KEYSTORE_PASSWORD }}" "${{ secrets.KEY_PASSWORD }}" "${{ secrets.KEY_ALIAS }}" > my_mindhelp_app/android/key.properties
+          echo "Created my_mindhelp_app/android/key.properties"
+
+      - name: Install dependencies
+        run: |
+          set -eo pipefail
+          cd my_mindhelp_app
+          flutter pub get --no-precompile
+
+      - name: Flutter analyze
+        run: |
+          set -eo pipefail
+          cd my_mindhelp_app
+          flutter analyze || true
+
+      - name: Flutter test
+        run: |
+          set -eo pipefail
+          cd my_mindhelp_app
+          flutter test --no-pub || true
+
+      - name: Build APK (release)
+        run: |
+          set -eo pipefail
+          cd my_mindhelp_app
+          flutter build apk --release
+
+      - name: Build AAB (release)
+        run: |
+          set -eo pipefail
+          cd my_mindhelp_app
+          flutter build appbundle --release
+
+      - name: Upload artifacts to GitHub
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-artifacts
+          path: |
+            my_mindhelp_app/build/app/outputs/flutter-apk/*.apk
+            my_mindhelp_app/build/app/outputs/bundle/release/*.aab
+
+      - id: upload-apk
+        name: Upload APK to BrowserStack App Automate
+        run: |
+          set -eo pipefail
+          # Ensure jq is available for JSON parsing
+          sudo apt-get update -y && sudo apt-get install -y jq
+
+          APK_PATH=$(ls my_mindhelp_app/build/app/outputs/flutter-apk/*.apk 2>/dev/null | head -n 1 || true)
+          if [ -z "${APK_PATH}" ]; then
+            echo "ERROR: APK not found"
+            exit 3
+          fi
+
+          echo "Uploading ${APK_PATH} to BrowserStack App Automate..."
+          UPLOAD_RESPONSE=$(curl -s -u "${{ secrets.BROWSERSTACK_USERNAME }}:${{ secrets.BROWSERSTACK_ACCESS_KEY }}" \
+            -X POST "https://api-cloud.browserstack.com/app-automate/upload" \
+            -F "file=@${APK_PATH}")
+
+          echo "Upload response: ${UPLOAD_RESPONSE}"
+          APP_URL=$(echo "${UPLOAD_RESPONSE}" | jq -r .app_url || echo "")
+          if [ -z "${APP_URL}" ] || [ "${APP_URL}" = "null" ]; then
+            echo "ERROR: Failed to extract app_url from BrowserStack response"
+            exit 4
+          fi
+          echo "BrowserStack app_url=${APP_URL}"
+          echo "app_url=${APP_URL}" >> $GITHUB_OUTPUT
+
+      - name: Show BrowserStack app_url
+        run: |
+          echo "BrowserStack app_url: ${{ steps.upload-apk.outputs.app_url }}"
