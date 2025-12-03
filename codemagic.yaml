@@ -1,3 +1,7 @@
+## 此檔為 Codemagic workflow 範本：
+## - 功能：在 CI 上建置 Flutter Android 的 APK 與 AAB，並將 APK 上傳到 BrowserStack App Automate。
+## - 注意：不要把任何私密金鑰提交到 repo；請在 Codemagic 的 Environment variables 裡以 Secure 方式設定金鑰。
+## 必要的環境變數（範例名稱）：AND R OID_KEYSTORE_BASE64, KEYSTORE_PASSWORD, KEY_ALIAS, KEY_PASSWORD, BROWSERSTACK_USERNAME, BROWSERSTACK_ACCESS_KEY
 workflows:
   build-android-and-upload-browserstack:
     name: Build Android (APK + AAB) and upload to BrowserStack App Automate
@@ -23,7 +27,7 @@ workflows:
         FLUTTER_VERSION: "stable"
 
     scripts:
-      - name: Checkout repository (默认)
+      - name: Checkout repository（預設）
         script: |
           #!/usr/bin/env bash
           set -eo pipefail
@@ -49,12 +53,7 @@ workflows:
           mkdir -p android/app
           echo "${ANDROID_KEYSTORE_BASE64}" | base64 -d > android/app/keystore.jks
           chmod 600 android/app/keystore.jks
-          cat > android/key.properties <<EOF
-storePassword=${KEYSTORE_PASSWORD}
-keyPassword=${KEY_PASSWORD}
-keyAlias=${KEY_ALIAS}
-storeFile=app/keystore.jks
-EOF
+          printf "storePassword=%s\nkeyPassword=%s\nkeyAlias=%s\nstoreFile=app/keystore.jks\n" "${KEYSTORE_PASSWORD}" "${KEY_PASSWORD}" "${KEY_ALIAS}" > android/key.properties
           echo "Created android/key.properties (storeFile -> app/keystore.jks)"
 
       - name: Flutter pub get
@@ -161,35 +160,39 @@ EOF
         on_success: change
         on_failure: always
 
-# iOS 构建的条件作业（注：仅作为未来扩展示例，已注释）
-# 说明：如果需要为 iOS 添加 workflow，请复制上方 Android workflow，设置 macOS 运行器并添加证书配置与 App Store / TestFlight 上传步骤。
-#
-#  build-ios:
-#    name: Build iOS
-#    triggers:
-#      - push
-#      - pull_request
-#      - manual
-#    branches:
-#      only:
-#        - main
-#        - develop
-#    environment:
-#      flutter: "stable"
-#      vars:
-#        FLUTTER_VERSION: "stable"
-#    scripts:
-#      - name: Checkout
-#        script: |
-#          set -eo pipefail
-#      - name: Enter project folder
-#        script: |
-#          cd my_mindhelp_app
-#      - name: flutter pub get
-#        script: |
-#          flutter pub get
-#      - name: Build iOS archive
-#        script: |
-#          flutter build ipa --release --no-codesign
-#    artifacts:
-#      - my_mindhelp_app/build/ios/ipa/**/*.ipa
+ # iOS 範例（已註解）
+ # 說明：以下為未來若要支援 iOS 時的範例工作流程。iOS 必須在 macOS runner 上執行，且需要上傳簽章憑證（.p12）與 provisioning profile。
+ # 若需要啟用 iOS，請取消註解並在 Codemagic UI 中上傳/設定下列機密：
+ # - APPLE_P12_BASE64 (p12 的 base64)
+ # - APPLE_P12_PASSWORD
+ # - IOS_PROVISIONING_PROFILE_BASE64
+ # 範例（保留註解以免誤觸）：
+ # build-ios:
+ #   name: Build iOS
+ #   triggers:
+ #     - push
+ #     - pull_request
+ #     - manual
+ #   branches:
+ #     only:
+ #       - main
+ #       - develop
+ #   environment:
+ #     flutter: "stable"
+ #     vars:
+ #       FLUTTER_VERSION: "stable"
+ #   scripts:
+ #     - name: Checkout（預設）
+ #       script: |
+ #         set -eo pipefail
+ #     - name: Enter project folder
+ #       script: |
+ #         cd my_mindhelp_app
+ #     - name: flutter pub get
+ #       script: |
+ #         flutter pub get
+ #     - name: Build iOS archive (需要簽章設定)
+ #       script: |
+ #         flutter build ipa --release --no-codesign
+ #   artifacts:
+ #     - my_mindhelp_app/build/ios/ipa/**/*.ipa
