@@ -17,6 +17,12 @@ jobs:
     runs-on: ubuntu-latest
     env:
       FLUTTER_VERSION: "stable"
+      ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+      KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+      KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+      KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+      BROWSERSTACK_USERNAME: ${{ secrets.BROWSERSTACK_USERNAME }}
+      BROWSERSTACK_ACCESS_KEY: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -30,14 +36,14 @@ jobs:
         run: |
           set -eo pipefail
           mkdir -p my_mindhelp_app/android/app
-          if [ -z "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" ]; then
+          if [ -z "${ANDROID_KEYSTORE_BASE64}" ]; then
             echo "ERROR: ANDROID_KEYSTORE_BASE64 is empty"
             exit 2
           fi
           echo "Decoding keystore..."
-          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > my_mindhelp_app/android/app/keystore.jks
+          echo "${ANDROID_KEYSTORE_BASE64}" | base64 -d > my_mindhelp_app/android/app/keystore.jks
           chmod 600 my_mindhelp_app/android/app/keystore.jks
-          printf "storePassword=%s\nkeyPassword=%s\nkeyAlias=%s\nstoreFile=app/keystore.jks\n" "${{ secrets.KEYSTORE_PASSWORD }}" "${{ secrets.KEY_PASSWORD }}" "${{ secrets.KEY_ALIAS }}" > my_mindhelp_app/android/key.properties
+          printf "storePassword=%s\nkeyPassword=%s\nkeyAlias=%s\nstoreFile=app/keystore.jks\n" "${KEYSTORE_PASSWORD}" "${KEY_PASSWORD}" "${KEY_ALIAS}" > my_mindhelp_app/android/key.properties
           echo "Created my_mindhelp_app/android/key.properties"
 
       - name: Install dependencies
@@ -92,7 +98,7 @@ jobs:
           fi
 
           echo "Uploading ${APK_PATH} to BrowserStack App Automate..."
-          UPLOAD_RESPONSE=$(curl -s -u "${{ secrets.BROWSERSTACK_USERNAME }}:${{ secrets.BROWSERSTACK_ACCESS_KEY }}" \
+          UPLOAD_RESPONSE=$(curl -s -u "${BROWSERSTACK_USERNAME}:${BROWSERSTACK_ACCESS_KEY}" \
             -X POST "https://api-cloud.browserstack.com/app-automate/upload" \
             -F "file=@${APK_PATH}")
 
