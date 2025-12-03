@@ -5,3 +5,6 @@ test_continue.go
 /node_modules
 .dccache
 /lib/config/openrouter_api.dart
+
+# Snyk Security Extension - AI Rules (auto-generated)
+.cursor/rules/snyk_rules.mdc
